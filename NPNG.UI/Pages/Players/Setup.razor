@@ -11,6 +11,14 @@
     <div style="font-size:.7rem;color:var(--sub);font-family:var(--font-mono)">@CurrentPlayerCount/8</div>
 </div>
 
+@if (GameState.CurrentSession != null && (GameState.CurrentSession.CurrentRound > 1 || GameState.CurrentSession.Scores.Any()))
+{
+    <div style="background:rgba(248, 113, 113, 0.1); border:1px solid rgba(248, 113, 113, 0.3); border-radius:11px; padding:12px; margin-bottom:12px; color:#F87171; font-size:0.8rem;">
+        <strong>⚠️ Partie en cours</strong><br/>
+        Ajouter ou retirer des joueurs maintenant peut décaler les scores existants. Procède avec prudence !
+    </div>
+}
+
 <div class="section-label">Ordre et 1er joueur</div>
 
 @if (GameState.CurrentSession == null || GameState.CurrentSession.Players.Length == 0)

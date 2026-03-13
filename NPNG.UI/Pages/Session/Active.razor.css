@@ -133,3 +133,43 @@
 .leaderboard-row.lead .tot {
     color: var(--accent);
 }
+
+/* end game panel */
+.end-panel {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--raised);
+    border-radius: 16px;
+    margin: 20px 0;
+    border: 2px dashed var(--accent);
+}
+
+.end-panel-title {
+    margin: 0 0 10px 0;
+    color: var(--accent);
+    font-size: 1.5rem;
+}
+
+.end-panel-desc {
+    margin: 0;
+    color: var(--sub);
+    font-size: 0.9rem;
+}
+
+.btn-secondary {
+    margin-top: 10px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    color: var(--txt);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--t), transform var(--t);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    background: var(--input);
+}

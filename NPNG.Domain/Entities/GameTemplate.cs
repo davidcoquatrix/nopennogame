@@ -1,7 +1,11 @@
-using System.Text.Json;
 using NPNG.Domain.Enums;
 
 namespace NPNG.Domain.Entities;
+
+/// <summary>
+/// Définition des règles de fin de partie.
+/// </summary>
+public record GameRules(int? TargetScore = null, int? MaxRounds = null);
 
 /// <summary>
 /// Représente le modèle de base d'un jeu (ses règles, son type de score).
@@ -11,4 +15,4 @@ public record GameTemplate(
     string Name,
     ScoreType ScoreType,
     string? Description = null,
-    JsonElement? Rules = null);
+    GameRules? Rules = null);

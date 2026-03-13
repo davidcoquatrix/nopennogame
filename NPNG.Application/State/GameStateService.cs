@@ -205,22 +205,115 @@ public class GameStateService
     /// <summary>
     /// Valide le tour en cours et passe au suivant.
     /// Met à jour le FirstPlayer en fonction de l'ordre de la table.
+    /// Gère également la condition de fin de partie si les règles sont atteintes.
     /// </summary>
     public async Task AdvanceToNextRoundAsync()
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
-        // Find current first player
-        var currentFirstIndex = CurrentSession.Players.ToList().FindIndex(p => p.IsFirstPlayer);
+        bool isGameFinished = false;
+
+        if (!CurrentSession.RulesOverridden)
+        {
+            // Check if MaxRounds is reached
+            if (CurrentSession.Template.Rules?.MaxRounds.HasValue == true)
+            {
+                if (CurrentSession.CurrentRound >= CurrentSession.Template.Rules.MaxRounds.Value)
+                {
+                    isGameFinished = true;
+                }
+            }
+
+            // Check if TargetScore is reached by any player
+            if (!isGameFinished && CurrentSession.Template.Rules?.TargetScore.HasValue == true)
+            {
+                var target = CurrentSession.Template.Rules.TargetScore.Value;
+                var playerIds = CurrentSession.Players.Select(p => p.PlayerId);
+                var leaderboard = NPNG.Domain.Services.ScoreCalculator.CalculateLeaderboard(
+                    CurrentSession.Template.ScoreType,
+                    playerIds,
+                    CurrentSession.Scores);
+
+                if (leaderboard.Any(l => l.TotalScore >= target))
+                {
+                    isGameFinished = true;
+                }
+            }
+        }
+
+        if (isGameFinished)
+        {
+            CurrentSession = CurrentSession with
+            {
+                Status = SessionStatus.Finished,
+                EndedAt = DateTime.UtcNow
+            };
+        }
+        else
+        {
+            // Find current first player
+            var currentFirstIndex = CurrentSession.Players.ToList().FindIndex(p => p.IsFirstPlayer);
+            
+            var updatedPlayers = CurrentSession.Players.ToList();
+            
+            if (currentFirstIndex >= 0 && updatedPlayers.Count > 0)
+            {
+                // Remove first player flag from current
+                updatedPlayers[currentFirstIndex] = updatedPlayers[currentFirstIndex] with { IsFirstPlayer = false };
+                
+                // Assign to next player (looping back to 0)
+                var nextIndex = (currentFirstIndex + 1) % updatedPlayers.Count;
+                updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };
+            }
+
+            CurrentSession = CurrentSession with 
+            { 
+                CurrentRound = CurrentSession.CurrentRound + 1,
+                Players = updatedPlayers.ToImmutableArray()
+            };
+        }
+
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Force la fin de la partie manuellement.
+    /// </summary>
+    public async Task FinishSessionAsync()
+    {
+        if (CurrentSession is null || CurrentSession.Status == SessionStatus.Finished) return;
         
+        CurrentSession = CurrentSession with 
+        { 
+            Status = SessionStatus.Finished,
+            EndedAt = DateTime.UtcNow
+        };
+        
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Reprend une partie terminée en ignorant les règles de fin automatique.
+    /// </summary>
+    public async Task ResumeSessionAsync()
+    {
+        if (CurrentSession is null) return;
+        
+        CurrentSession = CurrentSession with 
+        { 
+            Status = SessionStatus.Active,
+            EndedAt = null,
+            RulesOverridden = true
+        };
+        
+        // Comme on reprend, on passe le tour qui a déclenché la fin
+        // On fait avancer le FirstPlayer manuellement pour préparer le prochain tour
+        var currentFirstIndex = CurrentSession.Players.ToList().FindIndex(p => p.IsFirstPlayer);
         var updatedPlayers = CurrentSession.Players.ToList();
         
         if (currentFirstIndex >= 0 && updatedPlayers.Count > 0)
         {
-            // Remove first player flag from current
             updatedPlayers[currentFirstIndex] = updatedPlayers[currentFirstIndex] with { IsFirstPlayer = false };
-            
-            // Assign to next player (looping back to 0)
             var nextIndex = (currentFirstIndex + 1) % updatedPlayers.Count;
             updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };
         }
@@ -230,7 +323,7 @@ public class GameStateService
             CurrentRound = CurrentSession.CurrentRound + 1,
             Players = updatedPlayers.ToImmutableArray()
         };
-
+        
         await SaveStateAsync();
     }
 

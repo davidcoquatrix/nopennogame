@@ -15,7 +15,8 @@ public record Session(
     ImmutableArray<ScoreEntry> Scores,
     int CurrentRound = 1,
     DateTime? EndedAt = null,
-    SessionStatus Status = SessionStatus.Active)
+    SessionStatus Status = SessionStatus.Active,
+    bool RulesOverridden = false)
 {
     public static Session Create(GameTemplate template)
     {

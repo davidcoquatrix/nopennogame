@@ -70,7 +70,12 @@
         if (string.IsNullOrWhiteSpace(gameName)) return;
         
         var scoreType = winCondition == "high" ? NPNG.Domain.Enums.ScoreType.Cumulative : NPNG.Domain.Enums.ScoreType.CumulativeLower;
-        var template = new NPNG.Domain.Entities.GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé");
+        
+        int? parsedScoreLimit = int.TryParse(scoreLimit, out var s) ? s : null;
+        int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
+        var rules = new NPNG.Domain.Entities.GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit);
+
+        var template = new NPNG.Domain.Entities.GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
         await GameState.InitializeNewSessionAsync(template);
         
         NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(gameName.Trim())}");

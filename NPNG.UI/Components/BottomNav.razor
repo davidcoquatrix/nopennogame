@@ -1,4 +1,8 @@
 @using Microsoft.AspNetCore.Components.Routing
+@using NPNG.Application.State
+@using NPNG.Domain.Enums
+@inject GameStateService GameState
+@implements IDisposable
 
 <div class="nav">
     <NavLink class="ni" href="" Match="NavLinkMatch.All" ActiveClass="on">
@@ -7,11 +11,22 @@
         <div class="ndot"></div>
     </NavLink>
     
-    <NavLink class="ni" href="session" ActiveClass="on">
-        <span class="ico">🎮</span>
-        <span class="lbl">Partie</span>
-        <div class="ndot"></div>
-    </NavLink>
+    @if (HasActiveSession)
+    {
+        <NavLink class="ni" href="session" ActiveClass="on">
+            <span class="ico">🎮</span>
+            <span class="lbl">Partie</span>
+            <div class="ndot"></div>
+        </NavLink>
+    }
+    else
+    {
+        <div class="ni" style="opacity: 0.5; cursor: not-allowed;">
+            <span class="ico" style="filter: grayscale(1);">🎮</span>
+            <span class="lbl">Partie</span>
+            <div class="ndot"></div>
+        </div>
+    }
     
     <NavLink class="ni" href="history" ActiveClass="on">
         <span class="ico">📋</span>
@@ -25,3 +40,22 @@
         <div class="ndot"></div>
     </NavLink>
 </div>
+
+@code {
+    private bool HasActiveSession => GameState.CurrentSession != null && GameState.CurrentSession.Status != SessionStatus.Abandoned;
+
+    protected override async Task OnInitializedAsync()
+    {
+        GameState.OnStateChanged += StateHasChanged;
+        
+        if (GameState.CurrentSession == null)
+        {
+            await GameState.LoadLatestActiveSessionAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        GameState.OnStateChanged -= StateHasChanged;
+    }
+}

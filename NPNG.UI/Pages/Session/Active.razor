@@ -2,6 +2,7 @@
 @using NPNG.Application.State
 @using NPNG.Domain.Services
 @using NPNG.Domain.Models
+@using NPNG.Domain.Enums
 @inject NavigationManager NavigationManager
 @inject GameStateService GameState
 @implements IDisposable
@@ -9,6 +10,67 @@
 @if (GameState.CurrentSession == null)
 {
     <div style="padding:20px;text-align:center;color:var(--sub)">Aucune session en cours...</div>
+}
+else if (GameState.CurrentSession.Status == SessionStatus.Finished)
+{
+    <div class="app-header">
+        <div style="display:flex;align-items:center;gap:8px">
+            <button class="ico-btn" @onclick="GoBack">←</button>
+            <span style="font-size:1.05rem;font-weight:700">@GameState.CurrentSession.Template.Name</span>
+        </div>
+    </div>
+    
+    <div class="end-panel">
+        <h2 class="end-panel-title">🎉 Partie Terminée !</h2>
+        <p class="end-panel-desc">
+            @if (!GameState.CurrentSession.RulesOverridden && GameState.CurrentSession.Template.Rules?.TargetScore.HasValue == true)
+            {
+                <span>L'objectif de @GameState.CurrentSession.Template.Rules.TargetScore pts a été atteint.</span>
+            }
+            else if (!GameState.CurrentSession.RulesOverridden && GameState.CurrentSession.Template.Rules?.MaxRounds.HasValue == true)
+            {
+                <span>La limite de @GameState.CurrentSession.Template.Rules.MaxRounds tours a été atteinte.</span>
+            }
+            else
+            {
+                <span>La partie a été terminée manuellement.</span>
+            }
+        </p>
+    </div>
+    
+    <!-- CLASSEMENT FINAL -->
+    <div class="section-label">Classement Final</div>
+    <div class="leaderboard">
+        @foreach (var pScore in leaderboard)
+        {
+            var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
+            var isLeader = pScore.Rank == 1;
+            
+            <div class="leaderboard-row @(isLeader ? "lead" : "")">
+                <span class="rank">@pScore.Rank</span>
+                <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">@player.Name</div>
+                </div>
+                
+                @if (isLeader)
+                {
+                    <span class="db best">vainqueur</span>
+                }
+                else
+                {
+                    var bestScore = leaderboard.First().TotalScore;
+                    var diff = pScore.TotalScore - bestScore;
+                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                }
+                
+                <div class="tot">@pScore.TotalScore</div>
+            </div>
+        }
+    </div>
+    
+    <button class="btn-cta" style="margin-top:20px" @onclick="GoToHome">Retour à l'accueil</button>
+    <button class="btn-secondary" @onclick="ResumeSession">Continuer la partie quand même</button>
 }
 else
 {
@@ -20,6 +82,7 @@ else
         <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(GameState.CurrentSession.CurrentRound.ToString("D2"))</span>
             <button class="ico-btn" style="font-size:.75rem" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
+            <button class="ico-btn" style="font-size:.75rem; color:var(--danger);" title="Terminer" @onclick="FinishSession">🏁</button>
         </div>
     </div>
 
@@ -151,6 +214,11 @@ else
         NavigationManager.NavigateTo("/players");
     }
 
+    private void GoToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
     private void GoToTimeTravel()
     {
         NavigationManager.NavigateTo("/session/history");
@@ -184,5 +252,15 @@ else
         {
             currentInputs[key] = 0;
         }
+    }
+    
+    private async Task ResumeSession()
+    {
+        await GameState.ResumeSessionAsync();
+    }
+
+    private async Task FinishSession()
+    {
+        await GameState.FinishSessionAsync();
     }
 }
