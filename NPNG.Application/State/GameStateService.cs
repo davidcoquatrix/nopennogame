@@ -104,21 +104,88 @@ public class GameStateService
     }
 
     /// <summary>
-    /// Réordonne les joueurs suite à un Drag & Drop.
+    /// Réordonne les joueurs par index exact (plus robuste pour le Drag & Drop).
     /// </summary>
-    public void ReorderPlayer(Guid draggedPlayerId, Guid targetPlayerId)
+    public void ReorderPlayerByIndex(Guid draggedPlayerId, int dropIndex)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
         var playersList = CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
-        
         var draggedPlayer = playersList.FirstOrDefault(p => p.PlayerId == draggedPlayerId);
-        var targetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayerId);
 
-        if (draggedPlayer is not null && targetIndex >= 0)
+        if (draggedPlayer is not null)
         {
+            int originalSourceIndex = playersList.IndexOf(draggedPlayer);
             playersList.Remove(draggedPlayer);
-            playersList.Insert(targetIndex, draggedPlayer);
+
+            // On décale l'index de drop si l'élément qu'on retire était avant
+            if (dropIndex > originalSourceIndex)
+            {
+                dropIndex--;
+            }
+
+            if (dropIndex < 0) dropIndex = 0;
+            if (dropIndex > playersList.Count) dropIndex = playersList.Count;
+
+            playersList.Insert(dropIndex, draggedPlayer);
+
+            var updatedPlayers = playersList
+                .Select((p, index) => p with { DisplayOrder = index })
+                .ToImmutableArray();
+
+            CurrentSession = CurrentSession with { Players = updatedPlayers };
+            NotifyStateChanged();
+        }
+    }
+
+    /// <summary>
+    /// Réordonne les joueurs suite à un Drag & Drop.
+    /// Si targetPlayerId est null, on place le joueur à la fin.
+    /// </summary>
+    public void ReorderPlayer(Guid draggedPlayerId, Guid? targetPlayerId)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+
+        var playersList = CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
+        var draggedPlayer = playersList.FirstOrDefault(p => p.PlayerId == draggedPlayerId);
+
+        if (draggedPlayer is not null)
+        {
+            // On mémorise si on déplace vers le bas pour ajuster l'index d'insertion
+            int originalSourceIndex = playersList.IndexOf(draggedPlayer);
+            int originalTargetIndex = targetPlayerId.HasValue 
+                ? playersList.FindIndex(p => p.PlayerId == targetPlayerId.Value) 
+                : -1;
+            
+            bool isMovingDown = originalSourceIndex < originalTargetIndex;
+
+            playersList.Remove(draggedPlayer);
+            
+            if (targetPlayerId.HasValue)
+            {
+                var newTargetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayerId.Value);
+                if (newTargetIndex >= 0)
+                {
+                    // Si on descend dans la liste, on insère après la cible (car l'UI montre l'indicateur en dessous)
+                    if (isMovingDown)
+                    {
+                        playersList.Insert(newTargetIndex + 1, draggedPlayer);
+                    }
+                    else
+                    {
+                        playersList.Insert(newTargetIndex, draggedPlayer);
+                    }
+                }
+                else
+                {
+                    playersList.Add(draggedPlayer);
+                }
+            }
+            else
+            {
+                // Drop at end
+                playersList.Add(draggedPlayer);
+            }
 
             var updatedPlayers = playersList
                 .Select((p, index) => p with { DisplayOrder = index })

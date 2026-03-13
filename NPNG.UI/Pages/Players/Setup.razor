@@ -15,29 +15,42 @@
 
 @if (GameState.CurrentSession?.Players.Length == 0)
 {
-    <div style="text-align:center;padding:20px;color:var(--sub);font-size:.85rem;border:1px dashed var(--bdr-md);border-radius:12px;margin-bottom:12px">
+    <div
+        style="text-align:center;padding:20px;color:var(--sub);font-size:.85rem;border:1px dashed var(--bdr-md);border-radius:12px;margin-bottom:12px">
         Ajoute des joueurs pour commencer !
     </div>
 }
 else
 {
-    <div class="player-list">
-        @foreach (var player in GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder))
+<div class="player-list" @ondragover:preventDefault="true">
+        @{
+            var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
+        }
+        
+        @for (int i = 0; i <= playersList.Count; i++)
         {
-            var isDragging = draggedId == player.PlayerId;
-            var isTargetAbove = dragTargetId == player.PlayerId && isMovingUp;
-            var isTargetBelow = dragTargetId == player.PlayerId && !isMovingUp;
+            int currentIndex = i;
+            bool isActiveZone = dragTargetIndex == currentIndex;
 
-            <!-- Wrapper to handle drop events even if the inner row is hidden/collapsed during drag -->
-            <div @ondragenter="() => HandleDragEnter(player)"
-                 @ondragend="HandleDragEnd"
-                 @ondrop="() => HandleDrop(player.PlayerId)"
-                 @ondragover:preventDefault="true"
-                 class="player-drop-zone @(isTargetAbove ? "drag-target-above" : "") @(isTargetBelow ? "drag-target-below" : "")">
+            <!-- Drop zone explicit (avant chaque élément et à la toute fin) -->
+            <div class="explicit-drop-zone @(isActiveZone ? "active" : "")"
+                 @ondragenter="() => HandleDropZoneEnter(currentIndex)"
+                 @ondrop="() => HandleDrop(currentIndex)"
+                 @ondrop:stopPropagation="true"
+                 @ondragover:preventDefault="true">
+            </div>
+
+            if (currentIndex < playersList.Count)
+            {
+                var player = playersList[currentIndex];
+                var isDragging = draggedId == player.PlayerId;
 
                 <div class="player-row @(isDragging ? "dragging" : "")"
                      draggable="true"
-                     @ondragstart="() => HandleDragStart(player)">
+                     @ondragstart="() => HandleDragStart(player)"
+                     @ondragenter="() => HandlePlayerEnter(player)"
+                     @ondragend="HandleDragEnd"
+                     @key="player.PlayerId">
                     <div style="color:var(--sub);cursor:grab;padding-right:4px;">☰</div>
                     <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
 
@@ -51,27 +64,37 @@ else
 
                     @if (!player.IsFirstPlayer)
                     {
-                        <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem" title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁</button> 
+                        <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem"
+                                title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁
+                        </button>
                     }
 
-                    <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">✕</button>
+                    <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">
+                        ✕
+                    </button>
                 </div>
-            </div>
+            }
         }
-    </div>}
+    </div>
+}
 
 <div class="section-label">Ajouter un joueur</div>
 <div class="add-player-row">
-    <input class="add-input" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput" @onkeyup="HandleKeyUp" />
-    <button class="add-btn" @onclick="AddPlayer" disabled="@(string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8)">＋ Ajouter</button>
+    <input class="add-input" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput"
+           @onkeyup="HandleKeyUp"/>
+    <button class="add-btn" @onclick="AddPlayer"
+            disabled="@(string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8)">＋ Ajouter
+    </button>
 </div>
 
-<div style="background:var(--raised);border:1px solid var(--bdr-md);border-radius:11px;padding:9px 11px;margin-bottom:10px">
+<div
+    style="background:var(--raised);border:1px solid var(--bdr-md);border-radius:11px;padding:9px 11px;margin-bottom:10px">
     <div class="section-label" style="margin-top:0">Emojis disponibles</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
         @foreach (var emoji in availableEmojis)
         {
-            <span style="font-size:1.4rem;cursor:pointer;opacity:@(selectedEmoji == emoji ? "1" : "0.5")" @onclick="() => SelectEmoji(emoji)">@emoji</span>
+            <span style="font-size:1.4rem;cursor:pointer;opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
+                  @onclick="() => SelectEmoji(emoji)">@emoji</span>
         }
     </div>
 </div>
@@ -82,7 +105,7 @@ else
 
 @code {
     [Inject] public GameStateService GameState { get; set; } = default!;
-    
+
     [SupplyParameterFromQuery(Name = "game")]
     public string? GameName { get; set; } = "Partie";
 
@@ -96,8 +119,7 @@ else
 
     // Drag & Drop state
     private Guid? draggedId;
-    private Guid? dragTargetId;
-    private bool isMovingUp = false;
+    private int? dragTargetIndex;
 
     protected override void OnInitialized()
     {
@@ -151,7 +173,7 @@ else
     {
         GameState.RemovePlayerFromSetup(playerId);
     }
-    
+
     private void SetFirstPlayer(Guid playerId)
     {
         GameState.SetFirstPlayerManually(playerId);
@@ -160,38 +182,52 @@ else
     private void HandleDragStart(NPNG.Domain.Entities.SessionPlayer player)
     {
         draggedId = player.PlayerId;
+        dragTargetIndex = null;
     }
 
-    private void HandleDragEnter(NPNG.Domain.Entities.SessionPlayer targetPlayer)
+    private void HandlePlayerEnter(NPNG.Domain.Entities.SessionPlayer targetPlayer)
+    {
+        if (draggedId == null) return;
+        if (targetPlayer.PlayerId == draggedId) return;
+
+        var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
+        var sourceIndex = playersList.FindIndex(p => p.PlayerId == draggedId);
+        var targetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayer.PlayerId);
+
+        if (sourceIndex < targetIndex)
+        {
+            dragTargetIndex = targetIndex + 1;
+        }
+        else
+        {
+            dragTargetIndex = targetIndex;
+        }
+    }
+
+    private void HandleDropZoneEnter(int index)
+    {
+        if (draggedId == null) return;
+        dragTargetIndex = index;
+    }
+
+    private void HandleDrop(int dropIndex)
     {
         if (draggedId != null)
         {
-            var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
-            var sourceIndex = playersList.FindIndex(p => p.PlayerId == draggedId);
-            var targetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayer.PlayerId);
-
-            // Determine direction to know if we should show space above or below
-            isMovingUp = sourceIndex > targetIndex;
-
-            dragTargetId = targetPlayer.PlayerId;
+            GameState.ReorderPlayerByIndex(draggedId.Value, dropIndex);
         }
-    }    private void HandleDrop(Guid id)
-    {
-        if (draggedId != null && draggedId != id)
-        {
-            GameState.ReorderPlayer(draggedId.Value, id);
-        }
+        HandleDragEnd();
     }
 
     private void HandleDragEnd()
     {
         draggedId = null;
-        dragTargetId = null;
-        isMovingUp = false;
+        dragTargetIndex = null;
     }
 
     private void StartGame()
     {
         NavigationManager.NavigateTo("/session");
     }
+
 }
