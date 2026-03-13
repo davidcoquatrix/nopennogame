@@ -11,27 +11,27 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 ### Epic: Session Setup
 - [ ] **Story 1.1: Start a Game**
   - [x] UI/UX Integration (Game Catalog)
-  - [ ] Domain / State Management integration
-- [ ] **Story 1.2: Manage Players**
+  - [x] Domain / State Management integration
+- [x] **Story 1.2: Manage Players**
   - [x] UI/UX Integration (Add/Remove players, Emoji picker)
-  - [ ] Domain / State Management integration
-- [ ] **Story 1.3: Custom Basic Game**
+  - [x] Domain / State Management integration
+- [x] **Story 1.3: Custom Basic Game**
   - [x] UI/UX Integration (Custom rules form)
-  - [ ] Domain / State Management integration
+  - [x] Domain / State Management integration
 
 ### Epic: Score Entry
-- [ ] **Story 1.4: Quick Score Input**
+- [x] **Story 1.4: Quick Score Input**
   - [x] UI/UX Integration (Leaderboard & Quick increment buttons)
-  - [ ] Domain / State Management integration
+  - [x] Domain / State Management integration
 - [ ] **Story 1.5: Correct Mistakes (Time Travel)**
   - [x] UI/UX Integration (Round table, Edit mode)
   - [ ] Domain / State Management integration
 
 ### Epic: First Player Selection & Turn Order
-- [ ] **Story 1.6: Player Order & Starting Player**
-  - *As a Scorekeeper, I want to reorder players (e.g. via drag-and-drop) to match the seating order around the table, and manually pick who goes first, so that the app can automatically shift the "first player" badge to the next person each round.*
-  - [ ] UI/UX Integration (Drag & drop reordering, First player toggle)
-  - [ ] Domain / State Management integration
+- [x] **Story 1.6: Player Order & Starting Player**
+  - *As a Scorekeeper, I want to reorder players to match the seating order around the table, and manually pick who goes first, so that the app can automatically shift the "first player" badge to the next person each round.*
+  - [x] UI/UX Integration (Reordering, First player toggle)
+  - [x] Domain / State Management integration
 
 ---
 

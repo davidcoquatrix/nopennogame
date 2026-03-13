@@ -95,7 +95,7 @@
         selectedGame = game;
     }
 
-    private void ContinueToSetup()
+    private async Task ContinueToSetup()
     {
         if (selectedGame != null)
         {
@@ -106,7 +106,7 @@
             else
             {
                 var template = new NPNG.Domain.Entities.GameTemplate(selectedGame.Id, selectedGame.Name, selectedGame.ScoreType, selectedGame.Description);
-                GameState.InitializeNewSession(template);
+                await GameState.InitializeNewSessionAsync(template);
                 NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(selectedGame.Name)}");
             }
         }

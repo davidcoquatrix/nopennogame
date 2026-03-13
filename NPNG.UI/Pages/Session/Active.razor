@@ -1,98 +1,149 @@
 @page "/session"
+@using NPNG.Application.State
+@using NPNG.Domain.Services
+@using NPNG.Domain.Models
 @inject NavigationManager NavigationManager
+@inject GameStateService GameState
+@implements IDisposable
 
-<div class="app-header">
-    <div style="display:flex;align-items:center;gap:8px">
-        <button class="ico-btn" @onclick="GoBack">←</button>
-        <span style="font-size:1.05rem;font-weight:700">Skyjo</span>
+@if (GameState.CurrentSession == null)
+{
+    <div style="padding:20px;text-align:center;color:var(--sub)">Aucune session en cours...</div>
+}
+else
+{
+    <div class="app-header">
+        <div style="display:flex;align-items:center;gap:8px">
+            <button class="ico-btn" @onclick="GoBack">←</button>
+            <span style="font-size:1.05rem;font-weight:700">@GameState.CurrentSession.Template.Name</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(GameState.CurrentSession.CurrentRound.ToString("D2"))</span>
+            <button class="ico-btn" style="font-size:.75rem" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
+        </div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(currentRound.ToString("D2"))</span>
-        <button class="ico-btn" style="font-size:.75rem" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
-    </div>
-</div>
 
-<!-- LIVE LEADERBOARD -->
-<div class="section-label">Classement</div>
-<div class="leaderboard">
-    @foreach (var player in players.OrderBy(p => p.TotalScore))
-    {
-        var isLeader = player == players.OrderBy(p => p.TotalScore).First();
+    <!-- LIVE LEADERBOARD -->
+    <div class="section-label">Classement</div>
+    <div class="leaderboard">
+        @foreach (var pScore in leaderboard)
+        {
+            var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
+            var isLeader = pScore.Rank == 1;
+            
+            <div class="leaderboard-row @(isLeader ? "lead" : "")">
+                <span class="rank">@pScore.Rank</span>
+                <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">@player.Name</div>
+                    <div class="pips">
+                        @{
+                            var playerScores = GameState.CurrentSession.Scores.Where(s => s.PlayerId == player.PlayerId).OrderBy(s => s.Round);
+                            foreach (var score in playerScores)
+                            {
+                                <span class="pip">@(score.Value > 0 ? "+" : "")@score.Value</span>
+                            }
+                        }
+                    </div>
+                </div>
+                
+                @if (isLeader)
+                {
+                    <span class="db best">meilleur</span>
+                }
+                else
+                {
+                    var bestScore = leaderboard.First().TotalScore;
+                    var diff = pScore.TotalScore - bestScore;
+                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                }
+                
+                <div class="tot">@pScore.TotalScore</div>
+            </div>
+        }
+    </div>
+
+    <!-- ENTRY PANEL -->
+    <div class="section-label">Saisie — Tour @GameState.CurrentSession.CurrentRound</div>
+    <div class="entry-panel">
+        <div class="entry-panel-label">− 10 &nbsp;− 1 &nbsp;&nbsp;valeur&nbsp;&nbsp; + 1 &nbsp;+ 10</div>
         
-        <div class="leaderboard-row @(isLeader ? "lead" : "")">
-            <span class="rank">@(players.OrderBy(p => p.TotalScore).ToList().IndexOf(player) + 1)</span>
-            <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
-            <div class="leaderboard-info">
-                <div class="leaderboard-name">@player.Name</div>
-                <div class="pips">
-                    @foreach (var score in player.RoundScores)
+        @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+        {
+            <div class="entry-row">
+                <div class="entry-avatar">@player.Emoji</div>
+                <div style="display:flex;flex-direction:column;flex:1;">
+                    <span class="entry-name" style="flex:unset;">@player.Name</span>
+                    @if (player.IsFirstPlayer)
                     {
-                        <span class="pip">+@score</span>
+                        <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">1ER JOUEUR</span>
                     }
                 </div>
+                <div class="score-controls">
+                    <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -10)">−10</button>
+                    <button class="score-button sml" @onclick="() => AdjustScore(player.PlayerId, -1)">−1</button>
+                    <span class="score-value">@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)</span>
+                    <button class="score-button ssml" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
+                    <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 10)">+10</button>
+                </div>
             </div>
-            
-            @if (isLeader)
-            {
-                <span class="db best">meilleur</span>
-            }
-            else
-            {
-                <span class="db pos">+@(player.TotalScore - players.Min(p => p.TotalScore))</span>
-            }
-            
-            <div class="tot">@player.TotalScore</div>
-        </div>
-    }
-</div>
-
-<!-- ENTRY PANEL -->
-<div class="section-label">Saisie — Tour @currentRound</div>
-<div class="entry-panel">
-    <div class="entry-panel-label">− 10 &nbsp;− 1 &nbsp;&nbsp;valeur&nbsp;&nbsp; + 1 &nbsp;+ 10</div>
-    
-    @foreach (var player in players)
-    {
-        <div class="entry-row">
-            <div class="entry-avatar">@player.Emoji</div>
-            <span class="entry-name">@player.Name</span>
-            <div class="score-controls">
-                <button class="score-button lrg" @onclick="() => AdjustScore(player, -10)">−10</button>
-                <button class="score-button sml" @onclick="() => AdjustScore(player, -1)">−1</button>
-                <span class="score-value">@player.CurrentRoundInput</span>
-                <button class="score-button ssml" @onclick="() => AdjustScore(player, 1)">+1</button>
-                <button class="score-button slrg" @onclick="() => AdjustScore(player, 10)">+10</button>
-            </div>
-        </div>
-    }
-    
-    <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le tour @currentRound</button>
-</div>
+        }
+        
+        <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le tour @GameState.CurrentSession.CurrentRound</button>
+    </div>
+}
 
 @code {
-    public class SessionPlayer
+    private Dictionary<Guid, int> currentInputs = new();
+    private List<PlayerScore> leaderboard = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        public string Name { get; set; } = "";
-        public string Emoji { get; set; } = "";
-        public List<int> RoundScores { get; set; } = new();
-        public int CurrentRoundInput { get; set; } = 0;
+        GameState.OnStateChanged += HandleStateChanged;
         
-        public int TotalScore => RoundScores.Sum();
+        if (GameState.CurrentSession == null)
+        {
+            var loaded = await GameState.LoadLatestActiveSessionAsync();
+            if (!loaded)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+        }
+        
+        UpdateState();
     }
 
-    private int currentRound = 5;
-    private List<SessionPlayer> players = new();
-
-    protected override void OnInitialized()
+    public void Dispose()
     {
-        // Mock data based on the design
-        players = new List<SessionPlayer>
+        GameState.OnStateChanged -= HandleStateChanged;
+    }
+
+    private void HandleStateChanged()
+    {
+        UpdateState();
+        StateHasChanged();
+    }
+
+    private void UpdateState()
+    {
+        if (GameState.CurrentSession != null)
         {
-            new() { Name = "Dylan", Emoji = "🎮", RoundScores = new() { 8, 3, 7, 4 }, CurrentRoundInput = 0 },
-            new() { Name = "Bob", Emoji = "🌟", RoundScores = new() { 12, 5, 9, 5 }, CurrentRoundInput = 7 },
-            new() { Name = "Alice", Emoji = "🔥", RoundScores = new() { 11, 8, 14, 14 }, CurrentRoundInput = 11 },
-            new() { Name = "Carla", Emoji = "💜", RoundScores = new() { 15, 12, 16, 15 }, CurrentRoundInput = 9 }
-        };
+            var playerIds = GameState.CurrentSession.Players.Select(p => p.PlayerId);
+            leaderboard = ScoreCalculator.CalculateLeaderboard(
+                GameState.CurrentSession.Template.ScoreType,
+                playerIds,
+                GameState.CurrentSession.Scores).ToList();
+
+            // S'assurer que chaque joueur a une entrée initialisée pour le tour en cours
+            foreach (var p in GameState.CurrentSession.Players)
+            {
+                if (!currentInputs.ContainsKey(p.PlayerId))
+                {
+                    currentInputs[p.PlayerId] = 0;
+                }
+            }
+        }
     }
 
     private void GoBack()
@@ -105,18 +156,33 @@
         NavigationManager.NavigateTo("/session/history");
     }
 
-    private void AdjustScore(SessionPlayer player, int amount)
+    private void AdjustScore(Guid playerId, int amount)
     {
-        player.CurrentRoundInput += amount;
+        if (currentInputs.ContainsKey(playerId))
+        {
+            currentInputs[playerId] += amount;
+        }
     }
 
-    private void ValidateRound()
+    private async Task ValidateRound()
     {
-        foreach (var player in players)
+        if (GameState.CurrentSession == null) return;
+
+        int currentRound = GameState.CurrentSession.CurrentRound;
+
+        // On enregistre tous les scores saisis
+        foreach (var input in currentInputs)
         {
-            player.RoundScores.Add(player.CurrentRoundInput);
-            player.CurrentRoundInput = 0; // Reset for next round
+            await GameState.RecordScoreAsync(input.Key, currentRound, input.Value);
         }
-        currentRound++;
+
+        // On passe au tour suivant (ce qui mettra à jour le 1er joueur)
+        await GameState.AdvanceToNextRoundAsync();
+
+        // On remet les compteurs à 0 pour le prochain tour
+        foreach (var key in currentInputs.Keys.ToList())
+        {
+            currentInputs[key] = 0;
+        }
     }
 }

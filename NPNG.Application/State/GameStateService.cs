@@ -29,18 +29,37 @@ public class GameStateService
     public event Action? OnStateChanged;
 
     /// <summary>
+    /// Tente de recharger la dernière session active depuis le repository.
+    /// Retourne true si une session a été restaurée, false sinon.
+    /// </summary>
+    public async Task<bool> LoadLatestActiveSessionAsync()
+    {
+        var sessions = await _sessionRepository.GetAllSessionsAsync();
+        var latestActive = sessions.FirstOrDefault(s => s.Status == SessionStatus.Active);
+        
+        if (latestActive != null)
+        {
+            CurrentSession = latestActive;
+            NotifyStateChanged();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Étape 1 : Initialise une nouvelle partie (en attente de joueurs).
     /// </summary>
-    public void InitializeNewSession(GameTemplate template)
+    public async Task InitializeNewSessionAsync(GameTemplate template)
     {
         CurrentSession = Session.Create(template);
-        NotifyStateChanged();
+        await SaveStateAsync();
     }
 
     /// <summary>
     /// Étape 2 : Ajoute un joueur à la session en cours d'initialisation.
     /// </summary>
-    public void AddPlayerToSetup(string name, string emoji, string color)
+    public async Task AddPlayerToSetupAsync(string name, string emoji, string color)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
@@ -55,13 +74,13 @@ public class GameStateService
             Players = CurrentSession.Players.Add(newPlayer) 
         };
         
-        NotifyStateChanged();
+        await SaveStateAsync();
     }
 
     /// <summary>
     /// Retire un joueur lors du setup.
     /// </summary>
-    public void RemovePlayerFromSetup(Guid playerId)
+    public async Task RemovePlayerFromSetupAsync(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
@@ -84,14 +103,14 @@ public class GameStateService
                 .ToImmutableArray();
 
             CurrentSession = CurrentSession with { Players = reorderedPlayers };
-            NotifyStateChanged();
+            await SaveStateAsync();
         }
     }
 
     /// <summary>
     /// Force manuellement le statut de Premier Joueur.
     /// </summary>
-    public void SetFirstPlayerManually(Guid playerId)
+    public async Task SetFirstPlayerManuallyAsync(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
@@ -100,13 +119,13 @@ public class GameStateService
         ).ToImmutableArray();
 
         CurrentSession = CurrentSession with { Players = updatedPlayers };
-        NotifyStateChanged();
+        await SaveStateAsync();
     }
 
     /// <summary>
     /// Déplace un joueur vers le haut dans l'ordre d'affichage.
     /// </summary>
-    public void MovePlayerUp(Guid playerId)
+    public async Task MovePlayerUpAsync(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
@@ -124,14 +143,14 @@ public class GameStateService
                 .ToImmutableArray();
 
             CurrentSession = CurrentSession with { Players = updatedPlayers };
-            NotifyStateChanged();
+            await SaveStateAsync();
         }
     }
 
     /// <summary>
     /// Déplace un joueur vers le bas dans l'ordre d'affichage.
     /// </summary>
-    public void MovePlayerDown(Guid playerId)
+    public async Task MovePlayerDownAsync(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
@@ -149,7 +168,7 @@ public class GameStateService
                 .ToImmutableArray();
 
             CurrentSession = CurrentSession with { Players = updatedPlayers };
-            NotifyStateChanged();
+            await SaveStateAsync();
         }
     }
 

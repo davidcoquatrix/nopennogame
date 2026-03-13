@@ -13,7 +13,7 @@
 
 <div class="section-label">Ordre et 1er joueur</div>
 
-@if (GameState.CurrentSession?.Players.Length == 0)
+@if (GameState.CurrentSession == null || GameState.CurrentSession.Players.Length == 0)
 {
     <div
         style="text-align:center;padding:20px;color:var(--sub);font-size:.85rem;border:1px dashed var(--bdr-md);border-radius:12px;margin-bottom:12px">
@@ -22,9 +22,9 @@
 }
 else
 {
-<div class="player-list">
+    <div class="player-list">
         @{
-            var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
+            var playersList = GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
         }
         
         @for (int i = 0; i < playersList.Count; i++)
@@ -102,15 +102,20 @@ else
 
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         GameState.OnStateChanged += StateHasChanged;
 
-        // Populate with mock players ONLY if empty (to speed up testing, remove for prod later)
-        if (GameState.CurrentSession != null && GameState.CurrentSession.Players.Length == 0)
+        // Si la session est nulle (par exemple après un F5), on essaie de la recharger depuis le LocalStorage
+        if (GameState.CurrentSession == null)
         {
-            GameState.AddPlayerToSetup("Dylan", "🎮", "#7C9EBF");
-            GameState.AddPlayerToSetup("Bob", "🌟", "#4ADE80");
+            var loaded = await GameState.LoadLatestActiveSessionAsync();
+            if (!loaded)
+            {
+                // Si aucune session n'a pu être restaurée, on retourne à l'accueil
+                NavigationManager.NavigateTo("/");
+                return;
+            }
         }
     }
 
@@ -129,12 +134,12 @@ else
         selectedEmoji = emoji;
     }
 
-    private void AddPlayer()
+    private async Task AddPlayer()
     {
         if (string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8) return;
 
         var color = availableColors[CurrentPlayerCount % availableColors.Count];
-        GameState.AddPlayerToSetup(newPlayerName.Trim(), selectedEmoji, color);
+        await GameState.AddPlayerToSetupAsync(newPlayerName.Trim(), selectedEmoji, color);
 
         newPlayerName = "";
 
@@ -142,32 +147,32 @@ else
         selectedEmoji = availableEmojis[rnd.Next(availableEmojis.Count)];
     }
 
-    private void HandleKeyUp(KeyboardEventArgs e)
+    private async Task HandleKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            AddPlayer();
+            await AddPlayer();
         }
     }
 
-    private void RemovePlayer(Guid playerId)
+    private async Task RemovePlayer(Guid playerId)
     {
-        GameState.RemovePlayerFromSetup(playerId);
+        await GameState.RemovePlayerFromSetupAsync(playerId);
     }
 
-    private void SetFirstPlayer(Guid playerId)
+    private async Task SetFirstPlayer(Guid playerId)
     {
-        GameState.SetFirstPlayerManually(playerId);
+        await GameState.SetFirstPlayerManuallyAsync(playerId);
     }
 
-    private void MovePlayerUp(Guid playerId)
+    private async Task MovePlayerUp(Guid playerId)
     {
-        GameState.MovePlayerUp(playerId);
+        await GameState.MovePlayerUpAsync(playerId);
     }
 
-    private void MovePlayerDown(Guid playerId)
+    private async Task MovePlayerDown(Guid playerId)
     {
-        GameState.MovePlayerDown(playerId);
+        await GameState.MovePlayerDownAsync(playerId);
     }
 
     private void StartGame()

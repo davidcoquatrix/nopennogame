@@ -1,5 +1,6 @@
 @page "/custom-game"
 @inject NavigationManager NavigationManager
+@inject NPNG.Application.State.GameStateService GameState
 
 <div class="app-header">
     <div style="display:flex;align-items:center;gap:8px">
@@ -64,9 +65,13 @@
         incrementType = type;
     }
 
-    private void CreateGame()
+    private async Task CreateGame()
     {
         if (string.IsNullOrWhiteSpace(gameName)) return;
+        
+        var scoreType = winCondition == "high" ? NPNG.Domain.Enums.ScoreType.Cumulative : NPNG.Domain.Enums.ScoreType.CumulativeLower;
+        var template = new NPNG.Domain.Entities.GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé");
+        await GameState.InitializeNewSessionAsync(template);
         
         NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(gameName.Trim())}");
     }
