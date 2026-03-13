@@ -104,33 +104,23 @@ public class GameStateService
     }
 
     /// <summary>
-    /// Réordonne les joueurs par index exact (plus robuste pour le Drag & Drop).
+    /// Déplace un joueur vers le haut dans l'ordre d'affichage.
     /// </summary>
-    public void ReorderPlayerByIndex(Guid draggedPlayerId, int dropIndex)
+    public void MovePlayerUp(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
         var playersList = CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
-        var draggedPlayer = playersList.FirstOrDefault(p => p.PlayerId == draggedPlayerId);
+        var index = playersList.FindIndex(p => p.PlayerId == playerId);
 
-        if (draggedPlayer is not null)
+        if (index > 0)
         {
-            int originalSourceIndex = playersList.IndexOf(draggedPlayer);
-            playersList.Remove(draggedPlayer);
-
-            // On décale l'index de drop si l'élément qu'on retire était avant
-            if (dropIndex > originalSourceIndex)
-            {
-                dropIndex--;
-            }
-
-            if (dropIndex < 0) dropIndex = 0;
-            if (dropIndex > playersList.Count) dropIndex = playersList.Count;
-
-            playersList.Insert(dropIndex, draggedPlayer);
+            var player = playersList[index];
+            playersList.RemoveAt(index);
+            playersList.Insert(index - 1, player);
 
             var updatedPlayers = playersList
-                .Select((p, index) => p with { DisplayOrder = index })
+                .Select((p, i) => p with { DisplayOrder = i })
                 .ToImmutableArray();
 
             CurrentSession = CurrentSession with { Players = updatedPlayers };
@@ -139,56 +129,23 @@ public class GameStateService
     }
 
     /// <summary>
-    /// Réordonne les joueurs suite à un Drag & Drop.
-    /// Si targetPlayerId est null, on place le joueur à la fin.
+    /// Déplace un joueur vers le bas dans l'ordre d'affichage.
     /// </summary>
-    public void ReorderPlayer(Guid draggedPlayerId, Guid? targetPlayerId)
+    public void MovePlayerDown(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
         var playersList = CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
-        var draggedPlayer = playersList.FirstOrDefault(p => p.PlayerId == draggedPlayerId);
+        var index = playersList.FindIndex(p => p.PlayerId == playerId);
 
-        if (draggedPlayer is not null)
+        if (index >= 0 && index < playersList.Count - 1)
         {
-            // On mémorise si on déplace vers le bas pour ajuster l'index d'insertion
-            int originalSourceIndex = playersList.IndexOf(draggedPlayer);
-            int originalTargetIndex = targetPlayerId.HasValue 
-                ? playersList.FindIndex(p => p.PlayerId == targetPlayerId.Value) 
-                : -1;
-            
-            bool isMovingDown = originalSourceIndex < originalTargetIndex;
-
-            playersList.Remove(draggedPlayer);
-            
-            if (targetPlayerId.HasValue)
-            {
-                var newTargetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayerId.Value);
-                if (newTargetIndex >= 0)
-                {
-                    // Si on descend dans la liste, on insère après la cible (car l'UI montre l'indicateur en dessous)
-                    if (isMovingDown)
-                    {
-                        playersList.Insert(newTargetIndex + 1, draggedPlayer);
-                    }
-                    else
-                    {
-                        playersList.Insert(newTargetIndex, draggedPlayer);
-                    }
-                }
-                else
-                {
-                    playersList.Add(draggedPlayer);
-                }
-            }
-            else
-            {
-                // Drop at end
-                playersList.Add(draggedPlayer);
-            }
+            var player = playersList[index];
+            playersList.RemoveAt(index);
+            playersList.Insert(index + 1, player);
 
             var updatedPlayers = playersList
-                .Select((p, index) => p with { DisplayOrder = index })
+                .Select((p, i) => p with { DisplayOrder = i })
                 .ToImmutableArray();
 
             CurrentSession = CurrentSession with { Players = updatedPlayers };

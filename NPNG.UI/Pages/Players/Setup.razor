@@ -22,58 +22,43 @@
 }
 else
 {
-<div class="player-list" @ondragover:preventDefault="true">
+<div class="player-list">
         @{
             var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
         }
         
-        @for (int i = 0; i <= playersList.Count; i++)
+        @for (int i = 0; i < playersList.Count; i++)
         {
-            int currentIndex = i;
-            bool isActiveZone = dragTargetIndex == currentIndex;
+            var player = playersList[i];
+            var isFirstInList = i == 0;
+            var isLastInList = i == playersList.Count - 1;
 
-            <!-- Drop zone explicit (avant chaque élément et à la toute fin) -->
-            <div class="explicit-drop-zone @(isActiveZone ? "active" : "")"
-                 @ondragenter="() => HandleDropZoneEnter(currentIndex)"
-                 @ondrop="() => HandleDrop(currentIndex)"
-                 @ondrop:stopPropagation="true"
-                 @ondragover:preventDefault="true">
-            </div>
-
-            if (currentIndex < playersList.Count)
-            {
-                var player = playersList[currentIndex];
-                var isDragging = draggedId == player.PlayerId;
-
-                <div class="player-row @(isDragging ? "dragging" : "")"
-                     draggable="true"
-                     @ondragstart="() => HandleDragStart(player)"
-                     @ondragenter="() => HandlePlayerEnter(player)"
-                     @ondragend="HandleDragEnd"
-                     @key="player.PlayerId">
-                    <div style="color:var(--sub);cursor:grab;padding-right:4px;">☰</div>
-                    <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
-
-                    <div style="flex:1;display:flex;flex-direction:column">
-                        <span class="player-name">@player.Name</span>
-                        @if (player.IsFirstPlayer)
-                        {
-                            <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">PREMIER JOUEUR</span>
-                        }
-                    </div>
-
-                    @if (!player.IsFirstPlayer)
-                    {
-                        <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem"
-                                title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁
-                        </button>
-                    }
-
-                    <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">
-                        ✕
-                    </button>
+            <div class="player-row" @key="player.PlayerId">
+                <div class="player-order-controls">
+                    <button class="ico-btn move-btn" disabled="@isFirstInList" @onclick="() => MovePlayerUp(player.PlayerId)">▲</button>
+                    <button class="ico-btn move-btn" disabled="@isLastInList" @onclick="() => MovePlayerDown(player.PlayerId)">▼</button>
                 </div>
-            }
+                <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
+
+                <div style="flex:1;display:flex;flex-direction:column">
+                    <span class="player-name">@player.Name</span>
+                    @if (player.IsFirstPlayer)
+                    {
+                        <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">PREMIER JOUEUR</span>
+                    }
+                </div>
+
+                @if (!player.IsFirstPlayer)
+                {
+                    <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem"
+                            title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁
+                    </button>
+                }
+
+                <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">
+                    ✕
+                </button>
+            </div>
         }
     </div>
 }
@@ -116,10 +101,6 @@ else
     private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA", "#F472B6" };
 
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
-
-    // Drag & Drop state
-    private Guid? draggedId;
-    private int? dragTargetIndex;
 
     protected override void OnInitialized()
     {
@@ -179,50 +160,14 @@ else
         GameState.SetFirstPlayerManually(playerId);
     }
 
-    private void HandleDragStart(NPNG.Domain.Entities.SessionPlayer player)
+    private void MovePlayerUp(Guid playerId)
     {
-        draggedId = player.PlayerId;
-        dragTargetIndex = null;
+        GameState.MovePlayerUp(playerId);
     }
 
-    private void HandlePlayerEnter(NPNG.Domain.Entities.SessionPlayer targetPlayer)
+    private void MovePlayerDown(Guid playerId)
     {
-        if (draggedId == null) return;
-        if (targetPlayer.PlayerId == draggedId) return;
-
-        var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
-        var sourceIndex = playersList.FindIndex(p => p.PlayerId == draggedId);
-        var targetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayer.PlayerId);
-
-        if (sourceIndex < targetIndex)
-        {
-            dragTargetIndex = targetIndex + 1;
-        }
-        else
-        {
-            dragTargetIndex = targetIndex;
-        }
-    }
-
-    private void HandleDropZoneEnter(int index)
-    {
-        if (draggedId == null) return;
-        dragTargetIndex = index;
-    }
-
-    private void HandleDrop(int dropIndex)
-    {
-        if (draggedId != null)
-        {
-            GameState.ReorderPlayerByIndex(draggedId.Value, dropIndex);
-        }
-        HandleDragEnd();
-    }
-
-    private void HandleDragEnd()
-    {
-        draggedId = null;
-        dragTargetIndex = null;
+        GameState.MovePlayerDown(playerId);
     }
 
     private void StartGame()
