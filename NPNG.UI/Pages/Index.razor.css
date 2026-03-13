@@ -246,3 +246,118 @@
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* ─── MODAL OVERLAY ─── */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    background: var(--surf);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 320px;
+    border: 1px solid var(--bdr);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: slideUp 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.modal-title {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: var(--warn);
+}
+
+.modal-desc {
+    color: var(--sub);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.modal-danger-btn {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-secondary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    color: var(--txt);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--t), transform var(--t);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    background: var(--input);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ─── ACTIVE SESSION BANNER ─── */
+.active-session-banner {
+    background: var(--bg-accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.active-session-banner:hover {
+    transform: translateY(-2px);
+}
+
+.banner-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.banner-game-name {
+    color: var(--txt);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.banner-details {
+    color: var(--sub);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+.banner-icon {
+    font-size: 1.5rem;
+    color: var(--accent);
+}

@@ -11,13 +11,13 @@
 
 @if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
 {
-    <div style="background:var(--bg-accent-light); border:1px solid var(--accent); border-radius:12px; padding:16px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" @onclick="ResumeActiveSession">
+    <div class="active-session-banner" @onclick="ResumeActiveSession">
         <div>
-            <div style="color:var(--accent); font-weight:700; font-size:0.9rem; margin-bottom:4px;">Partie en cours</div>
-            <div style="color:var(--txt); font-weight:600; font-size:1.1rem;">@GameState.CurrentSession.Template.Name</div>
-            <div style="color:var(--sub); font-size:0.8rem; margin-top:2px;">Tour @GameState.CurrentSession.CurrentRound • @GameState.CurrentSession.Players.Length joueurs</div>
+            <div class="banner-title">Partie en cours</div>
+            <div class="banner-game-name">@GameState.CurrentSession.Template.Name</div>
+            <div class="banner-details">Tour @GameState.CurrentSession.CurrentRound • @GameState.CurrentSession.Players.Length joueurs</div>
         </div>
-        <div style="font-size:1.5rem; color:var(--accent);">▶</div>
+        <div class="banner-icon">▶</div>
     </div>
 }
 
@@ -77,9 +77,25 @@
     </div>
 }
 
-<button class="btn-cta" disabled="@(selectedGame == null)" @onclick="ContinueToSetup">
+<button class="btn-cta" disabled="@(selectedGame == null)" @onclick="TryContinueToSetup">
     Continuer &nbsp;→
 </button>
+
+@if (showOverwriteConfirm)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">⚠️ Partie en cours</h3>
+            <p class="modal-desc">
+                Lancer une nouvelle partie remplacera la partie de <strong>@GameState.CurrentSession?.Template.Name</strong> actuellement en cours.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cta modal-danger-btn" @onclick="ConfirmAndContinue">Écraser et continuer</button>
+                <button class="btn-secondary" @onclick="CancelOverwrite">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
@@ -97,6 +113,7 @@
     };
 
     private GameViewModel? selectedGame;
+    private bool showOverwriteConfirm = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,8 +152,26 @@
         }
     }
 
-    private async Task ContinueToSetup()
+    private void TryContinueToSetup()
     {
+        if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
+        {
+            showOverwriteConfirm = true;
+        }
+        else
+        {
+            _ = ConfirmAndContinue();
+        }
+    }
+
+    private void CancelOverwrite()
+    {
+        showOverwriteConfirm = false;
+    }
+
+    private async Task ConfirmAndContinue()
+    {
+        showOverwriteConfirm = false;
         if (selectedGame != null)
         {
             if (selectedGame.IsCustom)
