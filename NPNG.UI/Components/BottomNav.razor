@@ -42,7 +42,7 @@
 </div>
 
 @code {
-    private bool HasActiveSession => GameState.CurrentSession != null && GameState.CurrentSession.Status != SessionStatus.Abandoned;
+    private bool HasActiveSession => GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active;
 
     protected override async Task OnInitializedAsync()
     {
