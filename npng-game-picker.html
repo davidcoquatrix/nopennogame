@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPNG — Choix du jeu</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --accent:      #F5E642;
+  --accent-dim:  #C9BC1A;
+  --accent-text: #0D1B2A;
+  --r-card: 16px;
+  --r-btn:  12px;
+  --font-ui:   'Fredoka', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --t: 0.16s ease;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg:    #0D1B2A;
+  --surf:  #152233;
+  --raised:#1C2F44;
+  --input: #1E3249;
+  --txt:   #EEF2F7;
+  --sub:   #7A9AB5;
+  --bdr:   rgba(255,255,255,0.07);
+  --bdr-md:rgba(255,255,255,0.13);
+}}
+@media (prefers-color-scheme: light) { :root {
+  --bg:    #EFF3F8;
+  --surf:  #FFFFFF;
+  --raised:#E2EAF2;
+  --input: #F5F8FB;
+  --txt:   #0D1B2A;
+  --sub:   #527090;
+  --bdr:   rgba(0,0,0,0.07);
+  --bdr-md:rgba(0,0,0,0.13);
+}}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  font-family: var(--font-ui);
+  color: var(--txt);
+  /* ↓ retirer en Blazor, c'est juste pour la démo */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 16px;
+}
+
+/* ─── COMPOSANT RACINE ───────────────────────────────────────── */
+/*
+  En Blazor, ce sera simplement le contenu de ton .razor.
+  La largeur max + centrage peuvent être gérés par le layout parent.
+*/
+.game-picker {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ─── EN-TÊTE ────────────────────────────────────────────────── */
+.gp-header {
+  margin-bottom: 20px;
+}
+.gp-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 4px;
+}
+.gp-sub {
+  font-size: .82rem;
+  color: var(--sub);
+}
+
+/* ─── SECTION LABEL ──────────────────────────────────────────── */
+.section-lbl {
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--sub);
+  margin: 0 0 10px 2px;
+}
+
+/* ─── GRILLE CATALOGUE ───────────────────────────────────────── */
+.catalogue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+/* ─── TUILE JEU ──────────────────────────────────────────────── */
+.game-tile {
+  background: var(--surf);
+  border: 1.5px solid var(--bdr-md);
+  border-radius: var(--r-card);
+  padding: 14px 12px 12px;
+  cursor: pointer;
+  position: relative;
+  transition: transform var(--t), border-color var(--t), background var(--t);
+  outline: none;
+  text-align: left;
+  width: 100%;
+  color: var(--txt);
+  font-family: var(--font-ui);
+}
+.game-tile:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+.game-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.game-tile.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surf));
+}
+
+/* checkmark sélection */
+.tile-check {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 20px; height: 20px;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(.6);
+  transition: opacity var(--t), transform var(--t);
+  pointer-events: none;
+}
+.game-tile.selected .tile-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* point couleur (quand pas sélectionné) */
+.tile-dot {
+  position: absolute;
+  top: 13px; right: 12px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  transition: opacity var(--t);
+}
+.game-tile.selected .tile-dot { opacity: 0; }
+
+.tile-emoji {
+  font-size: 1.8rem;
+  display: block;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.tile-name {
+  font-size: .9rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+  color: var(--txt);
+}
+.tile-rule {
+  font-size: .62rem;
+  color: var(--sub);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+/* tuile "Custom" */
+.game-tile.custom {
+  border-style: dashed;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  grid-column: 1 / -1;        /* pleine largeur */
+  padding: 13px 16px;
+}
+.game-tile.custom .tile-emoji { margin-bottom: 0; font-size: 1.5rem; }
+.custom-text .tile-name  { font-size: .88rem; }
+.custom-text .tile-rule  { font-size: .68rem; }
+
+/* ─── PANNEAU INFO JEU SÉLECTIONNÉ ──────────────────────────── */
+.game-info {
+  background: var(--raised);
+  border: 1.5px solid var(--bdr-md);
+  border-radius: var(--r-card);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.gi-emoji { font-size: 2.2rem; flex-shrink: 0; }
+.gi-body  { flex: 1; min-width: 0; }
+.gi-name  { font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
+.gi-desc  { font-size: .75rem; color: var(--sub); line-height: 1.4; }
+.gi-badge {
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: rgba(245,230,66,.15);
+  color: var(--accent-dim);
+  border: 1px solid rgba(245,230,66,.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (prefers-color-scheme: light) {
+  .gi-badge { color: #8A7A00; background: rgba(245,230,66,.3); border-color: rgba(193,174,0,.3); }
+}
+
+/* ─── BOUTON CONTINUER ───────────────────────────────────────── */
+.btn-cta {
+  width: 100%;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-btn);
+  padding: 14px 16px;
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(245,230,66,.28);
+  transition: transform var(--t), box-shadow var(--t), opacity var(--t);
+}
+.btn-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(245,230,66,.42);
+}
+.btn-cta:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .catalogue { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 480px) {
+  .catalogue { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!--
+  ════════════════════════════════════════════════════════════════
+  COMPOSANT — GamePicker
+  ════════════════════════════════════════════════════════════════
+  En Blazor :
+    - Remplacer onclick="select(n)" par @onclick="() => SelectGame(game)"
+    - Remplacer le JS par du C# dans @code { }
+    - Les classes conditionnelles : class="game-tile @(selected==id ? "selected" : "")"
+    - Le panneau .game-info : @if (selectedGame != null) { ... }
+    - Le bouton CTA : disabled="@(selectedGame == null)"
+  ════════════════════════════════════════════════════════════════
+-->
+
+<div class="game-picker">
+
+  <div class="gp-header">
+    <h2 class="gp-title">Nouvelle partie</h2>
+    <p class="gp-sub">Choisis un jeu pour commencer</p>
+  </div>
+
+  <p class="section-lbl">Jeux disponibles</p>
+
+  <div class="catalogue" role="listbox" aria-label="Sélection du jeu">
+
+    <button class="game-tile selected" role="option" aria-selected="true" onclick="select(1)" id="tile-1">
+      <div class="tile-check" aria-hidden="true">✓</div>
+      <div class="tile-dot" style="background:#7C9EBF"></div>
+      <span class="tile-emoji">🃏</span>
+      <div class="tile-name">Skyjo</div>
+      <div class="tile-rule">Le + bas gagne</div>
+    </button>
+
+    <button class="game-tile" role="option" aria-selected="false" onclick="select(2)" id="tile-2">
+      <div class="tile-check" aria-hidden="true">✓</div>
+      <div class="tile-dot" style="background:#4ADE80"></div>
+      <span class="tile-emoji">🂡</span>
+      <div class="tile-name">Rami</div>
+      <div class="tile-rule">Le + haut gagne</div>
+    </button>
+
+    <button class="game-tile" role="option" aria-selected="false" onclick="select(3)" id="tile-3">
+      <div class="tile-check" aria-hidden="true">✓</div>
+      <div class="tile-dot" style="background:#F87171"></div>
+      <span class="tile-emoji">🎴</span>
+      <div class="tile-name">Uno</div>
+      <div class="tile-rule">Le + bas gagne</div>
+    </button>
+
+    <button class="game-tile" role="option" aria-selected="false" onclick="select(4)" id="tile-4">
+      <div class="tile-check" aria-hidden="true">✓</div>
+      <div class="tile-dot" style="background:var(--accent)"></div>
+      <span class="tile-emoji">🏛️</span>
+      <div class="tile-name">Accropolis</div>
+      <div class="tile-rule">Structuré</div>
+    </button>
+
+    <button class="game-tile custom" role="option" aria-selected="false" onclick="select(5)" id="tile-5">
+      <div class="tile-check" aria-hidden="true">✓</div>
+      <span class="tile-emoji">⚙️</span>
+      <div class="custom-text">
+        <div class="tile-name">Jeu personnalisé</div>
+        <div class="tile-rule">Définir tes propres règles</div>
+      </div>
+    </button>
+
+  </div>
+
+  <!-- Panneau info — affiché quand un jeu est sélectionné -->
+  <div class="game-info" id="game-info" role="status" aria-live="polite">
+    <span class="gi-emoji" id="gi-emoji">🃏</span>
+    <div class="gi-body">
+      <div class="gi-name" id="gi-name">Skyjo</div>
+      <div class="gi-desc" id="gi-desc">Cartes −2 à 12. Chaque joueur révèle ses cartes. Le total le plus bas gagne. La partie s'arrête dès qu'un joueur atteint 100 pts.</div>
+    </div>
+    <span class="gi-badge" id="gi-badge">Le + bas gagne</span>
+  </div>
+
+  <button class="btn-cta" id="btn-continue">
+    Continuer &nbsp;→
+  </button>
+
+</div>
+
+<script>
+  const games = {
+    1: { emoji:'🃏', name:'Skyjo',            desc:'Cartes −2 à 12. Chaque joueur révèle ses cartes. Le total le plus bas gagne. La partie s\'arrête dès qu\'un joueur atteint 100 pts.', badge:'Le + bas gagne' },
+    2: { emoji:'🂡', name:'Rami',             desc:'Défausser toutes ses cartes en formant des combinaisons. Le joueur avec le score cumulé le plus élevé en fin de manche gagne.',           badge:'Le + haut gagne' },
+    3: { emoji:'🎴', name:'Uno',              desc:'Se débarrasser de toutes ses cartes en premier. Les cartes restantes en main sont comptées comme points de pénalité.',                   badge:'Le + bas gagne' },
+    4: { emoji:'🏛️', name:'Accropolis',       desc:'Construire une cité en posant des tuiles par catégories. Chaque catégorie a son propre système de points. Le plus haut total gagne.',    badge:'Structuré' },
+    5: { emoji:'⚙️', name:'Jeu personnalisé', desc:'Définis ton propre nom de jeu, la règle de victoire (+ haut ou + bas) et les limites optionnelles de score ou de tours.',              badge:'Personnalisé' },
+  };
+
+  let current = 1;
+
+  function select(id) {
+    // deselect all
+    document.querySelectorAll('.game-tile').forEach(t => {
+      t.classList.remove('selected');
+      t.setAttribute('aria-selected', 'false');
+    });
+    // select clicked
+    const tile = document.getElementById('tile-' + id);
+    tile.classList.add('selected');
+    tile.setAttribute('aria-selected', 'true');
+    current = id;
+
+    // update info panel
+    const g = games[id];
+    document.getElementById('gi-emoji').textContent = g.emoji;
+    document.getElementById('gi-name').textContent  = g.name;
+    document.getElementById('gi-desc').textContent  = g.desc;
+    document.getElementById('gi-badge').textContent = g.badge;
+
+    // re-trigger animation
+    const info = document.getElementById('game-info');
+    info.style.animation = 'none';
+    info.offsetHeight; // reflow
+    info.style.animation = '';
+  }
+</script>
+
+</body>
+</html>

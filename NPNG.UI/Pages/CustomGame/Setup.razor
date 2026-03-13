@@ -1,0 +1,73 @@
+@page "/custom-game"
+@inject NavigationManager NavigationManager
+
+<div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+        <button class="ico-btn" @onclick="GoBack">←</button>
+        <span style="font-size:1.05rem;font-weight:700">Jeu personnalisé</span>
+    </div>
+</div>
+
+<div class="form-card">
+    <div class="field-lbl">Nom du jeu</div>
+    <input class="field-input" type="text" @bind="gameName" placeholder="Ex: Belote maison" />
+
+    <div class="field-lbl">Qui gagne ?</div>
+    <div class="toggle-row">
+        <button class="toggle-opt @(winCondition == "high" ? "on" : "")" @onclick='() => SetWinCondition("high")'>🏆 Le + haut</button>
+        <button class="toggle-opt @(winCondition == "low" ? "on" : "")" @onclick='() => SetWinCondition("low")'>🎯 Le + bas</button>
+    </div>
+
+    <div class="field-lbl">Limite de score (optionnel)</div>
+    <input class="field-input" type="text" @bind="scoreLimit" placeholder="ex : 500 pts → fin de partie" />
+
+    <div class="field-lbl">Limite de tours (optionnel)</div>
+    <input class="field-input" type="text" @bind="roundLimit" placeholder="ex : 10 tours" />
+</div>
+
+<div class="form-card">
+    <div class="field-lbl">Incrément par défaut des boutons</div>
+    <div class="toggle-row">
+        <button class="toggle-opt @(incrementType == "1_10" ? "on" : "")" @onclick='() => SetIncrement("1_10")'>± 1 / ± 10</button>
+        <button class="toggle-opt @(incrementType == "5_50" ? "on" : "")" @onclick='() => SetIncrement("5_50")'>± 5 / ± 50</button>
+        <button class="toggle-opt @(incrementType == "free" ? "on" : "")" @onclick='() => SetIncrement("free")'>Libre</button>
+    </div>
+</div>
+
+<div style="background:rgba(245,230,66,.07);border:1px solid rgba(245,230,66,.2);border-radius:11px;padding:9px 11px;margin-bottom:10px;font-size:.72rem;color:var(--sub)">
+    💡 Tu pourras modifier ces règles entre deux parties depuis les paramètres.
+</div>
+
+<button class="btn-cta" disabled="@string.IsNullOrWhiteSpace(gameName)" @onclick="CreateGame">
+    Créer ce jeu →
+</button>
+
+@code {
+    private string gameName = "Belote maison";
+    private string winCondition = "high";
+    private string scoreLimit = "";
+    private string roundLimit = "";
+    private string incrementType = "1_10";
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void SetWinCondition(string condition)
+    {
+        winCondition = condition;
+    }
+
+    private void SetIncrement(string type)
+    {
+        incrementType = type;
+    }
+
+    private void CreateGame()
+    {
+        if (string.IsNullOrWhiteSpace(gameName)) return;
+        
+        NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(gameName.Trim())}");
+    }
+}

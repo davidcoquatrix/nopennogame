@@ -1,0 +1,126 @@
+/* ─── SCOPED CSS FOR HISTORY (TIME TRAVEL) ─── */
+
+/* ─── TIME TRAVEL BANNER ─────────────────────────────────────── */
+.tt-banner {
+    background: var(--bg-warn-light);
+    border: 1px solid rgba(251, 146, 60, .3);
+    border-radius: 11px;
+    padding: 8px 11px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tt-banner .ico {
+    font-size: 1rem;
+}
+
+.tt-banner .txt {
+    font-size: .72rem;
+    color: var(--warn);
+    font-weight: 600;
+    flex: 1;
+}
+
+/* ─── TIME TRAVEL NAV ────────────────────────────────────────── */
+.tt-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px; /* for scrollbar */
+}
+
+.tt-btn {
+    flex: 1;
+    min-width: 45px;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: 9px;
+    padding: 8px;
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--sub);
+    transition: all var(--t);
+    white-space: nowrap;
+}
+
+.tt-btn.cur {
+    background: var(--bg-accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.tt-btn:hover:not(.cur) {
+    border-color: var(--bdr-md);
+    color: var(--txt);
+}
+
+/* ─── ROUND TABLE ────────────────────────────────────────────── */
+.round-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.round-table th {
+    font-size: .6rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--sub);
+    padding: 5px 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--bdr-md);
+    transition: color var(--t);
+}
+
+.round-table th:first-child {
+    text-align: left;
+    padding-left: 8px;
+}
+
+.round-table td {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    padding: 6px 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--bdr);
+    color: var(--txt);
+    transition: background var(--t);
+}
+
+.round-table td:first-child {
+    text-align: left;
+    padding-left: 8px;
+    font-family: var(--font-ui);
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.round-table tr:last-child td {
+    border-bottom: none;
+}
+
+.round-table .total-row td {
+    font-weight: 700;
+    color: var(--txt);
+    border-top: 1px solid var(--bdr-md);
+    font-size: .85rem;
+}
+
+/* Specific Edit Mode Styles */
+.editing-col-header {
+    color: var(--warn) !important;
+}
+
+.round-table.editing-mode .editable-col {
+    background: var(--bg-warn-light);
+}
+
+.round-table:not(.editing-mode) .editable-col {
+    background: rgba(255, 255, 255, 0.03); /* Subtle highlight for selected round */
+}

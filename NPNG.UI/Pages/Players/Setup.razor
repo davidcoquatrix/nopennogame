@@ -1,0 +1,106 @@
+@page "/players"
+@inject NavigationManager NavigationManager
+
+<div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+        <button class="ico-btn" @onclick="GoBack">←</button>
+        <span style="font-size:1.05rem;font-weight:700">@GameName — Joueurs</span>
+    </div>
+    <div style="font-size:.7rem;color:var(--sub);font-family:var(--font-mono)">@players.Count/8</div>
+</div>
+
+<div class="section-label">Joueurs ajoutés</div>
+<div class="player-list">
+    @foreach (var player in players)
+    {
+        <div class="player-row">
+            <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
+            <span class="player-name">@player.Name</span>
+            <div class="player-color-dot" style="background:@player.Color"></div>
+            <button class="btn-danger" @onclick="() => RemovePlayer(player)">✕</button>
+        </div>
+    }
+</div>
+
+<div class="section-label">Ajouter un joueur</div>
+<div class="add-player-row">
+    <input class="add-input" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+    <button class="add-btn" @onclick="AddPlayer" disabled="@string.IsNullOrWhiteSpace(newPlayerName)">＋ Ajouter</button>
+</div>
+
+<div style="background:var(--raised);border:1px solid var(--bdr-md);border-radius:11px;padding:9px 11px;margin-bottom:10px">
+    <div class="section-label" style="margin-top:0">Emojis disponibles</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+        @foreach (var emoji in availableEmojis)
+        {
+            <span style="font-size:1.4rem;cursor:pointer;opacity:@(selectedEmoji == emoji ? "1" : "0.5")" @onclick="() => SelectEmoji(emoji)">@emoji</span>
+        }
+    </div>
+</div>
+
+<button class="btn-cta" disabled="@(players.Count < 2)" @onclick="StartGame">
+    Lancer la partie ▶
+</button>
+
+@code {
+    [SupplyParameterFromQuery(Name = "game")]
+    public string? GameName { get; set; } = "Partie";
+
+    public record PlayerViewModel(string Name, string Emoji, string Color);
+
+    private List<PlayerViewModel> players = new();
+    private string newPlayerName = "";
+    private string selectedEmoji = "🎯";
+
+    private List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜" };
+    private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA" };
+
+    protected override void OnInitialized()
+    {
+        // Add some default players based on the mockup to avoid an empty state immediately
+        players.Add(new("Dylan", "🎮", "#7C9EBF"));
+        players.Add(new("Bob", "🌟", "#4ADE80"));
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void SelectEmoji(string emoji)
+    {
+        selectedEmoji = emoji;
+    }
+
+    private void AddPlayer()
+    {
+        if (string.IsNullOrWhiteSpace(newPlayerName)) return;
+
+        var color = availableColors[players.Count % availableColors.Count];
+        players.Add(new PlayerViewModel(newPlayerName.Trim(), selectedEmoji, color));
+        
+        newPlayerName = "";
+        
+        // Pick a new random emoji for the next player
+        var rnd = new Random();
+        selectedEmoji = availableEmojis[rnd.Next(availableEmojis.Count)];
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddPlayer();
+        }
+    }
+
+    private void RemovePlayer(PlayerViewModel player)
+    {
+        players.Remove(player);
+    }
+
+    private void StartGame()
+    {
+        NavigationManager.NavigateTo("/session");
+    }
+}

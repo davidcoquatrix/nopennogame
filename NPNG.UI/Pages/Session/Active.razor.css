@@ -1,0 +1,135 @@
+/* ─── SCOPED CSS FOR ACTIVE SESSION ─── */
+
+/* ─── SCORE ENTRY ────────────────────────────────────────────── */
+/* leaderboard */
+.leaderboard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.leaderboard-row {
+    background: var(--surf);
+    border: 1px solid var(--bdr);
+    border-radius: 13px;
+    padding: 8px 11px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--t);
+}
+
+.leaderboard-row.lead {
+    background: var(--raised);
+    border-color: var(--accent);
+}
+
+.leaderboard-row.lead::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+}
+
+.rank {
+    font-family: var(--font-mono);
+    font-size: .6rem;
+    color: var(--sub);
+    width: 11px;
+}
+
+.leaderboard-row.lead .rank {
+    color: var(--accent);
+}
+
+.av-m {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    border: 2px solid var(--bdr-md);
+    background: var(--raised);
+    flex-shrink: 0;
+}
+
+.leaderboard-row.lead .av-m {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(245, 230, 66, .25);
+}
+
+.leaderboard-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.leaderboard-name {
+    font-size: .84rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.pips {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+}
+
+.pip {
+    font-size: .53rem;
+    font-family: var(--font-mono);
+    color: var(--sub);
+    background: var(--raised);
+    border-radius: 3px;
+    padding: 1px 4px;
+}
+
+.pip.edit {
+    background: var(--bg-warn-light);
+    color: var(--warn);
+    cursor: pointer;
+}
+
+.db {
+    font-size: .57rem;
+    font-family: var(--font-mono);
+    border-radius: 5px;
+    padding: 1px 5px;
+    font-weight: 700;
+}
+
+.db.neg {
+    background: var(--bg-danger-light);
+    color: var(--danger);
+}
+
+.db.pos {
+    background: var(--bg-success-light);
+    color: var(--success);
+}
+
+.db.best {
+    background: var(--bg-accent-light);
+    color: var(--accent);
+}
+
+.tot {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--sub);
+    min-width: 44px;
+    text-align: right;
+}
+
+.leaderboard-row.lead .tot {
+    color: var(--accent);
+}

@@ -1,0 +1,72 @@
+/* ─── BOTTOM NAV SCOPED CSS ─── */
+.nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 7px 0 18px;
+    border-top: 1px solid var(--bdr);
+    background: var(--surf);
+    /* S'assurer que le nav reste toujours en bas */
+    margin-top: auto; 
+}
+
+.nav ::deep .ni {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    opacity: .4;
+    padding: 8px 10px 12px;
+    transition: opacity var(--t);
+    text-decoration: none !important;
+    color: var(--txt) !important;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+.nav ::deep .ni:focus, 
+.nav ::deep .ni:active, 
+.nav ::deep .ni:visited {
+    color: var(--txt) !important;
+    outline: none !important;
+    text-decoration: none !important;
+}
+
+.nav ::deep .ni.on {
+    opacity: 1;
+}
+
+.nav ::deep .ni .ico {
+    font-size: 1.2rem; /* Légèrement plus grand pour le mobile */
+}
+
+.nav ::deep .ni .lbl {
+    font-size: .54rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sub);
+}
+
+.nav ::deep .ni.on .lbl {
+    color: var(--accent) !important;
+}
+
+.nav ::deep .ndot {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--t);
+}
+
+.nav ::deep .ni.on .ndot {
+    opacity: 1;
+}

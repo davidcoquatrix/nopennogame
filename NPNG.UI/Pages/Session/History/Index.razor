@@ -1,0 +1,171 @@
+@page "/session/history"
+@inject NavigationManager NavigationManager
+
+<div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+        <button class="ico-btn" @onclick="GoBack">←</button>
+        <span style="font-size:1.05rem;font-weight:700">Skyjo — Historique</span>
+    </div>
+    <div style="font-size:.65rem;font-family:var(--font-mono);color:var(--warn)">⏪ Mode édition</div>
+</div>
+
+<!-- warning banner -->
+<div class="tt-banner">
+    <span class="ico">⚠️</span>
+    <span class="txt">Mode Time Travel — Modification d'un tour passé. Le classement sera recalculé.</span>
+</div>
+
+<!-- tour nav -->
+<div class="section-label">Sélectionner un tour</div>
+<div class="tt-nav">
+    @for (int i = 1; i <= currentRound; i++)
+    {
+        var roundNum = i;
+        var isCurrent = roundNum == editingRound;
+        var opacity = roundNum > currentRound - 2 && !isCurrent ? "0.3" : "1"; // Just simulating UI state
+        
+        <div class="tt-btn @(isCurrent ? "cur" : "")" style="opacity:@opacity" @onclick="() => SelectRound(roundNum)">
+            T.@roundNum
+        </div>
+    }
+</div>
+
+<!-- editable score grid -->
+<div class="section-label">Scores — Tour @editingRound</div>
+<div style="overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;">
+    <table class="round-table editing-mode">
+        <thead>
+            <tr>
+                <th>Joueur</th>
+                @for (int i = 1; i <= currentRound - 1; i++)
+                {
+                    if (i == editingRound)
+                    {
+                        <th class="editing-col-header">T.@i ✎</th>
+                    }
+                    else
+                    {
+                        <th>T.@i</th>
+                    }
+                }
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var player in players)
+            {
+                var isLeader = player == players.OrderBy(p => p.TotalScore).First();
+
+                <tr>
+                    <td>@player.Emoji @player.Name</td>
+                    @for (int i = 0; i < currentRound - 1; i++)
+                    {
+                        if (i + 1 == editingRound)
+                        {
+                            <td class="editable-col">
+                                <span class="score-value" style="color:var(--warn)">@tempScores[player.Name]</span>
+                            </td>
+                        }
+                        else
+                        {
+                            <td>@player.RoundScores[i]</td>
+                        }
+                    }
+                    <td style="font-weight:700;color:@(isLeader ? "var(--accent)" : "var(--txt)")">@player.TotalScore</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- correction in progress -->
+<div class="entry-panel">
+    <div class="entry-panel-label">Correction — Tour @editingRound</div>
+    
+    @foreach (var player in players)
+    {
+        <div class="entry-row">
+            <div class="entry-avatar">@player.Emoji</div>
+            <span class="entry-name">@player.Name</span>
+            <div class="score-controls">
+                <button class="score-button lrg" @onclick="() => AdjustEditScore(player.Name, -10)">−10</button>
+                <button class="score-button sml" @onclick="() => AdjustEditScore(player.Name, -1)">−1</button>
+                <span class="score-value" style="color:var(--warn)">@tempScores[player.Name]</span>
+                <button class="score-button ssml" @onclick="() => AdjustEditScore(player.Name, 1)">+1</button>
+                <button class="score-button slrg" @onclick="() => AdjustEditScore(player.Name, 10)">+10</button>
+            </div>
+        </div>
+    }
+    
+    <button class="validate-btn" style="margin-top:15px" @onclick="ConfirmEdit">✓ Confirmer le Tour @editingRound</button>
+</div>
+
+@code {
+    public class HistoryPlayer
+    {
+        public string Name { get; set; } = "";
+        public string Emoji { get; set; } = "";
+        public List<int> RoundScores { get; set; } = new();
+        public int TotalScore => RoundScores.Sum();
+    }
+
+    private List<HistoryPlayer> players = new();
+    private int currentRound = 5;
+    private int editingRound = 3;
+
+    private Dictionary<string, int> tempScores = new();
+
+    protected override void OnInitialized()
+    {
+        // Mock data based on the design
+        players = new List<HistoryPlayer>
+        {
+            new() { Name = "Dylan", Emoji = "🎮", RoundScores = new() { 8, 3, 7, 4 } },
+            new() { Name = "Bob", Emoji = "🌟", RoundScores = new() { 12, 5, 9, 5 } },
+            new() { Name = "Alice", Emoji = "🔥", RoundScores = new() { 11, 8, 14, 14 } },
+            new() { Name = "Carla", Emoji = "💜", RoundScores = new() { 15, 12, 16, 15 } }
+        };
+        
+        LoadRoundToEdit(editingRound);
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/session");
+    }
+
+    private void SelectRound(int round)
+    {
+        editingRound = round;
+        LoadRoundToEdit(round);
+    }
+
+    private void LoadRoundToEdit(int round)
+    {
+        tempScores.Clear();
+        foreach (var player in players)
+        {
+            tempScores[player.Name] = player.RoundScores[round - 1];
+        }
+    }
+
+    private void AdjustEditScore(string playerName, int amount)
+    {
+        if (tempScores.ContainsKey(playerName))
+        {
+            tempScores[playerName] += amount;
+        }
+    }
+
+    private void ConfirmEdit()
+    {
+        foreach (var player in players)
+        {
+            if (tempScores.ContainsKey(player.Name))
+            {
+                player.RoundScores[editingRound - 1] = tempScores[player.Name];
+            }
+        }
+        GoBack(); // Retour automatique à la session active après validation ? (Comportement typique)
+    }
+}

@@ -1,0 +1,111 @@
+@page "/"
+
+<!-- Header de la page d'accueil -->
+<div class="app-header">
+    <div class="logo">
+        <div class="logo-ico">🎲</div>
+        <span class="logo-txt">NPNG</span>
+    </div>
+</div>
+
+<div class="gp-header">
+    <h2 class="gp-title">Nouvelle partie</h2>
+    <p class="gp-sub">Choisis un jeu pour commencer</p>
+</div>
+
+<p class="section-lbl">Jeux disponibles</p>
+
+<div class="catalogue" role="listbox" aria-label="Sélection du jeu">
+    @foreach (var game in games)
+    {
+        var isSelected = selectedGame?.Id == game.Id;
+        
+        <button class="game-tile @(isSelected ? "selected" : "") @(game.IsCustom ? "custom" : "")" 
+                role="option" 
+                aria-selected="@isSelected.ToString().ToLower()" 
+                @onclick="() => SelectGame(game)">
+            
+            <div class="tile-check" aria-hidden="true">✓</div>
+            
+            @if (!game.IsCustom)
+            {
+                <div class="tile-dot" style="background:@game.Color"></div>
+            }
+
+            <span class="tile-emoji">@game.Emoji</span>
+
+            @if (game.IsCustom)
+            {
+                <div class="custom-text">
+                    <div class="tile-name">@game.Name</div>
+                    <div class="tile-rule">@game.Badge</div>
+                </div>
+            }
+            else
+            {
+                <div class="tile-name">@game.Name</div>
+                <div class="tile-rule">@game.Badge</div>
+            }
+        </button>
+    }
+</div>
+
+@if (selectedGame != null)
+{
+    <div class="game-info-wrapper">
+        <div class="game-info" role="status" aria-live="polite" @key="selectedGame.Id">
+            <span class="game-info-emoji">@selectedGame.Emoji</span>
+            <div class="game-info-body">
+                <div class="game-info-name">@selectedGame.Name</div>
+                <div class="game-info-desc">@selectedGame.Description</div>
+            </div>
+            <span class="game-info-badge">@selectedGame.Badge</span>
+        </div>
+    </div>
+}
+
+<button class="btn-cta" disabled="@(selectedGame == null)" @onclick="ContinueToSetup">
+    Continuer &nbsp;→
+</button>
+
+@code {
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+
+    public record GameViewModel(int Id, string Emoji, string Name, string Description, string Badge, string Color, bool IsCustom = false);
+
+    private List<GameViewModel> games = new()
+    {
+        new(1, "🃏", "Skyjo", "Cartes −2 à 12. Chaque joueur révèle ses cartes. Le total le plus bas gagne. La partie s'arrête dès qu'un joueur atteint 100 pts.", "Le + bas gagne", "#7C9EBF"),
+        new(2, "🂡", "Rami", "Défausser toutes ses cartes en formant des combinaisons. Le joueur avec le score cumulé le plus élevé en fin de manche gagne.", "Le + haut gagne", "#4ADE80"),
+        new(3, "🎴", "Uno", "Se débarrasser de toutes ses cartes en premier. Les cartes restantes en main sont comptées comme points de pénalité.", "Le + bas gagne", "#F87171"),
+        new(4, "🏛️", "Accropolis", "Construire une cité en posant des tuiles par catégories. Chaque catégorie a son propre système de points. Le plus haut total gagne.", "Structuré", "var(--accent)"),
+        new(5, "⚙️", "Jeu personnalisé", "Définis ton propre nom de jeu, la règle de victoire (+ haut ou + bas) et les limites optionnelles de score ou de tours.", "Personnalisé", "", true)
+    };
+
+    private GameViewModel? selectedGame;
+
+    protected override void OnInitialized()
+    {
+        selectedGame = games.First();
+    }
+
+    private void SelectGame(GameViewModel game)
+    {
+        selectedGame = game;
+    }
+
+    private void ContinueToSetup()
+    {
+        if (selectedGame != null)
+        {
+            if (selectedGame.IsCustom)
+            {
+                NavigationManager.NavigateTo($"/custom-game");
+            }
+            else
+            {
+                NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(selectedGame.Name)}");
+            }
+        }
+    }
+}

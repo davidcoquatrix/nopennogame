@@ -1,0 +1,248 @@
+/* ─── INDEX SCOPED CSS ─── */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.logo-ico {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    box-shadow: 0 3px 8px rgba(245, 230, 66, .3);
+}
+
+.logo-txt {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+
+/* ─── EN-TÊTE ────────────────────────────────────────────────── */
+.gp-header { margin-bottom: 20px; }
+.gp-title { font-size: 1.5rem; font-weight: 700; color: var(--txt); margin-bottom: 4px; }
+.gp-sub { font-size: .82rem; color: var(--sub); }
+
+/* ─── SECTION LABEL ──────────────────────────────────────────── */
+.section-lbl {
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--sub);
+    margin: 0 0 10px 2px;
+}
+
+/* ─── GRILLE CATALOGUE ───────────────────────────────────────── */
+.catalogue {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+/* ─── TUILE JEU ──────────────────────────────────────────────── */
+.game-tile {
+    background: var(--surf);
+    border: 1.5px solid var(--bdr-md);
+    border-radius: var(--r-card);
+    padding: 14px 12px 12px;
+    cursor: pointer;
+    position: relative;
+    transition: transform var(--t), border-color var(--t), background var(--t);
+    outline: none;
+    text-align: left;
+    width: 100%;
+    color: var(--txt);
+    font-family: var(--font-ui);
+}
+
+.game-tile:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+}
+
+.game-tile:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.game-tile.selected {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surf));
+}
+
+/* checkmark sélection */
+.tile-check {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .65rem;
+    font-weight: 700;
+    opacity: 0;
+    transform: scale(.6);
+    transition: opacity var(--t), transform var(--t);
+    pointer-events: none;
+}
+
+.game-tile.selected .tile-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* point couleur (quand pas sélectionné) */
+.tile-dot {
+    position: absolute;
+    top: 13px;
+    right: 12px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    transition: opacity var(--t);
+}
+
+.game-tile.selected .tile-dot {
+    opacity: 0;
+}
+
+.tile-emoji {
+    font-size: 1.8rem;
+    display: block;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.tile-name {
+    font-size: .9rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: var(--txt);
+}
+
+.tile-rule {
+    font-size: .62rem;
+    color: var(--sub);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+/* tuile "Custom" */
+.game-tile.custom {
+    border-style: dashed;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    grid-column: 1 / -1; /* pleine largeur */
+    padding: 13px 16px;
+}
+
+.game-tile.custom .tile-emoji {
+    margin-bottom: 0;
+    font-size: 1.5rem;
+}
+
+.custom-text .tile-name {
+    font-size: .88rem;
+}
+
+.custom-text .tile-rule {
+    font-size: .68rem;
+}
+
+/* ─── PANNEAU INFO JEU SÉLECTIONNÉ ──────────────────────────── */
+.game-info-wrapper {
+    margin-bottom: 20px;
+}
+
+.game-info {
+    background: var(--raised);
+    border: 1.5px solid var(--bdr-md);
+    border-radius: var(--r-card);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    animation: fadeIn .2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-info-emoji {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+}
+
+.game-info-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.game-info-name {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.game-info-desc {
+    font-size: .75rem;
+    color: var(--sub);
+    line-height: 1.4;
+}
+
+.game-info-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 99px;
+    background: rgba(245, 230, 66, .15);
+    color: var(--accent-dim);
+    border: 1px solid rgba(245, 230, 66, .25);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: light) {
+    .game-info-badge {
+        color: #8A7A00;
+        background: rgba(245, 230, 66, .3);
+        border-color: rgba(193, 174, 0, .3);
+    }
+}
+
+/* RESPONSIVE */
+@media (max-width: 400px) {
+    .catalogue {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 480px) {
+    .catalogue {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

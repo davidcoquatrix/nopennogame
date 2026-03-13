@@ -1,0 +1,122 @@
+@page "/session"
+@inject NavigationManager NavigationManager
+
+<div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+        <button class="ico-btn" @onclick="GoBack">←</button>
+        <span style="font-size:1.05rem;font-weight:700">Skyjo</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(currentRound.ToString("D2"))</span>
+        <button class="ico-btn" style="font-size:.75rem" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
+    </div>
+</div>
+
+<!-- LIVE LEADERBOARD -->
+<div class="section-label">Classement</div>
+<div class="leaderboard">
+    @foreach (var player in players.OrderBy(p => p.TotalScore))
+    {
+        var isLeader = player == players.OrderBy(p => p.TotalScore).First();
+        
+        <div class="leaderboard-row @(isLeader ? "lead" : "")">
+            <span class="rank">@(players.OrderBy(p => p.TotalScore).ToList().IndexOf(player) + 1)</span>
+            <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
+            <div class="leaderboard-info">
+                <div class="leaderboard-name">@player.Name</div>
+                <div class="pips">
+                    @foreach (var score in player.RoundScores)
+                    {
+                        <span class="pip">+@score</span>
+                    }
+                </div>
+            </div>
+            
+            @if (isLeader)
+            {
+                <span class="db best">meilleur</span>
+            }
+            else
+            {
+                <span class="db pos">+@(player.TotalScore - players.Min(p => p.TotalScore))</span>
+            }
+            
+            <div class="tot">@player.TotalScore</div>
+        </div>
+    }
+</div>
+
+<!-- ENTRY PANEL -->
+<div class="section-label">Saisie — Tour @currentRound</div>
+<div class="entry-panel">
+    <div class="entry-panel-label">− 10 &nbsp;− 1 &nbsp;&nbsp;valeur&nbsp;&nbsp; + 1 &nbsp;+ 10</div>
+    
+    @foreach (var player in players)
+    {
+        <div class="entry-row">
+            <div class="entry-avatar">@player.Emoji</div>
+            <span class="entry-name">@player.Name</span>
+            <div class="score-controls">
+                <button class="score-button lrg" @onclick="() => AdjustScore(player, -10)">−10</button>
+                <button class="score-button sml" @onclick="() => AdjustScore(player, -1)">−1</button>
+                <span class="score-value">@player.CurrentRoundInput</span>
+                <button class="score-button ssml" @onclick="() => AdjustScore(player, 1)">+1</button>
+                <button class="score-button slrg" @onclick="() => AdjustScore(player, 10)">+10</button>
+            </div>
+        </div>
+    }
+    
+    <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le tour @currentRound</button>
+</div>
+
+@code {
+    public class SessionPlayer
+    {
+        public string Name { get; set; } = "";
+        public string Emoji { get; set; } = "";
+        public List<int> RoundScores { get; set; } = new();
+        public int CurrentRoundInput { get; set; } = 0;
+        
+        public int TotalScore => RoundScores.Sum();
+    }
+
+    private int currentRound = 5;
+    private List<SessionPlayer> players = new();
+
+    protected override void OnInitialized()
+    {
+        // Mock data based on the design
+        players = new List<SessionPlayer>
+        {
+            new() { Name = "Dylan", Emoji = "🎮", RoundScores = new() { 8, 3, 7, 4 }, CurrentRoundInput = 0 },
+            new() { Name = "Bob", Emoji = "🌟", RoundScores = new() { 12, 5, 9, 5 }, CurrentRoundInput = 7 },
+            new() { Name = "Alice", Emoji = "🔥", RoundScores = new() { 11, 8, 14, 14 }, CurrentRoundInput = 11 },
+            new() { Name = "Carla", Emoji = "💜", RoundScores = new() { 15, 12, 16, 15 }, CurrentRoundInput = 9 }
+        };
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/players");
+    }
+
+    private void GoToTimeTravel()
+    {
+        NavigationManager.NavigateTo("/session/history");
+    }
+
+    private void AdjustScore(SessionPlayer player, int amount)
+    {
+        player.CurrentRoundInput += amount;
+    }
+
+    private void ValidateRound()
+    {
+        foreach (var player in players)
+        {
+            player.RoundScores.Add(player.CurrentRoundInput);
+            player.CurrentRoundInput = 0; // Reset for next round
+        }
+        currentRound++;
+    }
+}
