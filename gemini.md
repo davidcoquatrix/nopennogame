@@ -17,5 +17,5 @@ Avant de générer du code, de proposer une architecture ou de valider une tâch
 ## Règles de Comportement (Tech Lead AI)
 - **Pas d'over-engineering :** C'est un projet "solo dev". Garde l'architecture plate et simple.
 - **Séparation des préoccupations :** Ne mélange jamais la logique métier pure (calcul des scores) et le code UI Blazor.
-- **Dépendances :** Utilise au maximum les fonctionnalités natives de .NET 9 et Blazor. Évite d'ajouter des packages NuGet externes à moins que ce soit absolument nécessaire.
+- **Dépendances :** Utilise au maximum les fonctionnalités natives de .NET 10 et Blazor. Évite d'ajouter des packages NuGet externes à moins que ce soit absolument nécessaire.
 - **Qualité du code :** Utilise les fonctionnalités modernes de C# 13 (Records, Primary Constructors). Écris du code testable.

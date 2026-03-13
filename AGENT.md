@@ -18,8 +18,8 @@ Target: personal use / friend group. Solo developer project.
 
 | Layer | Choice |
 |---|---|
-| Framework | .NET 9 / Blazor WebAssembly (PWA) |
-| Language | C# |
+| Framework | .NET 10 / Blazor WebAssembly (PWA) |
+| Language | C# 13 |
 | Styling | CSS custom properties + scoped Blazor CSS |
 | Fonts | Fredoka (UI), Space Mono (scores/numbers) — Google Fonts |
 | Storage (V1) | localStorage / IndexedDB via Blazor JS interop |
@@ -48,8 +48,9 @@ Session
 
 SessionPlayer
   PlayerId: Guid
-  DisplayOrder: int
+  DisplayOrder: int             // Order around the table
   Color: string                 // hex color assigned to this player in this session
+  IsFirstPlayer: bool           // Track who starts the current round
 
 Player
   Id: Guid
@@ -77,12 +78,13 @@ enum SessionStatus
 ## Roadmap
 
 ### Phase 1 — MVP (current focus)
-- [ ] Blazor PWA project setup
+- [x] Blazor PWA project setup
 - [ ] GameTemplate model + 2 built-in games: Skyjo, Rami
-- [ ] Create session screen (pick game, add players)
-- [ ] Score entry screen (per round, +/- buttons)
-- [ ] Live leaderboard during game
-- [ ] LocalStorage persistence of active session
+- [x] Create session screen (pick game, add players)
+- [x] Score entry screen (per round, +/- buttons)
+- [x] Live leaderboard during game
+- [x] Session History / Time Travel UI
+- [ ] LocalStorage persistence of active session & State Management
 
 ### Phase 2 — History
 - [ ] IndexedDB persistence of finished sessions
