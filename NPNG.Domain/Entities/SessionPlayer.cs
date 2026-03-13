@@ -6,5 +6,8 @@ namespace NPNG.Domain.Entities;
 /// </summary>
 public record SessionPlayer(
     Guid PlayerId,
+    string Name,
+    string Emoji,
     int DisplayOrder,
-    string Color);
+    string Color,
+    bool IsFirstPlayer = false);

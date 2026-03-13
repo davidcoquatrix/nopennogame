@@ -17,6 +17,68 @@
     border-radius: 12px;
     padding: 8px 10px;
     animation: fadeIn .2s ease;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), margin 0.2s cubic-bezier(0.2, 0, 0, 1), padding 0.2s, height 0.2s, opacity 0.2s;
+    height: 52px; /* Fixed height to allow smooth collapsing */
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.player-row.dragging {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+.player-drop-zone {
+    transition: margin 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.player-drop-zone.drag-target-above {
+    margin-top: 58px; /* 52px height of a row + 6px gap */
+    position: relative;
+}
+
+.player-drop-zone.drag-target-above::before {
+    content: 'Déposer ici...';
+    position: absolute;
+    top: -58px; /* Offset by the exact same amount */
+    left: 0;
+    right: 0;
+    height: 52px; /* Same height as a normal row */
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    background: var(--bg-accent-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.player-drop-zone.drag-target-below {
+    margin-bottom: 58px;
+    position: relative;
+}
+
+.player-drop-zone.drag-target-below::after {
+    content: 'Déposer ici...';
+    position: absolute;
+    bottom: -58px;
+    left: 0;
+    right: 0;
+    height: 52px;
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    background: var(--bg-accent-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
 }
 
 @keyframes fadeIn {

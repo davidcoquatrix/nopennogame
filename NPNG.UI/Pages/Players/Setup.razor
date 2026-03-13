@@ -1,31 +1,69 @@
 @page "/players"
+@using NPNG.Application.State
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <div class="app-header">
     <div style="display:flex;align-items:center;gap:8px">
         <button class="ico-btn" @onclick="GoBack">←</button>
         <span style="font-size:1.05rem;font-weight:700">@GameName — Joueurs</span>
     </div>
-    <div style="font-size:.7rem;color:var(--sub);font-family:var(--font-mono)">@players.Count/8</div>
+    <div style="font-size:.7rem;color:var(--sub);font-family:var(--font-mono)">@CurrentPlayerCount/8</div>
 </div>
 
-<div class="section-label">Joueurs ajoutés</div>
-<div class="player-list">
-    @foreach (var player in players)
-    {
-        <div class="player-row">
-            <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
-            <span class="player-name">@player.Name</span>
-            <div class="player-color-dot" style="background:@player.Color"></div>
-            <button class="btn-danger" @onclick="() => RemovePlayer(player)">✕</button>
-        </div>
-    }
-</div>
+<div class="section-label">Ordre et 1er joueur</div>
+
+@if (GameState.CurrentSession?.Players.Length == 0)
+{
+    <div style="text-align:center;padding:20px;color:var(--sub);font-size:.85rem;border:1px dashed var(--bdr-md);border-radius:12px;margin-bottom:12px">
+        Ajoute des joueurs pour commencer !
+    </div>
+}
+else
+{
+    <div class="player-list">
+        @foreach (var player in GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder))
+        {
+            var isDragging = draggedId == player.PlayerId;
+            var isTargetAbove = dragTargetId == player.PlayerId && isMovingUp;
+            var isTargetBelow = dragTargetId == player.PlayerId && !isMovingUp;
+
+            <!-- Wrapper to handle drop events even if the inner row is hidden/collapsed during drag -->
+            <div @ondragenter="() => HandleDragEnter(player)"
+                 @ondragend="HandleDragEnd"
+                 @ondrop="() => HandleDrop(player.PlayerId)"
+                 @ondragover:preventDefault="true"
+                 class="player-drop-zone @(isTargetAbove ? "drag-target-above" : "") @(isTargetBelow ? "drag-target-below" : "")">
+
+                <div class="player-row @(isDragging ? "dragging" : "")"
+                     draggable="true"
+                     @ondragstart="() => HandleDragStart(player)">
+                    <div style="color:var(--sub);cursor:grab;padding-right:4px;">☰</div>
+                    <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
+
+                    <div style="flex:1;display:flex;flex-direction:column">
+                        <span class="player-name">@player.Name</span>
+                        @if (player.IsFirstPlayer)
+                        {
+                            <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">PREMIER JOUEUR</span>
+                        }
+                    </div>
+
+                    @if (!player.IsFirstPlayer)
+                    {
+                        <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem" title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁</button> 
+                    }
+
+                    <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">✕</button>
+                </div>
+            </div>
+        }
+    </div>}
 
 <div class="section-label">Ajouter un joueur</div>
 <div class="add-player-row">
     <input class="add-input" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput" @onkeyup="HandleKeyUp" />
-    <button class="add-btn" @onclick="AddPlayer" disabled="@string.IsNullOrWhiteSpace(newPlayerName)">＋ Ajouter</button>
+    <button class="add-btn" @onclick="AddPlayer" disabled="@(string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8)">＋ Ajouter</button>
 </div>
 
 <div style="background:var(--raised);border:1px solid var(--bdr-md);border-radius:11px;padding:9px 11px;margin-bottom:10px">
@@ -38,28 +76,44 @@
     </div>
 </div>
 
-<button class="btn-cta" disabled="@(players.Count < 2)" @onclick="StartGame">
+<button class="btn-cta" disabled="@(CurrentPlayerCount < 2)" @onclick="StartGame">
     Lancer la partie ▶
 </button>
 
 @code {
+    [Inject] public GameStateService GameState { get; set; } = default!;
+    
     [SupplyParameterFromQuery(Name = "game")]
     public string? GameName { get; set; } = "Partie";
 
-    public record PlayerViewModel(string Name, string Emoji, string Color);
-
-    private List<PlayerViewModel> players = new();
     private string newPlayerName = "";
     private string selectedEmoji = "🎯";
 
-    private List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜" };
-    private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA" };
+    private List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
+    private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA", "#F472B6" };
+
+    private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
+
+    // Drag & Drop state
+    private Guid? draggedId;
+    private Guid? dragTargetId;
+    private bool isMovingUp = false;
 
     protected override void OnInitialized()
     {
-        // Add some default players based on the mockup to avoid an empty state immediately
-        players.Add(new("Dylan", "🎮", "#7C9EBF"));
-        players.Add(new("Bob", "🌟", "#4ADE80"));
+        GameState.OnStateChanged += StateHasChanged;
+
+        // Populate with mock players ONLY if empty (to speed up testing, remove for prod later)
+        if (GameState.CurrentSession != null && GameState.CurrentSession.Players.Length == 0)
+        {
+            GameState.AddPlayerToSetup("Dylan", "🎮", "#7C9EBF");
+            GameState.AddPlayerToSetup("Bob", "🌟", "#4ADE80");
+        }
+    }
+
+    public void Dispose()
+    {
+        GameState.OnStateChanged -= StateHasChanged;
     }
 
     private void GoBack()
@@ -74,14 +128,13 @@
 
     private void AddPlayer()
     {
-        if (string.IsNullOrWhiteSpace(newPlayerName)) return;
+        if (string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8) return;
 
-        var color = availableColors[players.Count % availableColors.Count];
-        players.Add(new PlayerViewModel(newPlayerName.Trim(), selectedEmoji, color));
-        
+        var color = availableColors[CurrentPlayerCount % availableColors.Count];
+        GameState.AddPlayerToSetup(newPlayerName.Trim(), selectedEmoji, color);
+
         newPlayerName = "";
-        
-        // Pick a new random emoji for the next player
+
         var rnd = new Random();
         selectedEmoji = availableEmojis[rnd.Next(availableEmojis.Count)];
     }
@@ -94,9 +147,47 @@
         }
     }
 
-    private void RemovePlayer(PlayerViewModel player)
+    private void RemovePlayer(Guid playerId)
     {
-        players.Remove(player);
+        GameState.RemovePlayerFromSetup(playerId);
+    }
+    
+    private void SetFirstPlayer(Guid playerId)
+    {
+        GameState.SetFirstPlayerManually(playerId);
+    }
+
+    private void HandleDragStart(NPNG.Domain.Entities.SessionPlayer player)
+    {
+        draggedId = player.PlayerId;
+    }
+
+    private void HandleDragEnter(NPNG.Domain.Entities.SessionPlayer targetPlayer)
+    {
+        if (draggedId != null)
+        {
+            var playersList = GameState.CurrentSession!.Players.OrderBy(p => p.DisplayOrder).ToList();
+            var sourceIndex = playersList.FindIndex(p => p.PlayerId == draggedId);
+            var targetIndex = playersList.FindIndex(p => p.PlayerId == targetPlayer.PlayerId);
+
+            // Determine direction to know if we should show space above or below
+            isMovingUp = sourceIndex > targetIndex;
+
+            dragTargetId = targetPlayer.PlayerId;
+        }
+    }    private void HandleDrop(Guid id)
+    {
+        if (draggedId != null && draggedId != id)
+        {
+            GameState.ReorderPlayer(draggedId.Value, id);
+        }
+    }
+
+    private void HandleDragEnd()
+    {
+        draggedId = null;
+        dragTargetId = null;
+        isMovingUp = false;
     }
 
     private void StartGame()
