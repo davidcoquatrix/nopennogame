@@ -20,15 +20,24 @@
         <button class="toggle-opt @(winCondition == "low" ? "on" : "")" @onclick='() => SetWinCondition("low")'>🎯 Le + bas</button>
     </div>
 
-    <div class="field-lbl">Passage du 1er joueur</div>
-    <div class="toggle-row" style="flex-wrap: wrap;">
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Premier (Général)</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Dernier (Général)</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound)'>📈 + haut (Manche)</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound)'>📉 + bas (Manche)</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.None ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.None)'>❌ Ne change pas</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 16px;">
+        <div class="field-lbl" style="margin-bottom: 0; margin-top: 0;">Passage du 1er joueur</div>
+        <label class="toggle-switch">
+            <input type="checkbox" @bind="enableFirstPlayer" />
+            <span class="toggle-slider"></span>
+        </label>
     </div>
+
+    @if (enableFirstPlayer)
+    {
+        <div class="toggle-row" style="flex-wrap: wrap; margin-bottom: 16px;">
+            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
+            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Premier (Général)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Dernier (Général)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound)'>📈 + haut (Manche)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound)'>📉 + bas (Manche)</button>
+        </div>
+    }
 
     <div style="display:flex; gap:12px;">
         <div style="flex:1;">
@@ -71,6 +80,7 @@
     private string scoreLimit = "";
     private string roundLimit = "";
     private string incrementType = "1_10";
+    private bool enableFirstPlayer = true;
     private NPNG.Domain.Enums.FirstPlayerMechanic firstPlayerMechanic = NPNG.Domain.Enums.FirstPlayerMechanic.Sequential;
     private bool saveToCatalogue = false;
 
@@ -94,6 +104,12 @@
                     scoreLimit = baseGame.Rules.TargetScore?.ToString() ?? "";
                     roundLimit = baseGame.Rules.MaxRounds?.ToString() ?? "";
                     firstPlayerMechanic = baseGame.Rules.FirstPlayerMechanic;
+                    
+                    if (firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.None)
+                    {
+                        enableFirstPlayer = false;
+                        firstPlayerMechanic = NPNG.Domain.Enums.FirstPlayerMechanic.Sequential; // Keep a default selected if toggled on later
+                    }
                 }
             }
         }
@@ -127,7 +143,9 @@
         
         int? parsedScoreLimit = int.TryParse(scoreLimit, out var s) ? s : null;
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
-        var rules = new NPNG.Domain.Entities.GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit, FirstPlayerMechanic: firstPlayerMechanic);
+        
+        var finalMechanic = enableFirstPlayer ? firstPlayerMechanic : NPNG.Domain.Enums.FirstPlayerMechanic.None;
+        var rules = new NPNG.Domain.Entities.GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit, FirstPlayerMechanic: finalMechanic);
 
         var template = new NPNG.Domain.Entities.GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
         
