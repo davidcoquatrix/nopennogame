@@ -205,6 +205,12 @@ else
         await GameState.AddPlayerToSetupAsync(fav.Name, fav.DefaultEmoji, color);
     }
 
+    private async Task RemoveFavoritePlayer(Guid favId)
+    {
+        await ProfileRepository.RemoveFavoritePlayerAsync(favId);
+        await LoadFavoritesAsync();
+    }
+
     public void Dispose()
     {
         GameState.OnStateChanged -= StateHasChanged;
