@@ -56,7 +56,7 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
             color, 
             template.ScoreType, 
             template.Rules, 
-            false);
+            true); // Set to true for custom games
 
         // Update if exists, else add
         var existingIndex = customGames.FindIndex(g => g.Id == template.Id);
