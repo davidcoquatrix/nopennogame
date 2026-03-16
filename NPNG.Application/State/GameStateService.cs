@@ -328,6 +328,22 @@ public class GameStateService
     }
 
     /// <summary>
+    /// Abandonne la partie en cours.
+    /// </summary>
+    public async Task AbandonSessionAsync()
+    {
+        if (CurrentSession is null || CurrentSession.Status == SessionStatus.Abandoned) return;
+        
+        CurrentSession = CurrentSession with 
+        { 
+            Status = SessionStatus.Abandoned,
+            EndedAt = DateTime.UtcNow
+        };
+        
+        await SaveStateAsync();
+    }
+
+    /// <summary>
     /// Sauvegarde la session en cours via le repository et notifie l'UI du changement.
     /// </summary>
     private async Task SaveStateAsync()

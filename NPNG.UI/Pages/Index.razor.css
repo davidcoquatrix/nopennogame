@@ -338,6 +338,35 @@
     transform: translateY(-2px);
 }
 
+.banner-content {
+    flex: 1;
+}
+
+.banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-abandon {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--t);
+    color: var(--sub);
+}
+
+.btn-abandon:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
 .banner-title {
     color: var(--accent);
     font-weight: 700;

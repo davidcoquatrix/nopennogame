@@ -18,6 +18,11 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 - [x] **Story 1.3: Custom Basic Game**
   - [x] UI/UX Integration (Custom rules form)
   - [x] Domain / State Management integration
+- [x] **Story 1.7: Abandon Active Session**
+  - *As a User, I want to be able to abandon an active session directly from the Home page's "active session" card, so that I can easily start a new game without resuming the old one.*
+  - *Must include a confirmation dialog to prevent accidental deletion.*
+- [x] **Story 1.8: Game Catalogue Extraction**
+  - *As a Developer, I want to extract the hardcoded game list from the UI (Blazor) and move it to a dedicated Application Service, so that the Clean Architecture is respected.*
 
 ### Epic: Score Entry
 - [x] **Story 1.4: Quick Score Input**
@@ -41,6 +46,9 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 ### Epic: First Player Selection (Enhanced)
 - **Story 2.4: Random First Player Animation**
   - *As a group of Players, we want the app to randomly pick the first player with a fun visual animation (e.g., spinning wheel or flashing avatars) to resolve the "who goes first" debate fairly and entertainingly.*
+- **Story 2.5: Dynamic First Player Selection (Score-based)**
+  - *As a Scorekeeper, I want to configure the first player selection rule (e.g., highest/lowest score of the previous round) so that the app automatically assigns the first player badge each round.*
+  - *Tie-breaker rules: 1. Compare total global score. 2. If still tied, use the current table order.*
 
 ### Epic: Game Rules & Templates
 - **Story 2.1: View Rules**

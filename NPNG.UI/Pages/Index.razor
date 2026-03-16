@@ -11,12 +11,17 @@
 @if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
 {
     <div class="active-session-banner" @onclick="ResumeActiveSession">
-        <div>
+        <div class="banner-content">
             <div class="banner-title">Partie en cours</div>
             <div class="banner-game-name">@GameState.CurrentSession.Template.Name</div>
             <div class="banner-details">Tour @GameState.CurrentSession.CurrentRound • @GameState.CurrentSession.Players.Length joueurs</div>
         </div>
-        <div class="banner-icon">▶</div>
+        <div class="banner-actions">
+            <button class="btn-abandon" @onclick="TryAbandonSession" @onclick:stopPropagation="true" aria-label="Abandonner la partie">
+                🗑️
+            </button>
+            <div class="banner-icon">▶</div>
+        </div>
     </div>
 }
 
@@ -96,23 +101,31 @@
     </div>
 }
 
+@if (showAbandonConfirm)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">🗑️ Abandonner la partie</h3>
+            <p class="modal-desc">
+                Êtes-vous sûr de vouloir abandonner la partie de <strong>@GameState.CurrentSession?.Template.Name</strong> ?
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cta modal-danger-btn" @onclick="ConfirmAbandon">Oui, abandonner</button>
+                <button class="btn-secondary" @onclick="CancelAbandon">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
     [Inject] public NPNG.Application.State.GameStateService GameState { get; set; } = default!;
+    [Inject] public NPNG.Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
 
-    public record GameViewModel(Guid Id, string Emoji, string Name, string Description, string Badge, string Color, NPNG.Domain.Enums.ScoreType ScoreType, NPNG.Domain.Entities.GameRules? Rules = null, bool IsCustom = false);
-
-    private List<GameViewModel> games = new()
-    {
-        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "🃏", "Skyjo", "Cartes −2 à 12. Chaque joueur révèle ses cartes. Le total le plus bas gagne. La partie s'arrête dès qu'un joueur atteint 100 pts.", "Le + bas gagne", "#7C9EBF", NPNG.Domain.Enums.ScoreType.CumulativeLower, new NPNG.Domain.Entities.GameRules(TargetScore: 100)),
-        new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "🂡", "Rami", "Défausser toutes ses cartes en formant des combinaisons. Le joueur avec le score cumulé le plus élevé en fin de manche gagne.", "Le + haut gagne", "#4ADE80", NPNG.Domain.Enums.ScoreType.Cumulative),
-        new(Guid.Parse("33333333-3333-3333-3333-333333333333"), "🎴", "Uno", "Se débarrasser de toutes ses cartes en premier. Les cartes restantes en main sont comptées comme points de pénalité.", "Le + bas gagne", "#F87171", NPNG.Domain.Enums.ScoreType.CumulativeLower),
-        new(Guid.Parse("44444444-4444-4444-4444-444444444444"), "🏛️", "Accropolis", "Construire une cité en posant des tuiles par catégories. Chaque catégorie a son propre système de points. Le plus haut total gagne.", "Structuré", "var(--accent)", NPNG.Domain.Enums.ScoreType.Structured),
-        new(Guid.Parse("55555555-5555-5555-5555-555555555555"), "⚙️", "Jeu personnalisé", "Définis ton propre nom de jeu, la règle de victoire (+ haut ou + bas) et les limites optionnelles de score ou de tours.", "Personnalisé", "", NPNG.Domain.Enums.ScoreType.Cumulative, null, true)
-    };
-
-    private GameViewModel? selectedGame;
+    private IEnumerable<NPNG.Application.Models.GameCatalogueItem> games = Array.Empty<NPNG.Application.Models.GameCatalogueItem>();
+    private NPNG.Application.Models.GameCatalogueItem? selectedGame;
     private bool showOverwriteConfirm = false;
+    private bool showAbandonConfirm = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,7 +136,8 @@
             await GameState.LoadLatestActiveSessionAsync();
         }
         
-        selectedGame = games.First();
+        games = await GameCatalogue.GetAvailableGamesAsync();
+        selectedGame = games.FirstOrDefault();
     }
     
     public void Dispose()
@@ -131,9 +145,25 @@
         GameState.OnStateChanged -= StateHasChanged;
     }
 
-    private void SelectGame(GameViewModel game)
+    private void SelectGame(NPNG.Application.Models.GameCatalogueItem game)
     {
         selectedGame = game;
+    }
+    
+    private void TryAbandonSession()
+    {
+        showAbandonConfirm = true;
+    }
+
+    private void CancelAbandon()
+    {
+        showAbandonConfirm = false;
+    }
+
+    private async Task ConfirmAbandon()
+    {
+        showAbandonConfirm = false;
+        await GameState.AbandonSessionAsync();
     }
     
     private void ResumeActiveSession()
@@ -179,7 +209,7 @@
             }
             else
             {
-                var template = new NPNG.Domain.Entities.GameTemplate(selectedGame.Id, selectedGame.Name, selectedGame.ScoreType, selectedGame.Description, selectedGame.Rules);
+                var template = selectedGame.ToGameTemplate();
                 await GameState.InitializeNewSessionAsync(template);
                 NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(selectedGame.Name)}");
             }
