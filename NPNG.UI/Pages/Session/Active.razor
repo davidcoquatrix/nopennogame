@@ -171,7 +171,7 @@ else
             var loaded = await GameState.LoadLatestActiveSessionAsync();
             if (!loaded)
             {
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("");
                 return;
             }
         }
@@ -213,17 +213,17 @@ else
 
     private void GoBack()
     {
-        NavigationManager.NavigateTo("/players");
+        NavigationManager.NavigateTo("players");
     }
 
     private void GoToHome()
     {
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("");
     }
 
     private void GoToTimeTravel()
     {
-        NavigationManager.NavigateTo("/session/history");
+        NavigationManager.NavigateTo("session/history");
     }
 
     private void AdjustScore(Guid playerId, int amount)

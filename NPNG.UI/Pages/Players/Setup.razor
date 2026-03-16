@@ -155,7 +155,7 @@ else
             if (!loaded)
             {
                 // Si aucune session n'a pu être restaurée, on retourne à l'accueil
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("");
                 return;
             }
         }
@@ -222,7 +222,7 @@ else
 
     private void GoBack()
     {
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("");
     }
 
     private void SelectEmoji(string emoji)
@@ -293,7 +293,7 @@ else
     private async Task StartGame()
     {
         await GameState.StartSessionAsync();
-        NavigationManager.NavigateTo("/session");
+        NavigationManager.NavigateTo("session");
     }
 
 }

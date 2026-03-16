@@ -209,11 +209,11 @@
         {
             if (GameState.CurrentSession.CurrentRound == 1 && !GameState.CurrentSession.Scores.Any())
             {
-                NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(GameState.CurrentSession.Template.Name)}");
+                NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(GameState.CurrentSession.Template.Name)}");
             }
             else
             {
-                NavigationManager.NavigateTo("/session");
+                NavigationManager.NavigateTo("session");
             }
         }
     }
@@ -258,7 +258,7 @@
         {
             if (selectedGame.IsCustom && selectedGame.Id == Guid.Parse("55555555-5555-5555-5555-555555555555"))
             {
-                NavigationManager.NavigateTo($"/custom-game");
+                NavigationManager.NavigateTo($"custom-game");
             }
             else if (isEditingGame)
             {
@@ -268,7 +268,7 @@
             {
                 var template = selectedGame.ToGameTemplate();
                 await GameState.InitializeNewSessionAsync(template);
-                NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(selectedGame.Name)}");
+                NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(selectedGame.Name)}");
             }
         }
         isEditingGame = false;
@@ -278,6 +278,6 @@
     {
         // En passant l'ID dans l'URL, la page custom-game pourra charger le template du jeu de base
         // et préremplir le formulaire.
-        NavigationManager.NavigateTo($"/custom-game?baseGameId={game.Id}");
+        NavigationManager.NavigateTo($"custom-game?baseGameId={game.Id}");
     }
 }
