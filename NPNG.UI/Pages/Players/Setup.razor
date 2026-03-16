@@ -97,6 +97,7 @@ else
 
 @code {
     [Inject] public GameStateService GameState { get; set; } = default!;
+    [Inject] public NPNG.Application.Interfaces.IPlayerProfileRepository ProfileRepository { get; set; } = default!;
 
     [SupplyParameterFromQuery(Name = "game")]
     public string? GameName { get; set; } = "Partie";
@@ -124,6 +125,19 @@ else
                 return;
             }
         }
+
+        if (CurrentPlayerCount == 0)
+        {
+            var profile = await ProfileRepository.GetDefaultProfileAsync();
+            if (profile != null)
+            {
+                newPlayerName = profile.Name;
+                if (availableEmojis.Contains(profile.DefaultEmoji))
+                {
+                    selectedEmoji = profile.DefaultEmoji;
+                }
+            }
+        }
     }
 
     public void Dispose()
@@ -145,8 +159,15 @@ else
     {
         if (string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8) return;
 
+        var isFirstPlayerAdded = CurrentPlayerCount == 0;
         var color = availableColors[CurrentPlayerCount % availableColors.Count];
+        
         await GameState.AddPlayerToSetupAsync(newPlayerName.Trim(), selectedEmoji, color);
+
+        if (isFirstPlayerAdded)
+        {
+            await ProfileRepository.SaveDefaultProfileAsync(new NPNG.Domain.Entities.Player(Guid.NewGuid(), newPlayerName.Trim(), selectedEmoji));
+        }
 
         newPlayerName = "";
 
@@ -182,8 +203,9 @@ else
         await GameState.MovePlayerDownAsync(playerId);
     }
 
-    private void StartGame()
+    private async Task StartGame()
     {
+        await GameState.StartSessionAsync();
         NavigationManager.NavigateTo("/session");
     }
 

@@ -35,7 +35,7 @@ public class GameStateService
     public async Task<bool> LoadLatestActiveSessionAsync()
     {
         var sessions = await _sessionRepository.GetAllSessionsAsync();
-        var latestActive = sessions.FirstOrDefault(s => s.Status == SessionStatus.Active);
+        var latestActive = sessions.FirstOrDefault(s => s.Status == SessionStatus.Active || s.Status == SessionStatus.Setup);
         
         if (latestActive != null)
         {
@@ -61,7 +61,7 @@ public class GameStateService
     /// </summary>
     public async Task AddPlayerToSetupAsync(string name, string emoji, string color)
     {
-        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+        if (CurrentSession is null || (CurrentSession.Status != SessionStatus.Active && CurrentSession.Status != SessionStatus.Setup)) return;
 
         var displayOrder = CurrentSession.Players.Length;
         // First player is the first one added by default
@@ -82,7 +82,7 @@ public class GameStateService
     /// </summary>
     public async Task RemovePlayerFromSetupAsync(Guid playerId)
     {
-        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+        if (CurrentSession is null || (CurrentSession.Status != SessionStatus.Active && CurrentSession.Status != SessionStatus.Setup)) return;
 
         var playerToRemove = CurrentSession.Players.FirstOrDefault(p => p.PlayerId == playerId);
         if (playerToRemove is not null)
@@ -112,7 +112,7 @@ public class GameStateService
     /// </summary>
     public async Task SetFirstPlayerManuallyAsync(Guid playerId)
     {
-        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+        if (CurrentSession is null || (CurrentSession.Status != SessionStatus.Active && CurrentSession.Status != SessionStatus.Setup)) return;
 
         var updatedPlayers = CurrentSession.Players.Select(p => 
             p with { IsFirstPlayer = p.PlayerId == playerId }
@@ -127,7 +127,7 @@ public class GameStateService
     /// </summary>
     public async Task MovePlayerUpAsync(Guid playerId)
     {
-        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+        if (CurrentSession is null || (CurrentSession.Status != SessionStatus.Active && CurrentSession.Status != SessionStatus.Setup)) return;
 
         var playersList = CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
         var index = playersList.FindIndex(p => p.PlayerId == playerId);
@@ -152,7 +152,7 @@ public class GameStateService
     /// </summary>
     public async Task MovePlayerDownAsync(Guid playerId)
     {
-        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+        if (CurrentSession is null || (CurrentSession.Status != SessionStatus.Active && CurrentSession.Status != SessionStatus.Setup)) return;
 
         var playersList = CurrentSession.Players.OrderBy(p => p.DisplayOrder).ToList();
         var index = playersList.FindIndex(p => p.PlayerId == playerId);
@@ -170,6 +170,19 @@ public class GameStateService
             CurrentSession = CurrentSession with { Players = updatedPlayers };
             await SaveStateAsync();
         }
+    }
+
+    public async Task StartSessionAsync()
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+        
+        CurrentSession = CurrentSession with 
+        { 
+            Status = SessionStatus.Active,
+            StartedAt = DateTime.UtcNow // Reset start time to when actually started
+        };
+        
+        await SaveStateAsync();
     }
 
     /// <summary>

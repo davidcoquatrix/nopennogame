@@ -23,6 +23,11 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *Must include a confirmation dialog to prevent accidental deletion.*
 - [x] **Story 1.8: Game Catalogue Extraction**
   - *As a Developer, I want to extract the hardcoded game list from the UI (Blazor) and move it to a dedicated Application Service, so that the Clean Architecture is respected.*
+- [x] **Story 1.9: Auto-completion of Scorekeeper profile**
+  - *As a Scorekeeper, I want the app to remember my name and favorite emoji from one game to the next in local storage, so I don't have to re-enter them every time I start a new game.*
+- [ ] **Story 1.10: Favorite Players**
+  - *As a Scorekeeper, I want to be able to save my friends as "Favorite Players" (Name + Emoji) so that I can quickly add them to a new session with a single tap, without re-typing their names.*
+  - *These favorites should be displayed below the "Add player" form or "Start Game" button during session setup.*
 
 ### Epic: Score Entry
 - [x] **Story 1.4: Quick Score Input**
@@ -55,6 +60,9 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *As a Scorekeeper or Player, I want to read a quick summary of the rules for the selected game directly in the app to resolve disputes quickly.*
 - **Story 2.2: Advanced Custom Rules**
   - *As a Scorekeeper, I want to set score limits (e.g., "Game ends at 500 points") or round limits when creating a custom game.*
+- **Story 2.6: Save and Manage Custom Games**
+  - *As a Scorekeeper, I want to be able to save a custom game configuration (name, scoring type, rules) so that I can reuse it later without having to recreate it.*
+  - *As a Scorekeeper, I want to be able to delete a custom game that I previously saved, so that I can keep my game catalog clean.*
 
 ### Epic: Social (Offline)
 - **Story 2.3: Share Score Sheet**

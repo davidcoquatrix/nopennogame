@@ -5,6 +5,7 @@ namespace NPNG.Domain.Enums;
 /// </summary>
 public enum SessionStatus
 {
+    Setup,
     Active,
     Finished,
     Abandoned
