@@ -315,9 +315,19 @@ body::before {
     font-family: var(--font-mono);
     font-size: .9rem;
     font-weight: 700;
-    min-width: 30px;
+    width: 45px;
     text-align: center;
     color: var(--txt);
+    background: transparent;
+    border: 1px solid var(--bdr-md);
+    border-radius: 4px;
+    padding: 2px 0;
+}
+
+.score-value:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg-accent-subtle);
 }
 
 .validate-btn {

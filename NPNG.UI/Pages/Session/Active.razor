@@ -147,7 +147,10 @@ else
                 <div class="score-controls">
                     <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -10)">−10</button>
                     <button class="score-button sml" @onclick="() => AdjustScore(player.PlayerId, -1)">−1</button>
-                    <span class="score-value">@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)</span>
+                    <input type="number" class="score-value" 
+                           value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)" 
+                           @onchange="@(e => OnScoreInputChange(player.PlayerId, e))"
+                           inputmode="numeric" />
                     <button class="score-button ssml" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 10)">+10</button>
                 </div>
@@ -231,6 +234,14 @@ else
         if (currentInputs.ContainsKey(playerId))
         {
             currentInputs[playerId] += amount;
+        }
+    }
+
+    private void OnScoreInputChange(Guid playerId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var result))
+        {
+            currentInputs[playerId] = result;
         }
     }
 
