@@ -105,11 +105,16 @@ else
         @foreach (var fav in favoritePlayers)
         {
             var isAlreadyInGame = GameState.CurrentSession?.Players.Any(p => p.Name.Equals(fav.Name, StringComparison.OrdinalIgnoreCase)) == true;
-            <button class="fav-chip" 
-                    @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= 8)">
-                <span class="fav-emoji">@fav.DefaultEmoji</span>
-                <span>@fav.Name</span>
-            </button>
+            <div style="position: relative; display: inline-block;">
+                <button class="fav-chip" 
+                        @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= 8)">
+                    <span class="fav-emoji">@fav.DefaultEmoji</span>
+                    <span>@fav.Name</span>
+                </button>
+                <button class="ico-btn" style="position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; font-size: 0.6rem; background: var(--bg-danger-light); color: var(--danger); border: none; z-index: 2;"
+                        @onclick="() => RemoveFavoritePlayer(fav.Id)"
+                        title="Supprimer des favoris">✕</button>
+            </div>
         }
     </div>
 }
