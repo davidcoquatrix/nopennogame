@@ -1,0 +1,54 @@
+name: Deploy Blazor WASM to GitHub Pages
+
+on:
+  push:
+    branches: [ main ] # Se déclenche à chaque push sur la branche main
+
+# Autorise ce workflow à écrire dans les GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# S'assure qu'un seul déploiement tourne à la fois
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration de .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x' # Utilise .NET 10 comme défini dans ton projet
+
+      - name: Publication de l'application
+        run: dotnet publish NPNG.UI/NPNG.UI.csproj -c Release -o release --nologo
+        
+      - name: Modification de la base-href (Correction pour GitHub Pages)
+        # GitHub Pages sert ton site dans un sous-dossier (ex: github.com/user/repo/)
+        # Il faut donc remplacer la balise <base href="/" /> dans le index.html par <base href="/<NOM_DU_REPO>/" />
+        run: |
+          sed -i 's/<base href="\/" \/>/<base href="\/NPNG\/" \/>/g' release/wwwroot/index.html
+
+      - name: Ajout du fichier .nojekyll
+        # Indispensable pour que GitHub Pages ne masque pas les dossiers commençant par _ (comme _framework)
+        run: touch release/wwwroot/.nojekyll
+
+      - name: Upload de l'artefact pour GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'release/wwwroot'
+
+      - name: Déploiement sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
