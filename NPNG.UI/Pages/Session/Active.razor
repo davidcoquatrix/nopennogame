@@ -131,11 +131,15 @@ else
         
         @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
         {
+            var hasMechanic = GameState.CurrentSession.Template?.Rules != null 
+                              && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None;
+            var showFirstPlayerBadge = player.IsFirstPlayer && hasMechanic;
+
             <div class="entry-row">
                 <div class="entry-avatar">@player.Emoji</div>
                 <div style="display:flex;flex-direction:column;flex:1;">
                     <span class="entry-name" style="flex:unset;">@player.Name</span>
-                    @if (player.IsFirstPlayer && GameState.CurrentSession?.Template.Rules?.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None)
+                    @if (showFirstPlayerBadge)
                     {
                         <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">1ER JOUEUR</span>
                     }
