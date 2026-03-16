@@ -74,6 +74,31 @@
     private NPNG.Domain.Enums.FirstPlayerMechanic firstPlayerMechanic = NPNG.Domain.Enums.FirstPlayerMechanic.Sequential;
     private bool saveToCatalogue = false;
 
+    [SupplyParameterFromQuery(Name = "baseGameId")]
+    public Guid? BaseGameId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (BaseGameId.HasValue)
+        {
+            var games = await GameCatalogueService.GetAvailableGamesAsync();
+            var baseGame = games.FirstOrDefault(g => g.Id == BaseGameId.Value);
+
+            if (baseGame != null)
+            {
+                gameName = baseGame.Name;
+                winCondition = baseGame.ScoreType == NPNG.Domain.Enums.ScoreType.CumulativeLower ? "low" : "high";
+                
+                if (baseGame.Rules != null)
+                {
+                    scoreLimit = baseGame.Rules.TargetScore?.ToString() ?? "";
+                    roundLimit = baseGame.Rules.MaxRounds?.ToString() ?? "";
+                    firstPlayerMechanic = baseGame.Rules.FirstPlayerMechanic;
+                }
+            }
+        }
+    }
+
     private void GoBack()
     {
         NavigationManager.NavigateTo("/");

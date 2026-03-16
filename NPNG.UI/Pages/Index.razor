@@ -44,11 +44,6 @@
             
             <div class="tile-check" aria-hidden="true">✓</div>
             
-            @if (!game.IsCustom)
-            {
-                <div class="tile-dot" style="background:@game.Color"></div>
-            }
-
             <span class="tile-emoji">@game.Emoji</span>
 
             @if (game.IsCustom)
@@ -68,6 +63,9 @@
             {
                 <div class="tile-name">@game.Name</div>
                 <div class="tile-rule">@game.Badge</div>
+                <div class="edit-game-btn" @onclick="() => EditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
+                    ⚙️
+                </div>
             }
         </button>
     }
@@ -234,5 +232,12 @@
                 NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(selectedGame.Name)}");
             }
         }
+    }
+
+    private void EditBaseGame(NPNG.Application.Models.GameCatalogueItem game)
+    {
+        // En passant l'ID dans l'URL, la page custom-game pourra charger le template du jeu de base
+        // et préremplir le formulaire.
+        NavigationManager.NavigateTo($"/custom-game?baseGameId={game.Id}");
     }
 }

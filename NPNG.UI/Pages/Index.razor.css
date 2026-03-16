@@ -103,21 +103,6 @@
     transform: scale(1);
 }
 
-/* point couleur (quand pas sélectionné) */
-.tile-dot {
-    position: absolute;
-    top: 13px;
-    right: 12px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    transition: opacity var(--t);
-}
-
-.game-tile.selected .tile-dot {
-    opacity: 0;
-}
-
 .tile-emoji {
     font-size: 1.8rem;
     display: block;
@@ -187,6 +172,29 @@
     background: var(--danger);
     color: #fff;
     transform: scale(1.1);
+}
+
+/* bouton edit jeu de base */
+.edit-game-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: transform var(--t);
+    z-index: 10;
+    opacity: 0.6;
+}
+
+.edit-game-btn:hover {
+    opacity: 1;
+    transform: rotate(45deg);
 }
 
 /* ─── PANNEAU INFO JEU SÉLECTIONNÉ ──────────────────────────── */
