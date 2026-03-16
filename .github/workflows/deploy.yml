@@ -40,6 +40,11 @@ jobs:
         run: |
           sed -i "s/<base href=\"\/\" \/>/<base href=\"\/${{ github.event.repository.name }}\/\" \/>/g" release/wwwroot/index.html
 
+      - name: Ajout du fichier 404.html (Correction de routage SPA)
+        # GitHub Pages renvoie une erreur 404 si on actualise la page sur une route Blazor (ex: /players).
+        # Copier index.html en 404.html permet à Blazor de démarrer et de gérer la route correctement.
+        run: cp release/wwwroot/index.html release/wwwroot/404.html
+
       - name: Ajout du fichier .nojekyll
         # Indispensable pour que GitHub Pages ne masque pas les dossiers commençant par _ (comme _framework)
         run: touch release/wwwroot/.nojekyll
