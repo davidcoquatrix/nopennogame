@@ -122,3 +122,40 @@
 .add-btn:not(:disabled):hover {
     transform: translateY(-1px);
 }
+
+/* ─── FAVORITES ──────────────────────────────────────── */
+.fav-chip {
+    background: var(--input);
+    border: 1px solid var(--bdr-md);
+    border-radius: 99px;
+    padding: 6px 12px 6px 8px;
+    color: var(--txt);
+    font-family: var(--font-ui);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background var(--t), transform var(--t), border-color var(--t);
+}
+
+.fav-chip:hover:not(:disabled) {
+    background: var(--raised);
+    border-color: var(--sub);
+    transform: translateY(-1px);
+}
+
+.fav-chip:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+}
+
+.fav-emoji {
+    font-size: 1.1rem;
+}
+
+.star-active {
+    color: var(--warn);
+}

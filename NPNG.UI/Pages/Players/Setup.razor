@@ -63,7 +63,7 @@ else
                     </button>
                 }
                 
-                <button class="ico-btn" style="width:28px;height:28px;font-size:.8rem; margin-left:4px;"
+                <button class="ico-btn @(IsFavorite(player.Name) ? "star-active" : "")" style="width:28px;height:28px;font-size:.8rem; margin-left:4px;"
                         title="@(IsFavorite(player.Name) ? "Retirer des favoris" : "Ajouter aux favoris")"
                         @onclick="() => ToggleFavorite(player.Name, player.Emoji)">
                     @(IsFavorite(player.Name) ? "★" : "☆")
@@ -105,9 +105,10 @@ else
         @foreach (var fav in favoritePlayers)
         {
             var isAlreadyInGame = GameState.CurrentSession?.Players.Any(p => p.Name.Equals(fav.Name, StringComparison.OrdinalIgnoreCase)) == true;
-            <button class="btn-secondary" style="padding:6px 12px;font-size:.85rem; @(isAlreadyInGame ? "opacity:0.5;pointer-events:none" : "")" 
+            <button class="fav-chip" 
                     @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= 8)">
-                @fav.DefaultEmoji @fav.Name
+                <span class="fav-emoji">@fav.DefaultEmoji</span>
+                <span>@fav.Name</span>
             </button>
         }
     </div>
