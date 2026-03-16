@@ -54,13 +54,13 @@
                 <div class="delete-game-btn" @onclick="() => TryDeleteCustomGame(game.Id)" @onclick:stopPropagation="true" title="Supprimer ce jeu">
                     ✕
                 </div>
-                <div class="edit-game-btn" @onclick="() => EditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
+                <div class="edit-game-btn" @onclick="() => TryEditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
                     ⚙️
                 </div>
             }
             else
             {
-                <div class="edit-game-btn" @onclick="() => EditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
+                <div class="edit-game-btn" @onclick="() => TryEditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
                     ⚙️
                 </div>
             }
@@ -148,6 +148,8 @@
     private bool showOverwriteConfirm = false;
     private bool showAbandonConfirm = false;
 
+    private bool isEditingGame = false;
+
     protected override async Task OnInitializedAsync()
     {
         GameState.OnStateChanged += StateHasChanged;
@@ -218,6 +220,7 @@
 
     private async Task TryContinueToSetup()
     {
+        isEditingGame = false;
         if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
         {
             showOverwriteConfirm = true;
@@ -230,6 +233,7 @@
 
     private void TryEditBaseGame(NPNG.Application.Models.GameCatalogueItem game)
     {
+        isEditingGame = true;
         if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
         {
             selectedGame = game; // Make sure the right game is selected for context if we overwrite
@@ -244,6 +248,7 @@
     private void CancelOverwrite()
     {
         showOverwriteConfirm = false;
+        isEditingGame = false;
     }
 
     private async Task ConfirmAndContinue()
@@ -255,8 +260,7 @@
             {
                 NavigationManager.NavigateTo($"/custom-game");
             }
-            // Check if we were trying to edit a base game based on the click
-            else if (GameState.CurrentSession?.Status == SessionStatus.Active && !selectedGame.IsCustom)
+            else if (isEditingGame)
             {
                EditBaseGame(selectedGame);
             }
@@ -267,6 +271,7 @@
                 NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(selectedGame.Name)}");
             }
         }
+        isEditingGame = false;
     }
 
     private void EditBaseGame(NPNG.Application.Models.GameCatalogueItem game)
