@@ -97,7 +97,9 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
 
         try
         {
-            return JsonSerializer.Deserialize<List<GameCatalogueItem>>(json, _jsonOptions) ?? new List<GameCatalogueItem>();
+            var items = JsonSerializer.Deserialize<List<GameCatalogueItem>>(json, _jsonOptions) ?? new List<GameCatalogueItem>();
+            // Forcer IsCustom = true pour les parties sauvegardées avant la correction du bug
+            return items.Select(i => i with { IsCustom = true });
         }
         catch (JsonException)
         {

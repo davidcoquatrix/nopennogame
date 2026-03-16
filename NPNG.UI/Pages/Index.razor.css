@@ -151,17 +151,18 @@
 /* bouton suppression jeu custom */
 .delete-game-btn {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 24px;
-    height: 24px;
+    top: 50%;
+    right: 16px;
+    margin-top: -14px;
+    width: 28px;
+    height: 28px;
     background: var(--bg-danger-subtle);
     color: var(--danger);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .7rem;
+    font-size: .8rem;
     font-weight: 700;
     cursor: pointer;
     transition: transform var(--t), background var(--t), color var(--t);
@@ -171,21 +172,21 @@
 .delete-game-btn:hover {
     background: var(--danger);
     color: #fff;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 /* bouton edit jeu de base */
 .edit-game-btn {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 24px;
-    height: 24px;
+    bottom: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .9rem;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: transform var(--t);
     z-index: 10;
