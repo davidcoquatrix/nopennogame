@@ -156,6 +156,6 @@
         
         await GameState.InitializeNewSessionAsync(template);
         
-        NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(gameName.Trim())}");
+        NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(gameName.Trim())}");
     }
 }
