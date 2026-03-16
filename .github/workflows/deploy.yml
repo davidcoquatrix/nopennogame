@@ -36,9 +36,9 @@ jobs:
         
       - name: Modification de la base-href (Correction pour GitHub Pages)
         # GitHub Pages sert ton site dans un sous-dossier (ex: github.com/user/repo/)
-        # Il faut donc remplacer la balise <base href="/" /> dans le index.html par <base href="/<NOM_DU_REPO>/" />
+        # On utilise une variable d'environnement GitHub pour injecter le vrai nom du dépôt (ex: nopennogame)
         run: |
-          sed -i 's/<base href="\/" \/>/<base href="\/NPNG\/" \/>/g' release/wwwroot/index.html
+          sed -i "s/<base href=\"\/\" \/>/<base href=\"\/${{ github.event.repository.name }}\/\" \/>/g" release/wwwroot/index.html
 
       - name: Ajout du fichier .nojekyll
         # Indispensable pour que GitHub Pages ne masque pas les dossiers commençant par _ (comme _framework)
