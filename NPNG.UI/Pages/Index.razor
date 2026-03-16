@@ -216,7 +216,7 @@
         }
     }
 
-    private void TryContinueToSetup()
+    private async Task TryContinueToSetup()
     {
         if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
         {
@@ -225,6 +225,19 @@
         else
         {
             _ = ConfirmAndContinue();
+        }
+    }
+
+    private void TryEditBaseGame(NPNG.Application.Models.GameCatalogueItem game)
+    {
+        if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
+        {
+            selectedGame = game; // Make sure the right game is selected for context if we overwrite
+            showOverwriteConfirm = true; // Show the same modal for editing base games
+        }
+        else
+        {
+            EditBaseGame(game);
         }
     }
 
@@ -241,6 +254,11 @@
             if (selectedGame.IsCustom && selectedGame.Id == Guid.Parse("55555555-5555-5555-5555-555555555555"))
             {
                 NavigationManager.NavigateTo($"/custom-game");
+            }
+            // Check if we were trying to edit a base game based on the click
+            else if (GameState.CurrentSession?.Status == SessionStatus.Active && !selectedGame.IsCustom)
+            {
+               EditBaseGame(selectedGame);
             }
             else
             {
