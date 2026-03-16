@@ -80,22 +80,23 @@
 /* checkmark sélection */
 .tile-check {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 20px;
-    height: 20px;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
     background: var(--accent);
     color: var(--accent-text);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .65rem;
+    font-size: .9rem;
     font-weight: 700;
     opacity: 0;
     transform: scale(.6);
     transition: opacity var(--t), transform var(--t);
     pointer-events: none;
+    box-shadow: 0 2px 8px rgba(245, 230, 66, .4);
 }
 
 .game-tile.selected .tile-check {
@@ -127,9 +128,8 @@
 /* bouton suppression jeu custom */
 .delete-game-btn {
     position: absolute;
-    top: 50%;
-    right: 16px;
-    margin-top: -14px;
+    bottom: 8px;
+    right: 40px;
     width: 28px;
     height: 28px;
     background: var(--bg-danger-subtle);
@@ -138,7 +138,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .8rem;
+    font-size: .85rem;
     font-weight: 700;
     cursor: pointer;
     transition: transform var(--t), background var(--t), color var(--t);
@@ -148,30 +148,30 @@
 .delete-game-btn:hover {
     background: var(--danger);
     color: #fff;
-    transform: scale(1.15);
+    transform: scale(1.1);
 }
 
 /* bouton edit jeu de base */
 .edit-game-btn {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
+    bottom: 8px;
+    right: 8px;
     width: 28px;
     height: 28px;
+    background: var(--raised);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: .85rem;
     cursor: pointer;
-    transition: transform var(--t);
+    transition: transform var(--t), background var(--t);
     z-index: 10;
-    opacity: 0.6;
 }
 
 .edit-game-btn:hover {
-    opacity: 1;
-    transform: rotate(45deg);
+    background: var(--input);
+    transform: scale(1.1);
 }
 
 /* ─── PANNEAU INFO JEU SÉLECTIONNÉ ──────────────────────────── */
