@@ -25,7 +25,7 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *As a Developer, I want to extract the hardcoded game list from the UI (Blazor) and move it to a dedicated Application Service, so that the Clean Architecture is respected.*
 - [x] **Story 1.9: Auto-completion of Scorekeeper profile**
   - *As a Scorekeeper, I want the app to remember my name and favorite emoji from one game to the next in local storage, so I don't have to re-enter them every time I start a new game.*
-- [ ] **Story 1.10: Favorite Players**
+- [x] **Story 1.10: Favorite Players**
   - *As a Scorekeeper, I want to be able to save my friends as "Favorite Players" (Name + Emoji) so that I can quickly add them to a new session with a single tap, without re-typing their names.*
   - *These favorites should be displayed below the "Add player" form or "Start Game" button during session setup.*
 

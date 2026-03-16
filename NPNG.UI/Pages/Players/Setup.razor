@@ -1,4 +1,5 @@
 @page "/players"
+@using NPNG.Domain.Entities
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
@@ -61,6 +62,12 @@ else
                             title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁
                     </button>
                 }
+                
+                <button class="ico-btn" style="width:28px;height:28px;font-size:.8rem; margin-left:4px;"
+                        title="@(IsFavorite(player.Name) ? "Retirer des favoris" : "Ajouter aux favoris")"
+                        @onclick="() => ToggleFavorite(player.Name, player.Emoji)">
+                    @(IsFavorite(player.Name) ? "★" : "☆")
+                </button>
 
                 <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">
                     ✕
@@ -91,6 +98,21 @@ else
     </div>
 </div>
 
+@if (favoritePlayers.Any())
+{
+    <div class="section-label">Favoris</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px">
+        @foreach (var fav in favoritePlayers)
+        {
+            var isAlreadyInGame = GameState.CurrentSession?.Players.Any(p => p.Name.Equals(fav.Name, StringComparison.OrdinalIgnoreCase)) == true;
+            <button class="btn-secondary" style="padding:6px 12px;font-size:.85rem; @(isAlreadyInGame ? "opacity:0.5;pointer-events:none" : "")" 
+                    @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= 8)">
+                @fav.DefaultEmoji @fav.Name
+            </button>
+        }
+    </div>
+}
+
 <button class="btn-cta" disabled="@(CurrentPlayerCount < 2)" @onclick="StartGame">
     Lancer la partie ▶
 </button>
@@ -104,6 +126,8 @@ else
 
     private string newPlayerName = "";
     private string selectedEmoji = "🎯";
+    
+    private List<Player> favoritePlayers = new();
 
     private List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
     private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA", "#F472B6" };
@@ -138,6 +162,41 @@ else
                 }
             }
         }
+        
+        await LoadFavoritesAsync();
+    }
+    
+    private async Task LoadFavoritesAsync()
+    {
+        var favs = await ProfileRepository.GetFavoritePlayersAsync();
+        favoritePlayers = favs.ToList();
+    }
+    
+    private bool IsFavorite(string name)
+    {
+        return favoritePlayers.Any(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    private async Task ToggleFavorite(string name, string emoji)
+    {
+        var existingFav = favoritePlayers.FirstOrDefault(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (existingFav != null)
+        {
+            await ProfileRepository.RemoveFavoritePlayerAsync(existingFav.Id);
+        }
+        else
+        {
+            await ProfileRepository.AddFavoritePlayerAsync(new Player(Guid.NewGuid(), name, emoji));
+        }
+        
+        await LoadFavoritesAsync();
+    }
+    
+    private async Task AddFavoritePlayerToGame(Player fav)
+    {
+        if (CurrentPlayerCount >= 8) return;
+        var color = availableColors[CurrentPlayerCount % availableColors.Count];
+        await GameState.AddPlayerToSetupAsync(fav.Name, fav.DefaultEmoji, color);
     }
 
     public void Dispose()
