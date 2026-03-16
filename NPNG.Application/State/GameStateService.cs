@@ -303,6 +303,26 @@ public class GameStateService
                         }
                     }
                 }
+                else if (mechanic == FirstPlayerMechanic.HighestInPreviousRound || mechanic == FirstPlayerMechanic.LowestInPreviousRound)
+                {
+                    var previousRoundScores = CurrentSession.Scores
+                        .Where(s => s.Round == CurrentSession.CurrentRound)
+                        .ToList();
+
+                    if (previousRoundScores.Any())
+                    {
+                        var orderedScores = previousRoundScores.OrderByDescending(s => s.Value).ToList();
+                        var targetPlayerId = mechanic == FirstPlayerMechanic.HighestInPreviousRound
+                            ? orderedScores.First().PlayerId
+                            : orderedScores.Last().PlayerId;
+
+                        var foundIndex = updatedPlayers.FindIndex(p => p.PlayerId == targetPlayerId);
+                        if (foundIndex >= 0)
+                        {
+                            nextIndex = foundIndex;
+                        }
+                    }
+                }
                 // If mechanic == None, nextIndex remains currentFirstIndex (no change)
 
                 updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };

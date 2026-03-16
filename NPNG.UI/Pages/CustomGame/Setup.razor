@@ -23,8 +23,10 @@
     <div class="field-lbl">Passage du 1er joueur</div>
     <div class="toggle-row" style="flex-wrap: wrap;">
         <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Le gagnant</button>
-        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Le perdant</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Premier (Général)</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Dernier (Général)</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound)'>📈 + haut (Manche)</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound)'>📉 + bas (Manche)</button>
         <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.None ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.None)'>❌ Ne change pas</button>
     </div>
 
