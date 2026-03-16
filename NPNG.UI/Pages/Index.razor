@@ -33,7 +33,7 @@
 <p class="section-lbl">Jeux disponibles</p>
 
 <div class="catalogue" role="listbox" aria-label="Sélection du jeu">
-    @foreach (var game in games)
+    @foreach (var game in games.Where(g => g.Id != Guid.Parse("55555555-5555-5555-5555-555555555555")))
     {
         var isSelected = selectedGame?.Id == game.Id;
         
@@ -46,28 +46,45 @@
             
             <span class="tile-emoji">@game.Emoji</span>
 
+            <div class="tile-name">@game.Name</div>
+            <div class="tile-rule">@game.Badge</div>
+            
             @if (game.IsCustom)
             {
-                <div class="custom-text">
-                    <div class="tile-name">@game.Name</div>
-                    <div class="tile-rule">@game.Badge</div>
+                <div class="delete-game-btn" @onclick="() => TryDeleteCustomGame(game.Id)" @onclick:stopPropagation="true" title="Supprimer ce jeu">
+                    ✕
                 </div>
-                @if (game.Id != Guid.Parse("55555555-5555-5555-5555-555555555555"))
-                {
-                    <div class="delete-game-btn" @onclick="() => TryDeleteCustomGame(game.Id)" @onclick:stopPropagation="true">
-                        ✕
-                    </div>
-                }
+                <div class="edit-game-btn" @onclick="() => EditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
+                    ⚙️
+                </div>
             }
             else
             {
-                <div class="tile-name">@game.Name</div>
-                <div class="tile-rule">@game.Badge</div>
                 <div class="edit-game-btn" @onclick="() => EditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
                     ⚙️
                 </div>
             }
         </button>
+    }
+
+    @{
+        var createCustomGame = games.FirstOrDefault(g => g.Id == Guid.Parse("55555555-5555-5555-5555-555555555555"));
+        if (createCustomGame != null)
+        {
+            var isSelected = selectedGame?.Id == createCustomGame.Id;
+            <button class="game-tile @(isSelected ? "selected" : "")" 
+                    role="option" 
+                    style="border-style: dashed; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8;"
+                    aria-selected="@isSelected.ToString().ToLower()" 
+                    @onclick="() => SelectGame(createCustomGame)">
+                
+                <div class="tile-check" aria-hidden="true">✓</div>
+                
+                <span class="tile-emoji" style="margin-bottom: 4px; font-size: 1.5rem;">➕</span>
+                <div class="tile-name" style="text-align: center;">Nouveau jeu</div>
+                <div class="tile-rule" style="text-align: center;">Personnalisé</div>
+            </button>
+        }
     }
 </div>
 
