@@ -29,7 +29,13 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
-
+    <script>
+        window.selectActiveText = () => {
+            if (document.activeElement && document.activeElement.select) {
+                document.activeElement.select();
+            }
+        };
+    </script>
 </body>
 
 </html>

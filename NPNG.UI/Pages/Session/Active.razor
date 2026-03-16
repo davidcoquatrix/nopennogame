@@ -3,6 +3,7 @@
 @using NPNG.Domain.Models
 @inject NavigationManager NavigationManager
 @inject GameStateService GameState
+@inject IJSRuntime JsRuntime
 @implements IDisposable
 
 @if (GameState.CurrentSession == null)
@@ -17,7 +18,7 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
             <span style="font-size:1.05rem;font-weight:700">@GameState.CurrentSession.Template.Name</span>
         </div>
     </div>
-    
+
     <div class="end-panel">
         <h2 class="end-panel-title">🎉 Partie Terminée !</h2>
         <p class="end-panel-desc">
@@ -35,7 +36,7 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
             }
         </p>
     </div>
-    
+
     <!-- CLASSEMENT FINAL -->
     <div class="section-label">Classement Final</div>
     <div class="leaderboard">
@@ -43,14 +44,14 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
         {
             var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
             var isLeader = pScore.Rank == 1;
-            
+
             <div class="leaderboard-row @(isLeader ? "lead" : "")">
                 <span class="rank">@pScore.Rank</span>
                 <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
                 <div class="leaderboard-info">
                     <div class="leaderboard-name">@player.Name</div>
                 </div>
-                
+
                 @if (isLeader)
                 {
                     <span class="db best">vainqueur</span>
@@ -61,12 +62,12 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
                     var diff = pScore.TotalScore - bestScore;
                     <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
                 }
-                
+
                 <div class="tot">@pScore.TotalScore</div>
             </div>
         }
     </div>
-    
+
     <button class="btn-cta" style="margin-top:20px" @onclick="GoToHome">Retour à l'accueil</button>
     <button class="btn-secondary" @onclick="ResumeSession">Continuer la partie quand même</button>
 }
@@ -78,9 +79,12 @@ else
             <span style="font-size:1.05rem;font-weight:700">@GameState.CurrentSession.Template.Name</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(GameState.CurrentSession.CurrentRound.ToString("D2"))</span>
+            <span
+                style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(GameState.CurrentSession.CurrentRound.ToString("D2"))</span>
             <button class="ico-btn" style="font-size:.75rem" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
-            <button class="ico-btn" style="font-size:.75rem; color:var(--danger);" title="Terminer" @onclick="FinishSession">🏁</button>
+            <button class="ico-btn" style="font-size:.75rem; color:var(--danger);" title="Terminer"
+                    @onclick="FinishSession">🏁
+            </button>
         </div>
     </div>
 
@@ -91,7 +95,7 @@ else
         {
             var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
             var isLeader = pScore.Rank == 1;
-            
+
             <div class="leaderboard-row @(isLeader ? "lead" : "")">
                 <span class="rank">@pScore.Rank</span>
                 <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
@@ -107,7 +111,7 @@ else
                         }
                     </div>
                 </div>
-                
+
                 @if (isLeader)
                 {
                     <span class="db best">meilleur</span>
@@ -118,7 +122,7 @@ else
                     var diff = pScore.TotalScore - bestScore;
                     <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
                 }
-                
+
                 <div class="tot">@pScore.TotalScore</div>
             </div>
         }
@@ -127,12 +131,10 @@ else
     <!-- ENTRY PANEL -->
     <div class="section-label">Saisie — Tour @GameState.CurrentSession.CurrentRound</div>
     <div class="entry-panel">
-        <div class="entry-panel-label">− 10 &nbsp;− 1 &nbsp;&nbsp;valeur&nbsp;&nbsp; + 1 &nbsp;+ 10</div>
-        
         @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
         {
-            var hasMechanic = GameState.CurrentSession.Template?.Rules != null 
-                              && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None;
+            var hasMechanic = GameState.CurrentSession.Template?.Rules != null
+                                  && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None;
             var showFirstPlayerBadge = player.IsFirstPlayer && hasMechanic;
 
             <div class="entry-row">
@@ -146,18 +148,20 @@ else
                 </div>
                 <div class="score-controls">
                     <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -10)">−10</button>
-                    <button class="score-button sml" @onclick="() => AdjustScore(player.PlayerId, -1)">−1</button>
-                    <input type="number" class="score-value" 
-                           value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)" 
+                    <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -1)">−1</button>
+                    <input type="number" class="score-value"
+                           value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
                            @onchange="@(e => OnScoreInputChange(player.PlayerId, e))"
-                           inputmode="numeric" />
-                    <button class="score-button ssml" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
+                           @onfocus="async e => await SelectText(e)"
+                           inputmode="numeric"/>
+                    <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 10)">+10</button>
                 </div>
             </div>
         }
-        
-        <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le tour @GameState.CurrentSession.CurrentRound</button>
+
+        <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le
+            tour @GameState.CurrentSession.CurrentRound</button>
     </div>
 }
 
@@ -168,7 +172,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         GameState.OnStateChanged += HandleStateChanged;
-        
+
         if (GameState.CurrentSession == null)
         {
             var loaded = await GameState.LoadLatestActiveSessionAsync();
@@ -178,7 +182,7 @@ else
                 return;
             }
         }
-        
+
         UpdateState();
     }
 
@@ -266,14 +270,20 @@ else
             currentInputs[key] = 0;
         }
     }
-    
+
     private async Task ResumeSession()
     {
         await GameState.ResumeSessionAsync();
+    }
+
+    private async Task SelectText(FocusEventArgs e)
+    {
+        await JsRuntime.InvokeVoidAsync("selectActiveText");
     }
 
     private async Task FinishSession()
     {
         await GameState.FinishSessionAsync();
     }
+
 }
