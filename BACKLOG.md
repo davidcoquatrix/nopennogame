@@ -51,7 +51,7 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 ### Epic: First Player Selection (Enhanced)
 - **Story 2.4: Random First Player Animation**
   - *As a group of Players, we want the app to randomly pick the first player with a fun visual animation (e.g., spinning wheel or flashing avatars) to resolve the "who goes first" debate fairly and entertainingly.*
-- **Story 2.5: Dynamic First Player Selection (Score-based)**
+- [x] **Story 2.5: Dynamic First Player Selection (Score-based)**
   - *As a Scorekeeper, I want to configure the first player selection rule (e.g., highest/lowest score of the previous round) so that the app automatically assigns the first player badge each round.*
   - *Tie-breaker rules: 1. Compare total global score. 2. If still tied, use the current table order.*
 
@@ -60,7 +60,7 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *As a Scorekeeper or Player, I want to read a quick summary of the rules for the selected game directly in the app to resolve disputes quickly.*
 - **Story 2.2: Advanced Custom Rules**
   - *As a Scorekeeper, I want to set score limits (e.g., "Game ends at 500 points") or round limits when creating a custom game.*
-- **Story 2.6: Save and Manage Custom Games**
+- [x] **Story 2.6: Save and Manage Custom Games**
   - *As a Scorekeeper, I want to be able to save a custom game configuration (name, scoring type, rules) so that I can reuse it later without having to recreate it.*
   - *As a Scorekeeper, I want to be able to delete a custom game that I previously saved, so that I can keep my game catalog clean.*
 

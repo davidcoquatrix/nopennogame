@@ -14,7 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 // Injection des dépendances pour NPNG
 builder.Services.AddScoped<ISessionRepository, LocalStorageSessionRepository>();
 builder.Services.AddScoped<IPlayerProfileRepository, LocalStoragePlayerProfileRepository>();
-builder.Services.AddScoped<IGameCatalogueService, NPNG.Application.Services.InMemoryGameCatalogueService>();
+builder.Services.AddScoped<IGameCatalogueService, NPNG.Infrastructure.Services.LocalStorageGameCatalogueService>();
 builder.Services.AddScoped<GameStateService>();
 
 await builder.Build().RunAsync();

@@ -57,6 +57,12 @@
                     <div class="tile-name">@game.Name</div>
                     <div class="tile-rule">@game.Badge</div>
                 </div>
+                @if (game.Id != Guid.Parse("55555555-5555-5555-5555-555555555555"))
+                {
+                    <div class="delete-game-btn" @onclick="() => TryDeleteCustomGame(game.Id)" @onclick:stopPropagation="true">
+                        ✕
+                    </div>
+                }
             }
             else
             {
@@ -136,8 +142,16 @@
             await GameState.LoadLatestActiveSessionAsync();
         }
         
+        await LoadGamesAsync();
+    }
+    
+    private async Task LoadGamesAsync()
+    {
         games = await GameCatalogue.GetAvailableGamesAsync();
-        selectedGame = games.FirstOrDefault();
+        if (selectedGame == null || !games.Any(g => g.Id == selectedGame.Id))
+        {
+            selectedGame = games.FirstOrDefault();
+        }
     }
     
     public void Dispose()
@@ -148,6 +162,12 @@
     private void SelectGame(NPNG.Application.Models.GameCatalogueItem game)
     {
         selectedGame = game;
+    }
+    
+    private async Task TryDeleteCustomGame(Guid id)
+    {
+        await GameCatalogue.DeleteCustomGameAsync(id);
+        await LoadGamesAsync();
     }
     
     private void TryAbandonSession()
@@ -203,7 +223,7 @@
         showOverwriteConfirm = false;
         if (selectedGame != null)
         {
-            if (selectedGame.IsCustom)
+            if (selectedGame.IsCustom && selectedGame.Id == Guid.Parse("55555555-5555-5555-5555-555555555555"))
             {
                 NavigationManager.NavigateTo($"/custom-game");
             }

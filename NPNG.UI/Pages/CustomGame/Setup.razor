@@ -1,6 +1,7 @@
 @page "/custom-game"
 @inject NavigationManager NavigationManager
 @inject NPNG.Application.State.GameStateService GameState
+@inject NPNG.Application.Interfaces.IGameCatalogueService GameCatalogueService
 
 <div class="app-header">
     <div style="display:flex;align-items:center;gap:8px">
@@ -19,6 +20,14 @@
         <button class="toggle-opt @(winCondition == "low" ? "on" : "")" @onclick='() => SetWinCondition("low")'>🎯 Le + bas</button>
     </div>
 
+    <div class="field-lbl">Passage du 1er joueur</div>
+    <div class="toggle-row" style="flex-wrap: wrap;">
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Le gagnant</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Le perdant</button>
+        <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.None ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.None)'>❌ Ne change pas</button>
+    </div>
+
     <div class="field-lbl">Limite de score (optionnel)</div>
     <input class="field-input" type="text" @bind="scoreLimit" placeholder="ex : 500 pts → fin de partie" />
 
@@ -35,6 +44,11 @@
     </div>
 </div>
 
+<div style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+    <input type="checkbox" id="saveGame" @bind="saveToCatalogue" style="width:20px;height:20px;accent-color:var(--accent)" />
+    <label for="saveGame" style="font-size:0.85rem;font-weight:600;cursor:pointer">Sauvegarder ce modèle dans mon catalogue</label>
+</div>
+
 <div style="background:rgba(245,230,66,.07);border:1px solid rgba(245,230,66,.2);border-radius:11px;padding:9px 11px;margin-bottom:10px;font-size:.72rem;color:var(--sub)">
     💡 Tu pourras modifier ces règles entre deux parties depuis les paramètres.
 </div>
@@ -49,6 +63,8 @@
     private string scoreLimit = "";
     private string roundLimit = "";
     private string incrementType = "1_10";
+    private NPNG.Domain.Enums.FirstPlayerMechanic firstPlayerMechanic = NPNG.Domain.Enums.FirstPlayerMechanic.Sequential;
+    private bool saveToCatalogue = false;
 
     private void GoBack()
     {
@@ -58,6 +74,11 @@
     private void SetWinCondition(string condition)
     {
         winCondition = condition;
+    }
+
+    private void SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic mechanic)
+    {
+        firstPlayerMechanic = mechanic;
     }
 
     private void SetIncrement(string type)
@@ -73,9 +94,15 @@
         
         int? parsedScoreLimit = int.TryParse(scoreLimit, out var s) ? s : null;
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
-        var rules = new NPNG.Domain.Entities.GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit);
+        var rules = new NPNG.Domain.Entities.GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit, FirstPlayerMechanic: firstPlayerMechanic);
 
         var template = new NPNG.Domain.Entities.GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
+        
+        if (saveToCatalogue)
+        {
+            await GameCatalogueService.SaveCustomGameAsync(template, "var(--warn)");
+        }
+        
         await GameState.InitializeNewSessionAsync(template);
         
         NavigationManager.NavigateTo($"/players?game={Uri.EscapeDataString(gameName.Trim())}");

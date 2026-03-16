@@ -163,6 +163,32 @@
     font-size: .68rem;
 }
 
+/* bouton suppression jeu custom */
+.delete-game-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    background: var(--bg-danger-subtle);
+    color: var(--danger);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform var(--t), background var(--t), color var(--t);
+    z-index: 10;
+}
+
+.delete-game-btn:hover {
+    background: var(--danger);
+    color: #fff;
+    transform: scale(1.1);
+}
+
 /* ─── PANNEAU INFO JEU SÉLECTIONNÉ ──────────────────────────── */
 .game-info-wrapper {
     margin-bottom: 20px;

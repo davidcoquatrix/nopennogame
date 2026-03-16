@@ -274,8 +274,37 @@ public class GameStateService
                 // Remove first player flag from current
                 updatedPlayers[currentFirstIndex] = updatedPlayers[currentFirstIndex] with { IsFirstPlayer = false };
                 
-                // Assign to next player (looping back to 0)
-                var nextIndex = (currentFirstIndex + 1) % updatedPlayers.Count;
+                var mechanic = CurrentSession.Template.Rules?.FirstPlayerMechanic ?? FirstPlayerMechanic.Sequential;
+                var nextIndex = currentFirstIndex;
+
+                if (mechanic == FirstPlayerMechanic.Sequential)
+                {
+                    // Assign to next player (looping back to 0)
+                    nextIndex = (currentFirstIndex + 1) % updatedPlayers.Count;
+                }
+                else if (mechanic == FirstPlayerMechanic.Winner || mechanic == FirstPlayerMechanic.Loser)
+                {
+                    var playerIds = CurrentSession.Players.Select(p => p.PlayerId);
+                    var leaderboard = NPNG.Domain.Services.ScoreCalculator.CalculateLeaderboard(
+                        CurrentSession.Template.ScoreType,
+                        playerIds,
+                        CurrentSession.Scores);
+
+                    if (leaderboard.Any())
+                    {
+                        var targetPlayerId = mechanic == FirstPlayerMechanic.Winner
+                            ? leaderboard.First().PlayerId
+                            : leaderboard.Last().PlayerId;
+                            
+                        var foundIndex = updatedPlayers.FindIndex(p => p.PlayerId == targetPlayerId);
+                        if (foundIndex >= 0)
+                        {
+                            nextIndex = foundIndex;
+                        }
+                    }
+                }
+                // If mechanic == None, nextIndex remains currentFirstIndex (no change)
+
                 updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };
             }
 

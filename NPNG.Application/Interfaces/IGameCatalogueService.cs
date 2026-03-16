@@ -1,4 +1,5 @@
 using NPNG.Application.Models;
+using NPNG.Domain.Entities;
 
 namespace NPNG.Application.Interfaces;
 
@@ -8,4 +9,6 @@ namespace NPNG.Application.Interfaces;
 public interface IGameCatalogueService
 {
     Task<IEnumerable<GameCatalogueItem>> GetAvailableGamesAsync();
+    Task SaveCustomGameAsync(GameTemplate template, string color);
+    Task DeleteCustomGameAsync(Guid id);
 }
