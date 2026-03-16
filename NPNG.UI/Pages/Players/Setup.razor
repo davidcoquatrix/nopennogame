@@ -50,13 +50,13 @@ else
 
                 <div style="flex:1;display:flex;flex-direction:column">
                     <span class="player-name">@player.Name</span>
-                    @if (player.IsFirstPlayer)
+                    @if (player.IsFirstPlayer && GameState.CurrentSession?.Template.Rules != null && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None)
                     {
                         <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">PREMIER JOUEUR</span>
                     }
                 </div>
 
-                @if (!player.IsFirstPlayer)
+                @if (!player.IsFirstPlayer && GameState.CurrentSession?.Template.Rules != null && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None)
                 {
                     <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem"
                             title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁
