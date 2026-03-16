@@ -124,30 +124,6 @@
     text-transform: uppercase;
 }
 
-/* tuile "Custom" */
-.game-tile.custom {
-    border-style: dashed;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    grid-column: 1 / -1; /* pleine largeur */
-    padding: 13px 16px;
-}
-
-.game-tile.custom .tile-emoji {
-    margin-bottom: 0;
-    font-size: 1.5rem;
-}
-
-.custom-text .tile-name {
-    font-size: .88rem;
-}
-
-.custom-text .tile-rule {
-    font-size: .68rem;
-}
-
 /* bouton suppression jeu custom */
 .delete-game-btn {
     position: absolute;

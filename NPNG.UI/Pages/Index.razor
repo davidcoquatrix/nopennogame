@@ -37,7 +37,7 @@
     {
         var isSelected = selectedGame?.Id == game.Id;
         
-        <button class="game-tile @(isSelected ? "selected" : "") @(game.IsCustom ? "custom" : "")" 
+        <button class="game-tile @(isSelected ? "selected" : "")" 
                 role="option" 
                 aria-selected="@isSelected.ToString().ToLower()" 
                 @onclick="() => SelectGame(game)">
