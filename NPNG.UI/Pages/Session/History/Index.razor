@@ -109,6 +109,8 @@
         public int TotalScore => RoundScores.Sum();
     }
 
+    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+
     private List<HistoryPlayer> players = new();
     private int currentRound = 5;
     private int editingRound = 3;
@@ -129,9 +131,9 @@
         LoadRoundToEdit(editingRound);
     }
 
-    private void GoBack()
+    private async Task GoBack()
     {
-        NavigationManager.NavigateTo("session");
+        await JSRuntime.InvokeVoidAsync("goBack");
     }
 
     private void SelectRound(int round)
@@ -157,7 +159,7 @@
         }
     }
 
-    private void ConfirmEdit()
+    private async Task ConfirmEdit()
     {
         foreach (var player in players)
         {
@@ -166,6 +168,6 @@
                 player.RoundScores[editingRound - 1] = tempScores[player.Name];
             }
         }
-        GoBack(); // Retour automatique à la session active après validation ? (Comportement typique)
+        await GoBack(); // Retour automatique à la session active après validation ? (Comportement typique)
     }
 }

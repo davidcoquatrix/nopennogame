@@ -151,7 +151,7 @@ else
                     <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -1)">−1</button>
                     <input type="number" class="score-value"
                            value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
-                           @onchange="@(e => OnScoreInputChange(player.PlayerId, e))"
+                           @onchange="@(e=> OnScoreInputChange(player.PlayerId, e))"
                            @onfocus="async e => await SelectText(e)"
                            inputmode="numeric"/>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>

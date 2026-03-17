@@ -3,7 +3,6 @@ using NPNG.Application.Interfaces;
 using NPNG.Application.State;
 using NPNG.Domain.Entities;
 using NPNG.Domain.Enums;
-using Xunit;
 
 namespace NPNG.Tests.Application.State;
 

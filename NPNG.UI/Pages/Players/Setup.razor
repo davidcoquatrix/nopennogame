@@ -1,5 +1,4 @@
 @page "/players"
-@using NPNG.Domain.Entities
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
@@ -131,6 +130,8 @@ else
     [Inject] public GameStateService GameState { get; set; } = default!;
     [Inject] public NPNG.Application.Interfaces.IPlayerProfileRepository ProfileRepository { get; set; } = default!;
 
+    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+
     [SupplyParameterFromQuery(Name = "game")]
     public string? GameName { get; set; } = "Partie";
 
@@ -220,9 +221,9 @@ else
         GameState.OnStateChanged -= StateHasChanged;
     }
 
-    private void GoBack()
+    private async Task GoBack()
     {
-        NavigationManager.NavigateTo("");
+        await JSRuntime.InvokeVoidAsync("goBack");
     }
 
     private void SelectEmoji(string emoji)

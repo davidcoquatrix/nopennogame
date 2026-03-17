@@ -75,6 +75,8 @@
 </button>
 
 @code {
+    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+
     private string gameName = "Belote maison";
     private string winCondition = "high";
     private string scoreLimit = "";
@@ -115,9 +117,9 @@
         }
     }
 
-    private void GoBack()
+    private async Task GoBack()
     {
-        NavigationManager.NavigateTo("");
+        await JSRuntime.InvokeVoidAsync("goBack");
     }
 
     private void SetWinCondition(string condition)
