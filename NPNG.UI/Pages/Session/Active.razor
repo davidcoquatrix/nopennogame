@@ -152,24 +152,24 @@ else
                     <input type="number" class="score-value"
                            value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
                            @onchange="@(e=> OnScoreInputChange(player.PlayerId, e))"
-                           @onfocus="async e => await SelectText(e)"
+                           @onfocus="async e => await ClearText(e)"
                            inputmode="numeric"/>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 10)">+10</button>
-                </div>
-            </div>
-        }
+                    </div>
+                    </div>
+                    }
 
-        <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le
-            tour @GameState.CurrentSession.CurrentRound</button>
-    </div>
-}
+                    <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le
+                    tour @GameState.CurrentSession.CurrentRound</button>
+                    </div>
+                    }
 
-@code {
-    private Dictionary<Guid, int> currentInputs = new();
-    private List<PlayerScore> leaderboard = new();
+                    @code {
+                    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
 
-    protected override async Task OnInitializedAsync()
+                    private Dictionary<Guid, int> currentInputs = new();
+                    private List<PlayerScore> leaderboard = new();
     {
         GameState.OnStateChanged += HandleStateChanged;
 

@@ -30,9 +30,9 @@
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>
-        window.selectActiveText = () => {
-            if (document.activeElement && document.activeElement.select) {
-                document.activeElement.select();
+        window.clearActiveText = () => {
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                document.activeElement.value = '';
             }
         };
 
