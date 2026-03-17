@@ -156,20 +156,20 @@ else
                            inputmode="numeric"/>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
                     <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 10)">+10</button>
-                    </div>
-                    </div>
-                    }
+                </div>
+            </div>
+        }
 
-                    <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le
-                    tour @GameState.CurrentSession.CurrentRound</button>
-                    </div>
-                    }
+        <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le
+            tour @GameState.CurrentSession.CurrentRound</button>
+    </div>
+}
 
-                    @code {
-                    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+@code {
+    private Dictionary<Guid, int> currentInputs = new();
+    private List<PlayerScore> leaderboard = new();
 
-                    private Dictionary<Guid, int> currentInputs = new();
-                    private List<PlayerScore> leaderboard = new();
+    protected override async Task OnInitializedAsync()
     {
         GameState.OnStateChanged += HandleStateChanged;
 
@@ -276,9 +276,9 @@ else
         await GameState.ResumeSessionAsync();
     }
 
-    private async Task SelectText(FocusEventArgs e)
+    private async Task ClearText(FocusEventArgs e)
     {
-        await JsRuntime.InvokeVoidAsync("selectActiveText");
+        await JsRuntime.InvokeVoidAsync("clearActiveText");
     }
 
     private async Task FinishSession()
