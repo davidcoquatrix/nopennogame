@@ -1,5 +1,45 @@
 /* ─── SCOPED CSS FOR HISTORY (TIME TRAVEL) ─── */
 
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.header-subtitle {
+    font-size: .65rem;
+    font-family: var(--font-mono);
+    color: var(--warn);
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+}
+
+.total-cell {
+    font-weight: 700;
+    color: var(--txt);
+}
+
+.total-cell.lead {
+    color: var(--accent);
+}
+
+.score-value-warn {
+    color: var(--warn);
+}
+
+.mt-15 {
+    margin-top: 15px;
+}
+
 /* ─── TIME TRAVEL BANNER ─────────────────────────────────────── */
 .tt-banner {
     background: var(--bg-warn-light);

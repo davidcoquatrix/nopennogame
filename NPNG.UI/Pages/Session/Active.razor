@@ -8,14 +8,14 @@
 
 @if (GameState.CurrentSession == null)
 {
-    <div style="padding:20px;text-align:center;color:var(--sub)">Aucune session en cours...</div>
+    <div class="no-session">Aucune session en cours...</div>
 }
 else if (GameState.CurrentSession.Status == SessionStatus.Finished)
 {
     <div class="app-header">
-        <div style="display:flex;align-items:center;gap:8px">
+        <div class="header-nav">
             <button class="ico-btn" @onclick="GoBack">←</button>
-            <span style="font-size:1.05rem;font-weight:700">@GameState.CurrentSession.Template.Name</span>
+            <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
     </div>
 
@@ -47,7 +47,7 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
 
             <div class="leaderboard-row @(isLeader ? "lead" : "")">
                 <span class="rank">@pScore.Rank</span>
-                <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
+                <div class="av-m">@player.Emoji</div>
                 <div class="leaderboard-info">
                     <div class="leaderboard-name">@player.Name</div>
                 </div>
@@ -68,23 +68,20 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
         }
     </div>
 
-    <button class="btn-cta" style="margin-top:20px" @onclick="GoToHome">Retour à l'accueil</button>
+    <button class="btn-cta mt-20" @onclick="GoToHome">Retour à l'accueil</button>
     <button class="btn-secondary" @onclick="ResumeSession">Continuer la partie quand même</button>
 }
 else
 {
     <div class="app-header">
-        <div style="display:flex;align-items:center;gap:8px">
+        <div class="header-nav">
             <button class="ico-btn" @onclick="GoBack">←</button>
-            <span style="font-size:1.05rem;font-weight:700">@GameState.CurrentSession.Template.Name</span>
+            <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-            <span
-                style="font-size:.65rem;font-family:var(--font-mono);color:var(--sub)">T.@(GameState.CurrentSession.CurrentRound.ToString("D2"))</span>
-            <button class="ico-btn" style="font-size:.75rem" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
-            <button class="ico-btn" style="font-size:.75rem; color:var(--danger);" title="Terminer"
-                    @onclick="FinishSession">🏁
-            </button>
+        <div class="header-actions">
+            <span class="header-round-counter">T.@(GameState.CurrentSession.CurrentRound.ToString("D2"))</span>
+            <button class="ico-btn tt-btn" title="Time Travel" @onclick="GoToTimeTravel">⏪</button>
+            <button class="ico-btn finish-btn" title="Terminer" @onclick="FinishSession">🏁</button>
         </div>
     </div>
 
@@ -98,7 +95,7 @@ else
 
             <div class="leaderboard-row @(isLeader ? "lead" : "")">
                 <span class="rank">@pScore.Rank</span>
-                <div class="av-m" style="@(isLeader ? "border-color:var(--accent)" : "")">@player.Emoji</div>
+                <div class="av-m">@player.Emoji</div>
                 <div class="leaderboard-info">
                     <div class="leaderboard-name">@player.Name</div>
                     <div class="pips">
@@ -139,11 +136,11 @@ else
 
             <div class="entry-row">
                 <div class="entry-avatar">@player.Emoji</div>
-                <div style="display:flex;flex-direction:column;flex:1;">
-                    <span class="entry-name" style="flex:unset;">@player.Name</span>
+                <div class="entry-info">
+                    <span class="entry-name entry-name-override">@player.Name</span>
                     @if (showFirstPlayerBadge)
                     {
-                        <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">1ER JOUEUR</span>
+                        <span class="first-player-badge">1ER JOUEUR</span>
                     }
                 </div>
                 <div class="score-controls">

@@ -2,11 +2,11 @@
 @inject NavigationManager NavigationManager
 
 <div class="app-header">
-    <div style="display:flex;align-items:center;gap:8px">
+    <div class="header-nav">
         <button class="ico-btn" @onclick="GoBack">←</button>
-        <span style="font-size:1.05rem;font-weight:700">Skyjo — Historique</span>
+        <span class="header-title">Skyjo — Historique</span>
     </div>
-    <div style="font-size:.65rem;font-family:var(--font-mono);color:var(--warn)">⏪ Mode édition</div>
+    <div class="header-subtitle">⏪ Mode édition</div>
 </div>
 
 <!-- warning banner -->
@@ -32,7 +32,7 @@
 
 <!-- editable score grid -->
 <div class="section-label">Scores — Tour @editingRound</div>
-<div style="overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;">
+<div class="table-container">
     <table class="round-table editing-mode">
         <thead>
             <tr>
@@ -63,7 +63,7 @@
                         if (i + 1 == editingRound)
                         {
                             <td class="editable-col">
-                                <span class="score-value" style="color:var(--warn)">@tempScores[player.Name]</span>
+                                <span class="score-value score-value-warn">@tempScores[player.Name]</span>
                             </td>
                         }
                         else
@@ -71,7 +71,7 @@
                             <td>@player.RoundScores[i]</td>
                         }
                     }
-                    <td style="font-weight:700;color:@(isLeader ? "var(--accent)" : "var(--txt)")">@player.TotalScore</td>
+                    <td class="total-cell @(isLeader ? "lead" : "")">@player.TotalScore</td>
                 </tr>
             }
         </tbody>
@@ -90,14 +90,14 @@
             <div class="score-controls">
                 <button class="score-button lrg" @onclick="() => AdjustEditScore(player.Name, -10)">−10</button>
                 <button class="score-button sml" @onclick="() => AdjustEditScore(player.Name, -1)">−1</button>
-                <span class="score-value" style="color:var(--warn)">@tempScores[player.Name]</span>
+                <span class="score-value score-value-warn">@tempScores[player.Name]</span>
                 <button class="score-button ssml" @onclick="() => AdjustEditScore(player.Name, 1)">+1</button>
                 <button class="score-button slrg" @onclick="() => AdjustEditScore(player.Name, 10)">+10</button>
             </div>
         </div>
     }
     
-    <button class="validate-btn" style="margin-top:15px" @onclick="ConfirmEdit">✓ Confirmer le Tour @editingRound</button>
+    <button class="validate-btn mt-15" @onclick="ConfirmEdit">✓ Confirmer le Tour @editingRound</button>
 </div>
 
 @code {

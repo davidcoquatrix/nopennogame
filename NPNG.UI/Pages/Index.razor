@@ -72,17 +72,16 @@
         if (createCustomGame != null)
         {
             var isSelected = selectedGame?.Id == createCustomGame.Id;
-            <button class="game-tile @(isSelected ? "selected" : "")" 
+            <button class="game-tile new-custom-tile @(isSelected ? "selected" : "")" 
                     role="option" 
-                    style="border-style: dashed; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8;"
                     aria-selected="@isSelected.ToString().ToLower()" 
                     @onclick="() => SelectGame(createCustomGame)">
                 
                 <div class="tile-check" aria-hidden="true">✓</div>
                 
-                <span class="tile-emoji" style="margin-bottom: 4px; font-size: 1.5rem;">➕</span>
-                <div class="tile-name" style="text-align: center;">Nouveau jeu</div>
-                <div class="tile-rule" style="text-align: center;">Personnalisé</div>
+                <span class="tile-emoji">➕</span>
+                <div class="tile-name">Nouveau jeu</div>
+                <div class="tile-rule">Personnalisé</div>
             </button>
         }
     }

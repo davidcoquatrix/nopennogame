@@ -3,16 +3,16 @@
 @implements IDisposable
 
 <div class="app-header">
-    <div style="display:flex;align-items:center;gap:8px">
+    <div class="header-nav">
         <button class="ico-btn" @onclick="GoBack">←</button>
         <span style="font-size:1.05rem;font-weight:700">@GameName — Joueurs</span>
     </div>
-    <div style="font-size:.7rem;color:var(--sub);font-family:var(--font-mono)">@CurrentPlayerCount/8</div>
+    <div class="header-count">@CurrentPlayerCount/8</div>
 </div>
 
 @if (GameState.CurrentSession != null && (GameState.CurrentSession.CurrentRound > 1 || GameState.CurrentSession.Scores.Any()))
 {
-    <div style="background:rgba(248, 113, 113, 0.1); border:1px solid rgba(248, 113, 113, 0.3); border-radius:11px; padding:12px; margin-bottom:12px; color:#F87171; font-size:0.8rem;">
+    <div class="warning-banner">
         <strong>⚠️ Partie en cours</strong><br/>
         Ajouter ou retirer des joueurs maintenant peut décaler les scores existants. Procède avec prudence !
     </div>
@@ -22,8 +22,7 @@
 
 @if (GameState.CurrentSession == null || GameState.CurrentSession.Players.Length == 0)
 {
-    <div
-        style="text-align:center;padding:20px;color:var(--sub);font-size:.85rem;border:1px dashed var(--bdr-md);border-radius:12px;margin-bottom:12px">
+    <div class="empty-state">
         Ajoute des joueurs pour commencer !
     </div>
 }
@@ -47,28 +46,28 @@ else
                 </div>
                 <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
 
-                <div style="flex:1;display:flex;flex-direction:column">
+                <div class="player-info">
                     <span class="player-name">@player.Name</span>
                     @if (player.IsFirstPlayer && GameState.CurrentSession?.Template.Rules != null && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None)
                     {
-                        <span style="font-size:.6rem;color:var(--accent);font-weight:700;letter-spacing:.05em">PREMIER JOUEUR</span>
+                        <span class="first-player-badge">PREMIER JOUEUR</span>
                     }
                 </div>
 
                 @if (!player.IsFirstPlayer && GameState.CurrentSession?.Template.Rules != null && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None)
                 {
-                    <button class="ico-btn" style="width:28px;height:28px;font-size:.7rem"
+                    <button class="ico-btn action-btn"
                             title="Définir comme 1er joueur" @onclick="() => SetFirstPlayer(player.PlayerId)">🏁
                     </button>
                 }
                 
-                <button class="ico-btn @(IsFavorite(player.Name) ? "star-active" : "")" style="width:28px;height:28px;font-size:.8rem; margin-left:4px;"
+                <button class="ico-btn action-btn-fav @(IsFavorite(player.Name) ? "star-active" : "")"
                         title="@(IsFavorite(player.Name) ? "Retirer des favoris" : "Ajouter aux favoris")"
                         @onclick="() => ToggleFavorite(player.Name, player.Emoji)">
                     @(IsFavorite(player.Name) ? "★" : "☆")
                 </button>
 
-                <button class="btn-danger" style="margin-left:4px" @onclick="() => RemovePlayer(player.PlayerId)">
+                <button class="btn-danger action-btn-del" @onclick="() => RemovePlayer(player.PlayerId)">
                     ✕
                 </button>
             </div>
@@ -86,16 +85,15 @@ else
 </div>
 @if (showDuplicateError)
 {
-    <div style="color: var(--danger); font-size: 0.75rem; margin-top: -4px; margin-bottom: 8px; font-weight: 600; text-align: center; animation: fadeIn 0.2s ease;">Ce joueur est déjà dans la partie !</div>
+    <div class="error-msg">Ce joueur est déjà dans la partie !</div>
 }
 
-<div
-    style="background:var(--raised);border:1px solid var(--bdr-md);border-radius:11px;padding:9px 11px;margin-bottom:10px">
-    <div class="section-label" style="margin-top:0">Emojis disponibles</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+<div class="emoji-picker-container">
+    <div class="section-label emoji-picker-label">Emojis disponibles</div>
+    <div class="emoji-list">
         @foreach (var emoji in availableEmojis)
         {
-            <span style="font-size:1.4rem;cursor:pointer;opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
+            <span class="emoji-item" style="opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
                   @onclick="() => SelectEmoji(emoji)">@emoji</span>
         }
     </div>
@@ -104,17 +102,17 @@ else
 @if (favoritePlayers.Any())
 {
     <div class="section-label">Favoris</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px">
+    <div class="fav-list">
         @foreach (var fav in favoritePlayers)
         {
             var isAlreadyInGame = GameState.CurrentSession?.Players.Any(p => p.Name.Equals(fav.Name, StringComparison.OrdinalIgnoreCase)) == true;
-            <div style="position: relative; display: inline-block;">
+            <div class="fav-item-container">
                 <button class="fav-chip" 
                         @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= 8)">
                     <span class="fav-emoji">@fav.DefaultEmoji</span>
                     <span>@fav.Name</span>
                 </button>
-                <button class="ico-btn" style="position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; font-size: 0.6rem; background: var(--bg-danger-light); color: var(--danger); border: none; z-index: 2;"
+                <button class="ico-btn fav-del-btn"
                         @onclick="() => RemoveFavoritePlayer(fav.Id)"
                         title="Supprimer des favoris">✕</button>
             </div>

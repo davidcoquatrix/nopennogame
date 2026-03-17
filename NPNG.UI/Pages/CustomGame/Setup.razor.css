@@ -1,68 +1,63 @@
-/* ─── SCOPED CSS FOR CUSTOMGAME.RAZOR ─── */
+/* ─── SCOPED CSS FOR CUSTOM GAME SETUP ─── */
 
-/* ─── CUSTOM GAME FORM ───────────────────────────────────────── */
-.form-card {
-    background: var(--raised);
-    border: 1px solid var(--bdr-md);
-    border-radius: var(--r-card);
-    padding: 13px;
-    margin-bottom: 8px;
-}
-
-.field-lbl {
-    font-size: .6rem;
-    font-weight: 600;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-    color: var(--sub);
-    margin-bottom: 5px;
-}
-
-.field-input {
-    width: 100%;
-    background: var(--input);
-    border: 1px solid var(--bdr-md);
-    border-radius: 9px;
-    padding: 9px 11px;
-    color: var(--txt);
-    font-family: var(--font-ui);
-    font-size: .88rem;
-    font-weight: 600;
-    outline: none;
-    margin-bottom: 10px;
-}
-
-.field-input:focus {
-    border-color: var(--accent);
-}
-
-.toggle-row {
+.header-nav {
     display: flex;
-    gap: 7px;
-    margin-bottom: 10px;
+    align-items: center;
+    gap: 8px;
 }
 
-.toggle-opt {
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    margin-top: 16px;
+}
+
+.setting-row .field-lbl {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.mechanic-row {
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.input-group-row {
+    display: flex;
+    gap: 12px;
+}
+
+.input-group-col {
     flex: 1;
-    padding: 8px;
-    border-radius: 9px;
-    border: 1px solid var(--bdr-md);
-    text-align: center;
-    font-size: .78rem;
+}
+
+.save-game-row {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.save-game-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+}
+
+.save-game-lbl {
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    background: var(--input);
+}
+
+.info-banner {
+    background: rgba(245, 230, 66, .07);
+    border: 1px solid rgba(245, 230, 66, .2);
+    border-radius: 11px;
+    padding: 9px 11px;
+    margin-bottom: 10px;
+    font-size: .72rem;
     color: var(--sub);
-    transition: all var(--t);
-}
-
-.toggle-opt.on {
-    background: rgba(245, 230, 66, .12);
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-.toggle-opt:hover:not(.on) {
-    border-color: rgba(255, 255, 255, 0.2);
-    color: var(--txt);
 }

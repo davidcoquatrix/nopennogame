@@ -1,5 +1,38 @@
 /* ─── SCOPED CSS FOR SETUP.RAZOR ─── */
 
+/* ─── HEADERS & BANNERS ──────────────────────────────────────── */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-count {
+    font-size: .7rem;
+    color: var(--sub);
+    font-family: var(--font-mono);
+}
+
+.warning-banner {
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    border-radius: 11px;
+    padding: 12px;
+    margin-bottom: 12px;
+    color: var(--danger);
+    font-size: 0.8rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--sub);
+    font-size: .85rem;
+    border: 1px dashed var(--bdr-md);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
 /* ─── PLAYER MANAGEMENT ──────────────────────────────────────── */
 .player-list {
     display: flex;
@@ -9,92 +42,99 @@
 }
 
 .player-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    background: var(--raised);
+    background: var(--surf);
     border: 1px solid var(--bdr-md);
     border-radius: 12px;
-    padding: 8px 10px;
-    animation: fadeIn .2s ease;
-    height: 52px; /* Fixed height to allow smooth collapsing */
-    box-sizing: border-box;
-    overflow: hidden;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .player-order-controls {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding-right: 4px;
+    gap: 2px;
 }
 
 .move-btn {
-    width: 20px;
+    width: 24px;
     height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    color: var(--sub);
-    padding: 0;
+    font-size: 0.6rem;
+    border-radius: 4px;
 }
 
 .move-btn:disabled {
     opacity: 0.2;
-    cursor: default;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+    cursor: not-allowed;
 }
 
 .player-avatar {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    background: var(--bg);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
-    border: 2px solid var(--bdr-md);
-    background: var(--input);
-    flex-shrink: 0;
+    font-size: 1.5rem;
+    border: 2px solid; /* color set via inline style */
+}
+
+.player-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .player-name {
-    flex: 1;
-    font-size: .88rem;
     font-weight: 600;
+    color: var(--txt);
+    font-size: 0.95rem;
 }
 
-.player-color-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
+.first-player-badge {
+    font-size: .6rem;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .05em;
 }
 
+.action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: .7rem;
+}
+
+.action-btn-fav {
+    width: 28px;
+    height: 28px;
+    font-size: .8rem;
+    margin-left: 4px;
+}
+
+.action-btn-del {
+    margin-left: 4px;
+}
+
+/* ─── ADD PLAYER FORM ──────────────────────────────────────── */
 .add-player-row {
     display: flex;
-    gap: 7px;
-    margin-bottom: 8px;
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
 .add-input {
     flex: 1;
     background: var(--input);
     border: 1px solid var(--bdr-md);
-    border-radius: 9px;
-    padding: 8px 11px;
     color: var(--txt);
+    padding: 0 16px;
+    border-radius: 12px;
     font-family: var(--font-ui);
-    font-size: .85rem;
-    font-weight: 600;
+    font-size: 1rem;
     outline: none;
+    transition: border-color var(--t), background var(--t);
 }
 
 .add-input:focus {
@@ -107,6 +147,16 @@
     animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }
 
+.error-msg {
+    color: var(--danger);
+    font-size: 0.75rem;
+    margin-top: -4px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-align: center;
+    animation: fadeIn 0.2s ease;
+}
+
 @keyframes shake {
   10%, 90% { transform: translate3d(-1px, 0, 0); }
   20%, 80% { transform: translate3d(2px, 0, 0); }
@@ -114,15 +164,19 @@
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .add-btn {
     background: var(--accent);
-    border: none;
-    border-radius: 9px;
-    padding: 8px 13px;
     color: var(--accent-text);
-    font-family: var(--font-ui);
-    font-size: .85rem;
+    border: none;
+    padding: 0 18px;
+    border-radius: 12px;
     font-weight: 700;
+    font-family: var(--font-ui);
     cursor: pointer;
     transition: opacity var(--t), transform var(--t);
 }
@@ -136,7 +190,44 @@
     transform: translateY(-1px);
 }
 
+/* ─── EMOJI PICKER ──────────────────────────────────────── */
+.emoji-picker-container {
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: 11px;
+    padding: 9px 11px;
+    margin-bottom: 10px;
+}
+
+.emoji-picker-label {
+    margin-top: 0;
+}
+
+.emoji-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.emoji-item {
+    font-size: 1.4rem;
+    cursor: pointer;
+    /* opacity is handled inline */
+}
+
 /* ─── FAVORITES ──────────────────────────────────────── */
+.fav-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.fav-item-container {
+    position: relative;
+    display: inline-block;
+}
+
 .fav-chip {
     background: var(--input);
     border: 1px solid var(--bdr-md);
@@ -171,4 +262,29 @@
 
 .star-active {
     color: var(--warn);
+}
+
+.fav-del-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    font-size: 0.6rem;
+    background: var(--bg-danger-subtle);
+    color: var(--danger);
+    border: none;
+    border-radius: 50%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform var(--t), background var(--t);
+}
+
+.fav-del-btn:hover {
+    transform: scale(1.1);
+    background: var(--danger);
+    color: #fff;
 }

@@ -125,6 +125,27 @@
     text-transform: uppercase;
 }
 
+/* ─── NOUVEAU JEU CUSTOM ─────────────────────────────────────── */
+.new-custom-tile {
+    border-style: dashed;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+}
+
+.new-custom-tile .tile-emoji {
+    margin-bottom: 4px;
+    font-size: 1.5rem;
+}
+
+.new-custom-tile .tile-name,
+.new-custom-tile .tile-rule {
+    text-align: center;
+}
+
 /* bouton suppression jeu custom */
 .delete-game-btn {
     position: absolute;

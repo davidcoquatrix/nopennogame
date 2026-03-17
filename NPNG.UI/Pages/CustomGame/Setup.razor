@@ -4,7 +4,7 @@
 @inject NPNG.Application.Interfaces.IGameCatalogueService GameCatalogueService
 
 <div class="app-header">
-    <div style="display:flex;align-items:center;gap:8px">
+    <div class="header-nav">
         <button class="ico-btn" @onclick="GoBack">←</button>
         <span style="font-size:1.05rem;font-weight:700">Jeu personnalisé</span>
     </div>
@@ -20,8 +20,8 @@
         <button class="toggle-opt @(winCondition == "low" ? "on" : "")" @onclick='() => SetWinCondition("low")'>🎯 Le + bas</button>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 16px;">
-        <div class="field-lbl" style="margin-bottom: 0; margin-top: 0;">Passage du 1er joueur</div>
+    <div class="setting-row">
+        <div class="field-lbl">Passage du 1er joueur</div>
         <label class="toggle-switch">
             <input type="checkbox" @bind="enableFirstPlayer" />
             <span class="toggle-slider"></span>
@@ -30,7 +30,7 @@
 
     @if (enableFirstPlayer)
     {
-        <div class="toggle-row" style="flex-wrap: wrap; margin-bottom: 16px;">
+        <div class="toggle-row mechanic-row">
             <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
             <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Premier (Général)</button>
             <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Dernier (Général)</button>
@@ -39,13 +39,13 @@
         </div>
     }
 
-    <div style="display:flex; gap:12px;">
-        <div style="flex:1;">
+    <div class="input-group-row">
+        <div class="input-group-col">
             <div class="field-lbl">Limite de score (opt.)</div>
             <input class="field-input" type="number" @bind="scoreLimit" placeholder="ex : 500" />
         </div>
 
-        <div style="flex:1;">
+        <div class="input-group-col">
             <div class="field-lbl">Limite de tours (opt.)</div>
             <input class="field-input" type="number" @bind="roundLimit" placeholder="ex : 10" />
         </div>
@@ -61,12 +61,12 @@
     </div>
 </div>
 
-<div style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
-    <input type="checkbox" id="saveGame" @bind="saveToCatalogue" style="width:20px;height:20px;accent-color:var(--accent)" />
-    <label for="saveGame" style="font-size:0.85rem;font-weight:600;cursor:pointer">Sauvegarder ce modèle dans mon catalogue</label>
+<div class="save-game-row">
+    <input type="checkbox" id="saveGame" @bind="saveToCatalogue" class="save-game-checkbox" />
+    <label for="saveGame" class="save-game-lbl">Sauvegarder ce modèle dans mon catalogue</label>
 </div>
 
-<div style="background:rgba(245,230,66,.07);border:1px solid rgba(245,230,66,.2);border-radius:11px;padding:9px 11px;margin-bottom:10px;font-size:.72rem;color:var(--sub)">
+<div class="info-banner">
     💡 Tu pourras modifier ces règles entre deux parties depuis les paramètres.
 </div>
 

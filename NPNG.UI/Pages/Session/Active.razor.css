@@ -1,6 +1,65 @@
 /* ─── SCOPED CSS FOR ACTIVE SESSION ─── */
 
+.no-session {
+    padding: 20px;
+    text-align: center;
+    color: var(--sub);
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.header-round-counter {
+    font-size: .65rem;
+    font-family: var(--font-mono);
+    color: var(--sub);
+}
+
+.tt-btn {
+    font-size: .75rem;
+}
+
+.finish-btn {
+    font-size: .75rem;
+    color: var(--danger);
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
 /* ─── SCORE ENTRY ────────────────────────────────────────────── */
+.entry-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.entry-name-override {
+    flex: unset !important;
+}
+
+.first-player-badge {
+    font-size: .6rem;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+
 /* leaderboard */
 .leaderboard {
     display: flex;
