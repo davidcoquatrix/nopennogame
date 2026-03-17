@@ -1,11 +1,11 @@
 @page "/custom-game"
 @inject NavigationManager NavigationManager
-@inject NPNG.Application.State.GameStateService GameState
-@inject NPNG.Application.Interfaces.IGameCatalogueService GameCatalogueService
+@inject GameStateService GameState
+@inject Application.Interfaces.IGameCatalogueService GameCatalogueService
 
 <div class="app-header">
     <div class="header-nav">
-        <button class="ico-btn" @onclick="GoBack">←</button>
+        <BackButton />
         <span style="font-size:1.05rem;font-weight:700">Jeu personnalisé</span>
     </div>
 </div>
@@ -31,11 +31,11 @@
     @if (enableFirstPlayer)
     {
         <div class="toggle-row mechanic-row">
-            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
-            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Winner)'>🏆 Premier (Général)</button>
-            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.Loser)'>🎯 Dernier (Général)</button>
-            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.HighestInPreviousRound)'>📈 + haut (Manche)</button>
-            <button class="toggle-opt @(firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic.LowestInPreviousRound)'>📉 + bas (Manche)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == FirstPlayerMechanic.Sequential ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(FirstPlayerMechanic.Sequential)'>🔄 Chacun son tour</button>
+            <button class="toggle-opt @(firstPlayerMechanic == FirstPlayerMechanic.Winner ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(FirstPlayerMechanic.Winner)'>🏆 Premier (Général)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == FirstPlayerMechanic.Loser ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(FirstPlayerMechanic.Loser)'>🎯 Dernier (Général)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == FirstPlayerMechanic.HighestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(FirstPlayerMechanic.HighestInPreviousRound)'>📈 + haut (Manche)</button>
+            <button class="toggle-opt @(firstPlayerMechanic == FirstPlayerMechanic.LowestInPreviousRound ? "on" : "")" @onclick='() => SetFirstPlayerMechanic(FirstPlayerMechanic.LowestInPreviousRound)'>📉 + bas (Manche)</button>
         </div>
     }
 
@@ -83,7 +83,7 @@
     private string roundLimit = "";
     private string incrementType = "1_10";
     private bool enableFirstPlayer = true;
-    private NPNG.Domain.Enums.FirstPlayerMechanic firstPlayerMechanic = NPNG.Domain.Enums.FirstPlayerMechanic.Sequential;
+    private FirstPlayerMechanic firstPlayerMechanic = FirstPlayerMechanic.Sequential;
     private bool saveToCatalogue = false;
 
     [SupplyParameterFromQuery(Name = "baseGameId")]
@@ -99,7 +99,7 @@
             if (baseGame != null)
             {
                 gameName = baseGame.Name;
-                winCondition = baseGame.ScoreType == NPNG.Domain.Enums.ScoreType.CumulativeLower ? "low" : "high";
+                winCondition = baseGame.ScoreType == ScoreType.CumulativeLower ? "low" : "high";
                 
                 if (baseGame.Rules != null)
                 {
@@ -107,19 +107,14 @@
                     roundLimit = baseGame.Rules.MaxRounds?.ToString() ?? "";
                     firstPlayerMechanic = baseGame.Rules.FirstPlayerMechanic;
                     
-                    if (firstPlayerMechanic == NPNG.Domain.Enums.FirstPlayerMechanic.None)
+                    if (firstPlayerMechanic == FirstPlayerMechanic.None)
                     {
                         enableFirstPlayer = false;
-                        firstPlayerMechanic = NPNG.Domain.Enums.FirstPlayerMechanic.Sequential; // Keep a default selected if toggled on later
+                        firstPlayerMechanic = FirstPlayerMechanic.Sequential; // Keep a default selected if toggled on later
                     }
                 }
             }
         }
-    }
-
-    private async Task GoBack()
-    {
-        await JSRuntime.InvokeVoidAsync("goBack");
     }
 
     private void SetWinCondition(string condition)
@@ -127,7 +122,7 @@
         winCondition = condition;
     }
 
-    private void SetFirstPlayerMechanic(NPNG.Domain.Enums.FirstPlayerMechanic mechanic)
+    private void SetFirstPlayerMechanic(FirstPlayerMechanic mechanic)
     {
         firstPlayerMechanic = mechanic;
     }
@@ -141,15 +136,15 @@
     {
         if (string.IsNullOrWhiteSpace(gameName)) return;
         
-        var scoreType = winCondition == "high" ? NPNG.Domain.Enums.ScoreType.Cumulative : NPNG.Domain.Enums.ScoreType.CumulativeLower;
+        var scoreType = winCondition == "high" ? ScoreType.Cumulative : ScoreType.CumulativeLower;
         
         int? parsedScoreLimit = int.TryParse(scoreLimit, out var s) ? s : null;
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
         
-        var finalMechanic = enableFirstPlayer ? firstPlayerMechanic : NPNG.Domain.Enums.FirstPlayerMechanic.None;
-        var rules = new NPNG.Domain.Entities.GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit, FirstPlayerMechanic: finalMechanic);
+        var finalMechanic = enableFirstPlayer ? firstPlayerMechanic : FirstPlayerMechanic.None;
+        var rules = new GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit, FirstPlayerMechanic: finalMechanic);
 
-        var template = new NPNG.Domain.Entities.GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
+        var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
         
         if (saveToCatalogue)
         {

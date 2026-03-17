@@ -14,7 +14,7 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
 {
     <div class="app-header">
         <div class="header-nav">
-            <button class="ico-btn" @onclick="GoBack">←</button>
+            <BackButton />
             <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
     </div>
@@ -75,7 +75,7 @@ else
 {
     <div class="app-header">
         <div class="header-nav">
-            <button class="ico-btn" @onclick="GoBack">←</button>
+            <BackButton />
             <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
         <div class="header-actions">
@@ -131,7 +131,7 @@ else
         @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
         {
             var hasMechanic = GameState.CurrentSession.Template?.Rules != null
-                                  && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != NPNG.Domain.Enums.FirstPlayerMechanic.None;
+                                  && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != FirstPlayerMechanic.None;
             var showFirstPlayerBadge = player.IsFirstPlayer && hasMechanic;
 
             <div class="entry-row">
@@ -143,17 +143,10 @@ else
                         <span class="first-player-badge">1ER JOUEUR</span>
                     }
                 </div>
-                <div class="score-controls">
-                    <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -10)">−10</button>
-                    <button class="score-button lrg" @onclick="() => AdjustScore(player.PlayerId, -1)">−1</button>
-                    <input type="number" class="score-value"
-                           value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
-                           @onchange="@(e=> OnScoreInputChange(player.PlayerId, e))"
-                           @onfocus="async e => await ClearText(e)"
-                           inputmode="numeric"/>
-                    <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 1)">+1</button>
-                    <button class="score-button slrg" @onclick="() => AdjustScore(player.PlayerId, 10)">+10</button>
-                </div>
+                <ScoreInput 
+                    Value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
+                    OnScoreAdjusted="@((int amount) => AdjustScore(player.PlayerId, amount))"
+                    OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
             </div>
         }
 
@@ -215,11 +208,6 @@ else
         }
     }
 
-    private void GoBack()
-    {
-        NavigationManager.NavigateTo("players");
-    }
-
     private void GoToHome()
     {
         NavigationManager.NavigateTo("");
@@ -271,11 +259,6 @@ else
     private async Task ResumeSession()
     {
         await GameState.ResumeSessionAsync();
-    }
-
-    private async Task ClearText(FocusEventArgs e)
-    {
-        await JsRuntime.InvokeVoidAsync("clearActiveText");
     }
 
     private async Task FinishSession()

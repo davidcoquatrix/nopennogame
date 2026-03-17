@@ -242,7 +242,7 @@ public class GameStateService
             {
                 var target = CurrentSession.Template.Rules.TargetScore.Value;
                 var playerIds = CurrentSession.Players.Select(p => p.PlayerId);
-                var leaderboard = NPNG.Domain.Services.ScoreCalculator.CalculateLeaderboard(
+                var leaderboard = Domain.Services.ScoreCalculator.CalculateLeaderboard(
                     CurrentSession.Template.ScoreType,
                     playerIds,
                     CurrentSession.Scores);
@@ -285,7 +285,7 @@ public class GameStateService
                 else if (mechanic == FirstPlayerMechanic.Winner || mechanic == FirstPlayerMechanic.Loser)
                 {
                     var playerIds = CurrentSession.Players.Select(p => p.PlayerId);
-                    var leaderboard = NPNG.Domain.Services.ScoreCalculator.CalculateLeaderboard(
+                    var leaderboard = Domain.Services.ScoreCalculator.CalculateLeaderboard(
                         CurrentSession.Template.ScoreType,
                         playerIds,
                         CurrentSession.Scores);

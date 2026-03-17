@@ -139,11 +139,11 @@
 
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
-    [Inject] public NPNG.Application.State.GameStateService GameState { get; set; } = default!;
-    [Inject] public NPNG.Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
+    [Inject] public GameStateService GameState { get; set; } = default!;
+    [Inject] public Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
 
-    private IEnumerable<NPNG.Application.Models.GameCatalogueItem> games = Array.Empty<NPNG.Application.Models.GameCatalogueItem>();
-    private NPNG.Application.Models.GameCatalogueItem? selectedGame;
+    private IEnumerable<Application.Models.GameCatalogueItem> games = Array.Empty<Application.Models.GameCatalogueItem>();
+    private Application.Models.GameCatalogueItem? selectedGame;
     private bool showOverwriteConfirm = false;
     private bool showAbandonConfirm = false;
 
@@ -175,7 +175,7 @@
         GameState.OnStateChanged -= StateHasChanged;
     }
 
-    private void SelectGame(NPNG.Application.Models.GameCatalogueItem game)
+    private void SelectGame(Application.Models.GameCatalogueItem game)
     {
         selectedGame = game;
     }
@@ -230,7 +230,7 @@
         }
     }
 
-    private void TryEditBaseGame(NPNG.Application.Models.GameCatalogueItem game)
+    private void TryEditBaseGame(Application.Models.GameCatalogueItem game)
     {
         isEditingGame = true;
         if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
@@ -273,7 +273,7 @@
         isEditingGame = false;
     }
 
-    private void EditBaseGame(NPNG.Application.Models.GameCatalogueItem game)
+    private void EditBaseGame(Application.Models.GameCatalogueItem game)
     {
         // En passant l'ID dans l'URL, la page custom-game pourra charger le template du jeu de base
         // et préremplir le formulaire.

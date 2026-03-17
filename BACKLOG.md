@@ -33,9 +33,9 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 - [x] **Story 1.4: Quick Score Input**
   - [x] UI/UX Integration (Leaderboard & Quick increment buttons)
   - [x] Domain / State Management integration
-- [ ] **Story 1.5: Correct Mistakes (Time Travel)**
+- [x] **Story 1.5: Correct Mistakes (Time Travel)**
   - [x] UI/UX Integration (Round table, Edit mode)
-  - [ ] Domain / State Management integration
+  - [x] Domain / State Management integration
 
 ### Epic: First Player Selection & Turn Order
 - [x] **Story 1.6: Player Order & Starting Player**

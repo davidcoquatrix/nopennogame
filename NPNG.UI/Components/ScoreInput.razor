@@ -1,0 +1,51 @@
+@inject IJSRuntime JSRuntime
+
+<div class="score-controls">
+    <button class="score-button lrg" @onclick="() => Adjust(-10)">−10</button>
+    <button class="score-button lrg" @onclick="() => Adjust(-1)">−1</button>
+    <input type="number" class="score-value @InputClass"
+           value="@Value"
+           @onchange="HandleChange"
+           @onfocus="ClearText"
+           inputmode="numeric" />
+    <button class="score-button slrg" @onclick="() => Adjust(1)">+1</button>
+    <button class="score-button slrg" @onclick="() => Adjust(10)">+10</button>
+</div>
+
+@code {
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnScoreAdjusted { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnValueChanged { get; set; }
+
+    [Parameter]
+    public string InputClass { get; set; } = "";
+
+    private async Task Adjust(int amount)
+    {
+        if (OnScoreAdjusted.HasDelegate)
+        {
+            await OnScoreAdjusted.InvokeAsync(amount);
+        }
+    }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var result))
+        {
+            if (OnValueChanged.HasDelegate)
+            {
+                await OnValueChanged.InvokeAsync(result);
+            }
+        }
+    }
+
+    private async Task ClearText()
+    {
+        await JSRuntime.InvokeVoidAsync("clearActiveText");
+    }
+}

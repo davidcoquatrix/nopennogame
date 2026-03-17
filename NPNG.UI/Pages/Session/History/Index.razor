@@ -1,134 +1,148 @@
 @page "/session/history"
-@inject NavigationManager NavigationManager
+@using NPNG.Domain.Models
+@using NPNG.Domain.Services
+@using System.Linq
+@inject GameStateService GameState
 
 <div class="app-header">
     <div class="header-nav">
-        <button class="ico-btn" @onclick="GoBack">←</button>
-        <span class="header-title">Skyjo — Historique</span>
+        <BackButton />
+        <span class="header-title">@(GameState.CurrentSession?.Template.Name ?? "Historique")</span>
     </div>
     <div class="header-subtitle">⏪ Mode édition</div>
 </div>
 
-<!-- warning banner -->
-<div class="tt-banner">
-    <span class="ico">⚠️</span>
-    <span class="txt">Mode Time Travel — Modification d'un tour passé. Le classement sera recalculé.</span>
-</div>
+@if (GameState.CurrentSession == null || maxCompletedRound < 1)
+{
+    <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <div class="empty-text">Aucun tour terminé à modifier pour le moment.</div>
+        <button class="primary-btn mt-15" @onclick="GoBack">Retour</button>
+    </div>
+}
+else
+{
+    <!-- warning banner -->
+    <div class="tt-banner">
+        <span class="ico">⚠️</span>
+        <span class="txt">Mode Time Travel — Modification d'un tour passé. Le classement sera recalculé.</span>
+    </div>
 
-<!-- tour nav -->
-<div class="section-label">Sélectionner un tour</div>
-<div class="tt-nav">
-    @for (int i = 1; i <= currentRound; i++)
-    {
-        var roundNum = i;
-        var isCurrent = roundNum == editingRound;
-        var opacity = roundNum > currentRound - 2 && !isCurrent ? "0.3" : "1"; // Just simulating UI state
-        
-        <div class="tt-btn @(isCurrent ? "cur" : "")" style="opacity:@opacity" @onclick="() => SelectRound(roundNum)">
-            T.@roundNum
-        </div>
-    }
-</div>
+    <!-- tour nav -->
+    <div class="section-label">Sélectionner un tour</div>
+    <div class="tt-nav">
+        @for (int i = 1; i <= maxCompletedRound; i++)
+        {
+            var roundNum = i;
+            var isCurrent = roundNum == editingRound;
+            
+            <div class="tt-btn @(isCurrent ? "cur" : "")" @onclick="() => SelectRound(roundNum)">
+                T.@roundNum
+            </div>
+        }
+    </div>
 
-<!-- editable score grid -->
-<div class="section-label">Scores — Tour @editingRound</div>
-<div class="table-container">
-    <table class="round-table editing-mode">
-        <thead>
-            <tr>
-                <th>Joueur</th>
-                @for (int i = 1; i <= currentRound - 1; i++)
-                {
-                    if (i == editingRound)
-                    {
-                        <th class="editing-col-header">T.@i ✎</th>
-                    }
-                    else
-                    {
-                        <th>T.@i</th>
-                    }
-                }
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var player in players)
-            {
-                var isLeader = player == players.OrderBy(p => p.TotalScore).First();
-
+    <!-- editable score grid -->
+    <div class="section-label">Scores — Tour @editingRound</div>
+    <div class="table-container">
+        <table class="round-table editing-mode">
+            <thead>
                 <tr>
-                    <td>@player.Emoji @player.Name</td>
-                    @for (int i = 0; i < currentRound - 1; i++)
+                    <th>Joueur</th>
+                    @for (int i = 1; i <= maxCompletedRound; i++)
                     {
-                        if (i + 1 == editingRound)
+                        if (i == editingRound)
                         {
-                            <td class="editable-col">
-                                <span class="score-value score-value-warn">@tempScores[player.Name]</span>
-                            </td>
+                            <th class="editing-col-header">T.@i ✎</th>
                         }
                         else
                         {
-                            <td>@player.RoundScores[i]</td>
+                            <th>T.@i</th>
                         }
                     }
-                    <td class="total-cell @(isLeader ? "lead" : "")">@player.TotalScore</td>
+                    <th>Total</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+                {
+                    var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
 
-<!-- correction in progress -->
-<div class="entry-panel">
-    <div class="entry-panel-label">Correction — Tour @editingRound</div>
-    
-    @foreach (var player in players)
-    {
-        <div class="entry-row">
-            <div class="entry-avatar">@player.Emoji</div>
-            <span class="entry-name">@player.Name</span>
-            <div class="score-controls">
-                <button class="score-button lrg" @onclick="() => AdjustEditScore(player.Name, -10)">−10</button>
-                <button class="score-button sml" @onclick="() => AdjustEditScore(player.Name, -1)">−1</button>
-                <span class="score-value score-value-warn">@tempScores[player.Name]</span>
-                <button class="score-button ssml" @onclick="() => AdjustEditScore(player.Name, 1)">+1</button>
-                <button class="score-button slrg" @onclick="() => AdjustEditScore(player.Name, 10)">+10</button>
+                    <tr>
+                        <td>@player.Emoji @player.Name</td>
+                        @for (int i = 1; i <= maxCompletedRound; i++)
+                        {
+                            if (i == editingRound)
+                            {
+                                <td class="editable-col">
+                                    <span class="score-value score-value-warn">@(tempScores.GetValueOrDefault(player.PlayerId, 0))</span>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>@(GetScoreForRound(player.PlayerId, i))</td>
+                            }
+                        }
+                        <td class="total-cell @(isLeader ? "lead" : "")">
+                            @GetProjectedTotalScore(player.PlayerId)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- correction in progress -->
+    <div class="entry-panel">
+        <div class="entry-panel-label">Correction — Tour @editingRound</div>
+        
+        @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+        {
+            <div class="entry-row">
+                <div class="entry-avatar">@player.Emoji</div>
+                <span class="entry-name">@player.Name</span>
+                <ScoreInput 
+                    InputClass="score-value-warn"
+                    Value="@(tempScores.GetValueOrDefault(player.PlayerId, 0))"
+                    OnScoreAdjusted="@((int amount) => AdjustEditScore(player.PlayerId, amount))"
+                    OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
             </div>
-        </div>
-    }
-    
-    <button class="validate-btn mt-15" @onclick="ConfirmEdit">✓ Confirmer le Tour @editingRound</button>
-</div>
+        }
+        
+        <button class="validate-btn mt-15" @onclick="ConfirmEdit">✓ Confirmer le Tour @editingRound</button>
+    </div>
+}
 
 @code {
-    public class HistoryPlayer
-    {
-        public string Name { get; set; } = "";
-        public string Emoji { get; set; } = "";
-        public List<int> RoundScores { get; set; } = new();
-        public int TotalScore => RoundScores.Sum();
-    }
-
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
 
-    private List<HistoryPlayer> players = new();
-    private int currentRound = 5;
-    private int editingRound = 3;
-
-    private Dictionary<string, int> tempScores = new();
+    private int maxCompletedRound = 0;
+    private int editingRound = 1;
+    private Dictionary<Guid, int> tempScores = new();
+    private List<PlayerScore> leaderboard = new();
 
     protected override void OnInitialized()
     {
-        // Mock data based on the design
-        players = new List<HistoryPlayer>
+        if (GameState.CurrentSession != null)
         {
-            new() { Name = "Dylan", Emoji = "🎮", RoundScores = new() { 8, 3, 7, 4 } },
-            new() { Name = "Bob", Emoji = "🌟", RoundScores = new() { 12, 5, 9, 5 } },
-            new() { Name = "Alice", Emoji = "🔥", RoundScores = new() { 11, 8, 14, 14 } },
-            new() { Name = "Carla", Emoji = "💜", RoundScores = new() { 15, 12, 16, 15 } }
-        };
-        
-        LoadRoundToEdit(editingRound);
+            maxCompletedRound = GameState.CurrentSession.Status == SessionStatus.Finished
+                ? GameState.CurrentSession.CurrentRound
+                : GameState.CurrentSession.CurrentRound - 1;
+
+            if (maxCompletedRound > 0)
+            {
+                editingRound = maxCompletedRound; // Default to most recently completed round
+                LoadRoundToEdit(editingRound);
+                CalculateCurrentLeaderboard();
+            }
+        }
+    }
+
+    private void SelectRound(int round)
+    {
+        editingRound = round;
+        LoadRoundToEdit(round);
+        CalculateCurrentLeaderboard(); // Needed to reflect the change in selected round correctly
     }
 
     private async Task GoBack()
@@ -136,38 +150,88 @@
         await JSRuntime.InvokeVoidAsync("goBack");
     }
 
-    private void SelectRound(int round)
-    {
-        editingRound = round;
-        LoadRoundToEdit(round);
-    }
-
     private void LoadRoundToEdit(int round)
     {
         tempScores.Clear();
-        foreach (var player in players)
+        if (GameState.CurrentSession != null)
         {
-            tempScores[player.Name] = player.RoundScores[round - 1];
+            foreach (var player in GameState.CurrentSession.Players)
+            {
+                var entry = GameState.CurrentSession.Scores.FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == round);
+                tempScores[player.PlayerId] = entry?.Value ?? 0;
+            }
         }
     }
 
-    private void AdjustEditScore(string playerName, int amount)
+    private void AdjustEditScore(Guid playerId, int amount)
     {
-        if (tempScores.ContainsKey(playerName))
+        if (tempScores.ContainsKey(playerId))
         {
-            tempScores[playerName] += amount;
+            tempScores[playerId] += amount;
+            CalculateCurrentLeaderboard(); // Recalculate leaderboard on every change for dynamic total preview
+        }
+    }
+
+    private int GetScoreForRound(Guid playerId, int round)
+    {
+        if (GameState.CurrentSession == null) return 0;
+        var entry = GameState.CurrentSession.Scores.FirstOrDefault(s => s.PlayerId == playerId && s.Round == round);
+        return entry?.Value ?? 0;
+    }
+
+    private int GetProjectedTotalScore(Guid playerId)
+    {
+        if (GameState.CurrentSession == null) return 0;
+        
+        var actualScoresSum = GameState.CurrentSession.Scores
+            .Where(s => s.PlayerId == playerId && s.Round <= maxCompletedRound && s.Round != editingRound)
+            .Sum(s => s.Value);
+
+        var editedScore = tempScores.GetValueOrDefault(playerId, 0);
+
+        return actualScoresSum + editedScore;
+    }
+
+    private void CalculateCurrentLeaderboard()
+    {
+        if (GameState.CurrentSession == null) return;
+        
+        var playerIds = GameState.CurrentSession.Players.Select(p => p.PlayerId).ToList();
+        
+        var projectedScores = GameState.CurrentSession.Scores
+            .Where(s => s.Round <= maxCompletedRound && s.Round != editingRound)
+            .ToList();
+        
+        foreach (var kvp in tempScores)
+        {
+            projectedScores.Add(new ScoreEntry(Guid.NewGuid(), GameState.CurrentSession.Id, kvp.Key, editingRound, kvp.Value));
+        }
+
+        leaderboard = ScoreCalculator.CalculateLeaderboard(
+            GameState.CurrentSession.Template.ScoreType,
+            playerIds,
+            projectedScores
+        ).ToList();
+    }
+
+    private void OnScoreInputChange(Guid playerId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var result))
+        {
+            tempScores[playerId] = result;
+            CalculateCurrentLeaderboard();
         }
     }
 
     private async Task ConfirmEdit()
     {
-        foreach (var player in players)
+        if (GameState.CurrentSession != null)
         {
-            if (tempScores.ContainsKey(player.Name))
+            foreach (var kvp in tempScores)
             {
-                player.RoundScores[editingRound - 1] = tempScores[player.Name];
+                await GameState.RecordScoreAsync(kvp.Key, editingRound, kvp.Value);
             }
         }
-        await GoBack(); // Retour automatique à la session active après validation ? (Comportement typique)
+        await GoBack();
     }
 }

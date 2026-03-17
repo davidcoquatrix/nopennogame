@@ -1,0 +1,20 @@
+@inject IJSRuntime JSRuntime
+
+<button class="ico-btn" @onclick="HandleClick">←</button>
+
+@code {
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("goBack");
+        }
+    }
+}
