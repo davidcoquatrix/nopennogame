@@ -1,0 +1,29 @@
+/* ─── SCOPED CSS FOR AKROPOLIS CATEGORY ROW ─── */
+
+.akr-cat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.akr-cat-label {
+    flex: 1;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--txt);
+}
+
+.akr-cat-x {
+    font-size: .7rem;
+    color: var(--sub);
+}
+
+.akr-cat-subtotal {
+    width: 34px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+}

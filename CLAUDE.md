@@ -25,5 +25,4 @@ Avant de générer du code, de proposer une architecture ou de valider une tâch
 
 ## État connu à date (voir `AGENT.md` pour le détail)
 - MVP Phase 1 fonctionnellement complet (setup, saisie de score, Time Travel, favoris, mécaniques de premier joueur, catalogue de jeux custom).
-- Bug connu : sélectionner "Accropolis" plante l'app car `ScoreType.Structured` n'est pas implémenté dans `ScoreCalculator`.
 - Phase 2/3 (historique des parties finies, règles avancées, partage) pas encore commencées.

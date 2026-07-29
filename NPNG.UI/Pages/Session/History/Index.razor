@@ -12,7 +12,15 @@
     <div class="header-subtitle">⏪ Mode édition</div>
 </div>
 
-@if (GameState.CurrentSession == null || maxCompletedRound < 1)
+@if (GameState.CurrentSession != null && GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)
+{
+    <div class="section-label">Feuille de score</div>
+    <AkropolisScoreSheet
+        Players="GameState.CurrentSession.Players"
+        ExistingScores="GameState.CurrentSession.Scores"
+        OnSubmit="HandleStructuredEdit" />
+}
+else if (GameState.CurrentSession == null || maxCompletedRound < 1)
 {
     <div class="empty-state">
         <div class="empty-icon">⏳</div>
@@ -123,18 +131,18 @@ else
 
     protected override void OnInitialized()
     {
-        if (GameState.CurrentSession != null)
-        {
-            maxCompletedRound = GameState.CurrentSession.Status == SessionStatus.Finished
-                ? GameState.CurrentSession.CurrentRound
-                : GameState.CurrentSession.CurrentRound - 1;
+        if (GameState.CurrentSession == null) return;
+        if (GameState.CurrentSession.Template.ScoreType == ScoreType.Structured) return;
 
-            if (maxCompletedRound > 0)
-            {
-                editingRound = maxCompletedRound; // Default to most recently completed round
-                LoadRoundToEdit(editingRound);
-                CalculateCurrentLeaderboard();
-            }
+        maxCompletedRound = GameState.CurrentSession.Status == SessionStatus.Finished
+            ? GameState.CurrentSession.CurrentRound
+            : GameState.CurrentSession.CurrentRound - 1;
+
+        if (maxCompletedRound > 0)
+        {
+            editingRound = maxCompletedRound; // Default to most recently completed round
+            LoadRoundToEdit(editingRound);
+            CalculateCurrentLeaderboard();
         }
     }
 
@@ -232,6 +240,15 @@ else
                 await GameState.RecordScoreAsync(kvp.Key, editingRound, kvp.Value);
             }
         }
+        await GoBack();
+    }
+
+    private async Task HandleStructuredEdit(IReadOnlyDictionary<Guid, AkropolisScoreDetail> details)
+    {
+        // La session est Finished ici : ResumeSessionAsync la repasse Active sans toucher CurrentRound
+        // pour les jeux Structured, ce qui permet à SubmitStructuredScoreAndFinishAsync d'utiliser le round fixe.
+        await GameState.ResumeSessionAsync();
+        await GameState.SubmitStructuredScoreAndFinishAsync(details);
         await GoBack();
     }
 }

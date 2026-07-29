@@ -1,0 +1,20 @@
+<div class="akr-cat-row">
+    <span class="akr-cat-label">@Label</span>
+    <NumericCellInput Value="Category.Multiplicateur" CssClass="akr-cat-input"
+        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Category with { Multiplicateur = v }))" />
+    <span class="akr-cat-x">×</span>
+    <NumericCellInput Value="Category.Quartiers" CssClass="akr-cat-input"
+        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Category with { Quartiers = v }))" />
+    <span class="akr-cat-subtotal">@Category.Subtotal</span>
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public AkropolisCategoryScore Category { get; set; } = new(0, 0);
+
+    [Parameter]
+    public EventCallback<AkropolisCategoryScore> OnChanged { get; set; }
+}

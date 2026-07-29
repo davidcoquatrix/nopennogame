@@ -5,14 +5,6 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 
 ---
 
-## 🐛 Known Issues
-- **Accropolis crashes on start.** It's registered in the catalogue with `ScoreType.Structured`, but
-  `ScoreCalculator.CalculateLeaderboard` only implements `Cumulative` / `CumulativeLower` and throws
-  `NotImplementedException` for anything else. Needs either a real `Structured` implementation or the
-  game should be hidden from the catalogue until it's ready.
-
----
-
 ## 🎯 Phase 1: MVP (The Core Offline Experience)
 *Goal: Provide a fully functional, offline-first scoring experience that is strictly better than pen and paper.*
 

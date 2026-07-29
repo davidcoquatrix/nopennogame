@@ -321,6 +321,24 @@ body::before {
     background: var(--bg-accent-subtle);
 }
 
+.akr-cat-input {
+    width: 42px;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: 7px;
+    padding: 5px 0;
+    text-align: center;
+    color: var(--txt);
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    font-weight: 700;
+    outline: none;
+}
+
+.akr-cat-input:focus {
+    border-color: var(--accent);
+}
+
 .validate-btn {
   width: 100%;
   background: var(--accent);

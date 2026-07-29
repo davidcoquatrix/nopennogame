@@ -16,7 +16,7 @@ public enum ScoreType
     CumulativeLower,
     
     /// <summary>
-    /// Score par catégorie avec règles personnalisées (ex: Accropolis).
+    /// Score par catégorie avec règles personnalisées (ex: Akropolis).
     /// </summary>
     Structured
 }

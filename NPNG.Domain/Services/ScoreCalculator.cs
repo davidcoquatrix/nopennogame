@@ -32,7 +32,7 @@ public static class ScoreCalculator
         // 2. Trier les joueurs en fonction de la règle du jeu (Score le plus haut ou le plus bas gagne)
         var sortedScores = scoreType switch
         {
-            ScoreType.Cumulative => totalScores.OrderByDescending(kvp => kvp.Value).ToList(),
+            ScoreType.Cumulative or ScoreType.Structured => totalScores.OrderByDescending(kvp => kvp.Value).ToList(),
             ScoreType.CumulativeLower => totalScores.OrderBy(kvp => kvp.Value).ToList(),
             _ => throw new NotImplementedException($"Le type de score {scoreType} n'est pas encore implémenté.")
         };

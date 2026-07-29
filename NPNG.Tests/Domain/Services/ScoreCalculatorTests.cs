@@ -113,4 +113,40 @@ public class ScoreCalculatorTests
         Assert.Equal(20, result[2].TotalScore);
         Assert.Equal(3, result[2].Rank); // 3rd (skipped 2nd)
     }
+
+    [Fact]
+    public void CalculateLeaderboard_WhenStructured_HighestScoreWinsLikeCumulative()
+    {
+        // Arrange
+        var detail = new AkropolisScoreDetail(
+            Carrieres: new(2, 3), // Subtotal 6
+            Habitations: new(0, 0),
+            Marches: new(0, 0),
+            Casernes: new(0, 0),
+            Jardins: new(0, 0),
+            PierresRestantes: 4); // Total 10
+
+        var entries = new List<ScoreEntry>
+        {
+            new(Guid.NewGuid(), _sessionId, _player1, 1, detail.Total, detail), // 10
+            new(Guid.NewGuid(), _sessionId, _player2, 1, 25),                    // 25 (Winner)
+            new(Guid.NewGuid(), _sessionId, _player3, 1, 15)                     // 15
+        };
+
+        // Act
+        var result = ScoreCalculator.CalculateLeaderboard(ScoreType.Structured, PlayerIds, entries);
+
+        // Assert
+        Assert.Equal(_player2, result[0].PlayerId);
+        Assert.Equal(25, result[0].TotalScore);
+        Assert.Equal(1, result[0].Rank);
+
+        Assert.Equal(_player3, result[1].PlayerId);
+        Assert.Equal(15, result[1].TotalScore);
+        Assert.Equal(2, result[1].Rank);
+
+        Assert.Equal(_player1, result[2].PlayerId);
+        Assert.Equal(10, result[2].TotalScore);
+        Assert.Equal(3, result[2].Rank);
+    }
 }

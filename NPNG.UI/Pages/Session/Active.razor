@@ -69,7 +69,29 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
     </div>
 
     <button class="btn-cta mt-20" @onclick="GoToHome">Retour à l'accueil</button>
-    <button class="btn-secondary" @onclick="ResumeSession">Continuer la partie quand même</button>
+    @if (GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)
+    {
+        <button class="btn-secondary" @onclick="GoToTimeTravel">✎ Modifier le score</button>
+    }
+    else
+    {
+        <button class="btn-secondary" @onclick="ResumeSession">Continuer la partie quand même</button>
+    }
+}
+else if (GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)
+{
+    <div class="app-header">
+        <div class="header-nav">
+            <BackButton />
+            <span class="header-title">@GameState.CurrentSession.Template.Name</span>
+        </div>
+    </div>
+
+    <div class="section-label">Feuille de score</div>
+    <AkropolisScoreSheet
+        Players="GameState.CurrentSession.Players"
+        ExistingScores="GameState.CurrentSession.Scores"
+        OnSubmit="HandleStructuredSubmit" />
 }
 else
 {
@@ -264,6 +286,11 @@ else
     private async Task FinishSession()
     {
         await GameState.FinishSessionAsync();
+    }
+
+    private async Task HandleStructuredSubmit(IReadOnlyDictionary<Guid, AkropolisScoreDetail> details)
+    {
+        await GameState.SubmitStructuredScoreAndFinishAsync(details);
     }
 
 }

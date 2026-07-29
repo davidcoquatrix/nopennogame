@@ -8,4 +8,5 @@ public record ScoreEntry(
     Guid SessionId,
     Guid PlayerId,
     int Round,
-    int Value);
+    int Value,
+    AkropolisScoreDetail? AkropolisDetail = null);

@@ -50,9 +50,13 @@ public class GameStateService
 
     /// <summary>
     /// Étape 1 : Initialise une nouvelle partie (en attente de joueurs).
+    /// Abandonne la partie en cours s'il y en a une, pour qu'elle ne ressurgisse pas
+    /// comme "partie active" au prochain chargement (chaque session persiste sous sa propre clé).
     /// </summary>
     public async Task InitializeNewSessionAsync(GameTemplate template)
     {
+        await AbandonSessionAsync();
+
         CurrentSession = Session.Create(template);
         await SaveStateAsync();
     }
@@ -189,7 +193,14 @@ public class GameStateService
     /// <summary>
     /// Ajoute ou met à jour un score pour un joueur lors d'une manche (Gère la saisie rapide et le Time Travel).
     /// </summary>
-    public async Task RecordScoreAsync(Guid playerId, int round, int value)
+    public Task RecordScoreAsync(Guid playerId, int round, int value) =>
+        RecordScoreAsync(playerId, round, value, akropolisDetail: null);
+
+    /// <summary>
+    /// Ajoute ou met à jour un score pour un joueur lors d'une manche, avec le détail structuré
+    /// optionnel (ex: Akropolis) associé (Gère la saisie rapide et le Time Travel).
+    /// </summary>
+    public async Task RecordScoreAsync(Guid playerId, int round, int value, AkropolisScoreDetail? akropolisDetail)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active)
         {
@@ -202,20 +213,41 @@ public class GameStateService
         if (existingScore is null)
         {
             // Nouveau score
-            var newEntry = new ScoreEntry(Guid.NewGuid(), CurrentSession.Id, playerId, round, value);
+            var newEntry = new ScoreEntry(Guid.NewGuid(), CurrentSession.Id, playerId, round, value, akropolisDetail);
             newScores = CurrentSession.Scores.Add(newEntry);
         }
         else
         {
             // Modification (Time Travel)
-            var updatedEntry = existingScore with { Value = value };
+            var updatedEntry = existingScore with { Value = value, AkropolisDetail = akropolisDetail };
             newScores = CurrentSession.Scores.Replace(existingScore, updatedEntry);
         }
 
         CurrentSession = CurrentSession with { Scores = newScores };
         await SaveStateAsync();
     }
-    
+
+    /// <summary>
+    /// Round fixe unique utilisé pour les jeux Structured (ex: Akropolis), qui n'ont pas de notion de tour.
+    /// </summary>
+    public const int AkropolisScoringRound = 1;
+
+    /// <summary>
+    /// Enregistre le détail structuré de fin de partie (ex: Akropolis) pour chaque joueur,
+    /// au round fixe unique, puis termine la partie immédiatement (pas de notion de tour).
+    /// </summary>
+    public async Task SubmitStructuredScoreAndFinishAsync(IReadOnlyDictionary<Guid, AkropolisScoreDetail> detailsByPlayer)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+
+        foreach (var (playerId, detail) in detailsByPlayer)
+        {
+            await RecordScoreAsync(playerId, AkropolisScoringRound, detail.Total, detail);
+        }
+
+        await FinishSessionAsync();
+    }
+
     /// <summary>
     /// Valide le tour en cours et passe au suivant.
     /// Met à jour le FirstPlayer en fonction de l'ordre de la table.
@@ -367,19 +399,27 @@ public class GameStateService
     public async Task ResumeSessionAsync()
     {
         if (CurrentSession is null) return;
-        
-        CurrentSession = CurrentSession with 
-        { 
+
+        CurrentSession = CurrentSession with
+        {
             Status = SessionStatus.Active,
             EndedAt = null,
             RulesOverridden = true
         };
-        
+
+        // Les jeux Structured (ex: Akropolis) n'ont qu'un seul round fixe : rien à faire avancer,
+        // sous peine de créer une 2e entrée de score au round suivant (double comptage du total).
+        if (CurrentSession.Template.ScoreType == ScoreType.Structured)
+        {
+            await SaveStateAsync();
+            return;
+        }
+
         // Comme on reprend, on passe le tour qui a déclenché la fin
         // On fait avancer le FirstPlayer manuellement pour préparer le prochain tour
         var currentFirstIndex = CurrentSession.Players.ToList().FindIndex(p => p.IsFirstPlayer);
         var updatedPlayers = CurrentSession.Players.ToList();
-        
+
         if (currentFirstIndex >= 0 && updatedPlayers.Count > 0)
         {
             updatedPlayers[currentFirstIndex] = updatedPlayers[currentFirstIndex] with { IsFirstPlayer = false };
@@ -387,12 +427,12 @@ public class GameStateService
             updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };
         }
 
-        CurrentSession = CurrentSession with 
-        { 
+        CurrentSession = CurrentSession with
+        {
             CurrentRound = CurrentSession.CurrentRound + 1,
             Players = updatedPlayers.ToImmutableArray()
         };
-        
+
         await SaveStateAsync();
     }
 

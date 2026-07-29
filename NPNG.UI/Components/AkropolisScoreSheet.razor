@@ -1,0 +1,164 @@
+@using System.Collections.Immutable
+
+<div class="entry-panel">
+    @{
+        var orderedPlayers = Players.OrderBy(p => p.DisplayOrder).ToList();
+    }
+
+    <div class="akr-category-section akr-cat-carrieres">
+        <p class="akr-category-title">Carrières</p>
+        <div class="akr-cat-header">
+            <span class="akr-cat-header-label-spacer"></span>
+            <span class="akr-cat-header-col">Mult.</span>
+            <span class="akr-cat-header-sep"></span>
+            <span class="akr-cat-header-col">Tuiles</span>
+            <span class="akr-cat-header-total-spacer"></span>
+        </div>
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <AkropolisCategoryRow Label="@($"{player.Emoji} {player.Name}")" Category="detail.Carrieres"
+                OnChanged="@((AkropolisCategoryScore c) => UpdateDetail(player.PlayerId, detail with { Carrieres = c }))" />
+        }
+    </div>
+
+    <div class="akr-category-section akr-cat-habitations">
+        <p class="akr-category-title">Habitations</p>
+        <div class="akr-cat-header">
+            <span class="akr-cat-header-label-spacer"></span>
+            <span class="akr-cat-header-col">Mult.</span>
+            <span class="akr-cat-header-sep"></span>
+            <span class="akr-cat-header-col">Tuiles</span>
+            <span class="akr-cat-header-total-spacer"></span>
+        </div>
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <AkropolisCategoryRow Label="@($"{player.Emoji} {player.Name}")" Category="detail.Habitations"
+                OnChanged="@((AkropolisCategoryScore c) => UpdateDetail(player.PlayerId, detail with { Habitations = c }))" />
+        }
+    </div>
+
+    <div class="akr-category-section akr-cat-marches">
+        <p class="akr-category-title">Marchés</p>
+        <div class="akr-cat-header">
+            <span class="akr-cat-header-label-spacer"></span>
+            <span class="akr-cat-header-col">Mult.</span>
+            <span class="akr-cat-header-sep"></span>
+            <span class="akr-cat-header-col">Tuiles</span>
+            <span class="akr-cat-header-total-spacer"></span>
+        </div>
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <AkropolisCategoryRow Label="@($"{player.Emoji} {player.Name}")" Category="detail.Marches"
+                OnChanged="@((AkropolisCategoryScore c) => UpdateDetail(player.PlayerId, detail with { Marches = c }))" />
+        }
+    </div>
+
+    <div class="akr-category-section akr-cat-casernes">
+        <p class="akr-category-title">Casernes</p>
+        <div class="akr-cat-header">
+            <span class="akr-cat-header-label-spacer"></span>
+            <span class="akr-cat-header-col">Mult.</span>
+            <span class="akr-cat-header-sep"></span>
+            <span class="akr-cat-header-col">Tuiles</span>
+            <span class="akr-cat-header-total-spacer"></span>
+        </div>
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <AkropolisCategoryRow Label="@($"{player.Emoji} {player.Name}")" Category="detail.Casernes"
+                OnChanged="@((AkropolisCategoryScore c) => UpdateDetail(player.PlayerId, detail with { Casernes = c }))" />
+        }
+    </div>
+
+    <div class="akr-category-section akr-cat-jardins">
+        <p class="akr-category-title">Jardins</p>
+        <div class="akr-cat-header">
+            <span class="akr-cat-header-label-spacer"></span>
+            <span class="akr-cat-header-col">Mult.</span>
+            <span class="akr-cat-header-sep"></span>
+            <span class="akr-cat-header-col">Tuiles</span>
+            <span class="akr-cat-header-total-spacer"></span>
+        </div>
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <AkropolisCategoryRow Label="@($"{player.Emoji} {player.Name}")" Category="detail.Jardins"
+                OnChanged="@((AkropolisCategoryScore c) => UpdateDetail(player.PlayerId, detail with { Jardins = c }))" />
+        }
+    </div>
+
+    <div class="akr-category-section akr-cat-pierres">
+        <p class="akr-category-title">Pierres restantes</p>
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <div class="akr-cat-row">
+                <span class="akr-cat-label">@player.Emoji @player.Name</span>
+                <NumericCellInput Value="detail.PierresRestantes" CssClass="akr-cat-input"
+                    OnValueChanged="@((int v) => UpdateStones(player.PlayerId, detail, v))" />
+            </div>
+        }
+    </div>
+
+    <div class="akr-category-section">
+        @foreach (var player in orderedPlayers)
+        {
+            var detail = GetDetail(player.PlayerId);
+            <div class="akr-total-row">
+                <span class="entry-avatar">@player.Emoji</span>
+                <span class="entry-name">@player.Name</span>
+                <span class="akr-player-total">@detail.Total pts</span>
+            </div>
+        }
+    </div>
+
+    <button class="validate-btn" @onclick="Submit">✓ &nbsp;Terminer la partie</button>
+</div>
+
+@code {
+    [Parameter]
+    public ImmutableArray<SessionPlayer> Players { get; set; } = ImmutableArray<SessionPlayer>.Empty;
+
+    [Parameter]
+    public ImmutableArray<ScoreEntry> ExistingScores { get; set; } = ImmutableArray<ScoreEntry>.Empty;
+
+    [Parameter]
+    public EventCallback<IReadOnlyDictionary<Guid, AkropolisScoreDetail>> OnSubmit { get; set; }
+
+    private readonly Dictionary<Guid, AkropolisScoreDetail> details = new();
+
+    protected override void OnParametersSet()
+    {
+        foreach (var player in Players)
+        {
+            if (!details.ContainsKey(player.PlayerId))
+            {
+                var existing = ExistingScores.FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == GameStateService.AkropolisScoringRound);
+                details[player.PlayerId] = existing?.AkropolisDetail ?? AkropolisScoreDetail.Empty;
+            }
+        }
+    }
+
+    private AkropolisScoreDetail GetDetail(Guid playerId) => details.GetValueOrDefault(playerId, AkropolisScoreDetail.Empty);
+
+    private void UpdateDetail(Guid playerId, AkropolisScoreDetail detail)
+    {
+        details[playerId] = detail;
+    }
+
+    private void UpdateStones(Guid playerId, AkropolisScoreDetail detail, int value)
+    {
+        details[playerId] = detail with { PierresRestantes = value };
+    }
+
+    private async Task Submit()
+    {
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(details);
+        }
+    }
+}

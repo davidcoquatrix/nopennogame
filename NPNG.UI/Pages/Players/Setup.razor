@@ -7,7 +7,7 @@
         <BackButton />
         <span style="font-size:1.05rem;font-weight:700">@GameName — Joueurs</span>
     </div>
-    <div class="header-count">@CurrentPlayerCount/8</div>
+    <div class="header-count">@CurrentPlayerCount/@MaxPlayers</div>
 </div>
 
 @if (GameState.CurrentSession != null && (GameState.CurrentSession.CurrentRound > 1 || GameState.CurrentSession.Scores.Any()))
@@ -80,7 +80,7 @@ else
     <input class="add-input @(showDuplicateError ? "error" : "")" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput"
            @onkeyup="HandleKeyUp"/>
     <button class="add-btn" @onclick="AddPlayer"
-            disabled="@(string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8)">＋ Ajouter
+            disabled="@(string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= MaxPlayers)">＋ Ajouter
     </button>
 </div>
 @if (showDuplicateError)
@@ -108,7 +108,7 @@ else
             var isAlreadyInGame = GameState.CurrentSession?.Players.Any(p => p.Name.Equals(fav.Name, StringComparison.OrdinalIgnoreCase)) == true;
             <div class="fav-item-container">
                 <button class="fav-chip" 
-                        @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= 8)">
+                        @onclick="() => AddFavoritePlayerToGame(fav)" disabled="@(isAlreadyInGame || CurrentPlayerCount >= MaxPlayers)">
                     <span class="fav-emoji">@fav.DefaultEmoji</span>
                     <span>@fav.Name</span>
                 </button>
@@ -141,7 +141,10 @@ else
     private List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
     private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA", "#F472B6" };
 
+    private const int DefaultMaxPlayers = 8;
+
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
+    private int MaxPlayers => GameState.CurrentSession?.Template.Rules?.MaxPlayers ?? DefaultMaxPlayers;
 
     protected override async Task OnInitializedAsync()
     {
@@ -203,7 +206,7 @@ else
     
     private async Task AddFavoritePlayerToGame(Player fav)
     {
-        if (CurrentPlayerCount >= 8) return;
+        if (CurrentPlayerCount >= MaxPlayers) return;
         var color = availableColors[CurrentPlayerCount % availableColors.Count];
         await GameState.AddPlayerToSetupAsync(fav.Name, fav.DefaultEmoji, color);
     }
@@ -228,7 +231,7 @@ else
 
     private async Task AddPlayer()
     {
-        if (string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= 8) return;
+        if (string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= MaxPlayers) return;
 
         var nameToAdding = newPlayerName.Trim();
         

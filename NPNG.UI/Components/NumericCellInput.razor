@@ -1,0 +1,23 @@
+<input type="number" inputmode="numeric" class="@CssClass"
+       value="@Value"
+       @onchange="HandleChange" />
+
+@code {
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public string CssClass { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<int> OnValueChanged { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        var result = int.TryParse(e.Value?.ToString(), out var parsed) ? parsed : 0;
+        if (OnValueChanged.HasDelegate)
+        {
+            await OnValueChanged.InvokeAsync(result);
+        }
+    }
+}

@@ -33,7 +33,7 @@ Target: personal use / friend group. Solo developer project.
 ```
 GameTemplate
   Id: Guid
-  Name: string                  // "Skyjo", "Rami", "Accropolis"...
+  Name: string                  // "Skyjo", "Rami", "Akropolis"...
   ScoreType: ScoreType          // enum — see below
   Description: string?
   Rules: JsonElement?           // structured rules for complex games
@@ -67,7 +67,7 @@ ScoreEntry
 enum ScoreType
   Cumulative        // total = sum of rounds, higher wins (Rami, Uno)
   CumulativeLower   // total = sum of rounds, lower wins (Skyjo)
-  Structured        // per-category scoring with custom rules (Accropolis)
+  Structured        // per-category scoring with custom rules (Akropolis)
 
 enum SessionStatus
   Active | Finished | Abandoned
@@ -79,17 +79,13 @@ enum SessionStatus
 
 ### Phase 1 — MVP (done)
 - [x] Blazor PWA project setup
-- [x] GameTemplate model + 4 built-in games: Skyjo, Rami, Uno, Accropolis (+ custom game creation)
+- [x] GameTemplate model + 4 built-in games: Skyjo, Rami, Uno, Akropolis (+ custom game creation)
 - [x] Create session screen (pick game, add players)
 - [x] Score entry screen (per round, +/- buttons)
 - [x] Live leaderboard during game
 - [x] Session History / Time Travel UI
 - [x] LocalStorage persistence of active session & State Management
 - [x] Player order, manual/automatic first-player mechanics, favorite players, custom game catalogue
-
-> ⚠️ Known gap: `Accropolis` is registered with `ScoreType.Structured`, but `ScoreCalculator.CalculateLeaderboard`
-> only implements `Cumulative` / `CumulativeLower` and throws `NotImplementedException` for anything else.
-> Selecting Accropolis currently crashes the app on the leaderboard screen. Needs a fix before Phase 3.
 
 ### Phase 2 — History
 - [ ] IndexedDB persistence of finished sessions
@@ -98,8 +94,9 @@ enum SessionStatus
 - [x] End-of-game summary screen (winner banner + final leaderboard recap, in `Session/Active.razor`)
 
 ### Phase 3 — Game catalogue
-- [x] More built-in games (Uno, Accropolis added to the catalogue) + custom game creation/saving
-- [ ] Structured ScoreType implementation (Accropolis categories) — see known gap above, currently crashes
+- [x] More built-in games (Uno, Akropolis added to the catalogue) + custom game creation/saving
+- [x] Structured ScoreType implementation (Akropolis: manual category score sheet — multiplicateur × quartiers
+      per category + pierres restantes, no in-app rules validation)
 - [ ] Extensible rules engine for new game types
 
 ### Phase 4 — Polish
