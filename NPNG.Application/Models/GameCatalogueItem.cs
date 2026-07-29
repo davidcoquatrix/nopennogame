@@ -15,9 +15,14 @@ public record GameCatalogueItem(
     string Badge, 
     string Color, 
     ScoreType ScoreType, 
-    GameRules? Rules = null, 
+    GameRules? Rules = null,
     bool IsCustom = false)
 {
+    /// <summary>
+    /// Identifiant fixe de la tuile "Nouveau jeu" du catalogue, utilisée pour rediriger vers l'écran de création.
+    /// </summary>
+    public static readonly Guid CustomGameTemplateId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+
     public GameTemplate ToGameTemplate()
     {
         return new GameTemplate(Id, Name, ScoreType, Description, Rules);

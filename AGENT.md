@@ -77,23 +77,29 @@ enum SessionStatus
 
 ## Roadmap
 
-### Phase 1 — MVP (current focus)
+### Phase 1 — MVP (done)
 - [x] Blazor PWA project setup
-- [ ] GameTemplate model + 2 built-in games: Skyjo, Rami
+- [x] GameTemplate model + 4 built-in games: Skyjo, Rami, Uno, Accropolis (+ custom game creation)
 - [x] Create session screen (pick game, add players)
 - [x] Score entry screen (per round, +/- buttons)
 - [x] Live leaderboard during game
 - [x] Session History / Time Travel UI
-- [ ] LocalStorage persistence of active session & State Management
+- [x] LocalStorage persistence of active session & State Management
+- [x] Player order, manual/automatic first-player mechanics, favorite players, custom game catalogue
+
+> ⚠️ Known gap: `Accropolis` is registered with `ScoreType.Structured`, but `ScoreCalculator.CalculateLeaderboard`
+> only implements `Cumulative` / `CumulativeLower` and throws `NotImplementedException` for anything else.
+> Selecting Accropolis currently crashes the app on the leaderboard screen. Needs a fix before Phase 3.
 
 ### Phase 2 — History
 - [ ] IndexedDB persistence of finished sessions
-- [ ] Session history screen
-- [ ] End-of-game summary screen
+- [ ] Session history screen (browsing past finished games — not to be confused with the existing
+      "Time Travel" round-correction screen at `session/history`, which only edits the active session)
+- [x] End-of-game summary screen (winner banner + final leaderboard recap, in `Session/Active.razor`)
 
 ### Phase 3 — Game catalogue
-- [ ] More built-in games (Uno, Accropolis, custom)
-- [ ] Structured ScoreType implementation (Accropolis categories)
+- [x] More built-in games (Uno, Accropolis added to the catalogue) + custom game creation/saving
+- [ ] Structured ScoreType implementation (Accropolis categories) — see known gap above, currently crashes
 - [ ] Extensible rules engine for new game types
 
 ### Phase 4 — Polish

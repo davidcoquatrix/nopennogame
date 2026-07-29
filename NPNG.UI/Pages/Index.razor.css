@@ -28,16 +28,6 @@
 .gp-title { font-size: 1.5rem; font-weight: 700; color: var(--txt); margin-bottom: 4px; }
 .gp-sub { font-size: .82rem; color: var(--sub); }
 
-/* ─── SECTION LABEL ──────────────────────────────────────────── */
-.section-lbl {
-    font-size: .62rem;
-    font-weight: 600;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--sub);
-    margin: 0 0 10px 2px;
-}
-
 /* ─── GRILLE CATALOGUE ───────────────────────────────────────── */
 .catalogue {
     display: grid;
@@ -328,23 +318,6 @@
 .modal-danger-btn {
     background: var(--danger);
     color: white;
-}
-
-.btn-secondary {
-    width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    background: var(--raised);
-    border: 1px solid var(--bdr-md);
-    color: var(--txt);
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity var(--t), transform var(--t);
-}
-
-.btn-secondary:hover {
-    transform: translateY(-1px);
-    background: var(--input);
 }
 
 @keyframes slideUp {

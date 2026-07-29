@@ -5,11 +5,19 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 
 ---
 
+## 🐛 Known Issues
+- **Accropolis crashes on start.** It's registered in the catalogue with `ScoreType.Structured`, but
+  `ScoreCalculator.CalculateLeaderboard` only implements `Cumulative` / `CumulativeLower` and throws
+  `NotImplementedException` for anything else. Needs either a real `Structured` implementation or the
+  game should be hidden from the catalogue until it's ready.
+
+---
+
 ## 🎯 Phase 1: MVP (The Core Offline Experience)
 *Goal: Provide a fully functional, offline-first scoring experience that is strictly better than pen and paper.*
 
 ### Epic: Session Setup
-- [ ] **Story 1.1: Start a Game**
+- [x] **Story 1.1: Start a Game**
   - [x] UI/UX Integration (Game Catalog)
   - [x] Domain / State Management integration
 - [x] **Story 1.2: Manage Players**
@@ -56,10 +64,11 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *Tie-breaker rules: 1. Compare total global score. 2. If still tied, use the current table order.*
 
 ### Epic: Game Rules & Templates
-- **Story 2.1: View Rules**
+- [ ] **Story 2.1: View Rules**
   - *As a Scorekeeper or Player, I want to read a quick summary of the rules for the selected game directly in the app to resolve disputes quickly.*
-- **Story 2.2: Advanced Custom Rules**
+- [x] **Story 2.2: Advanced Custom Rules**
   - *As a Scorekeeper, I want to set score limits (e.g., "Game ends at 500 points") or round limits when creating a custom game.*
+  - *Implemented in `CustomGame/Setup.razor` (score/round limit fields) and enforced in `GameStateService.AdvanceToNextRoundAsync`.*
 - [x] **Story 2.6: Save and Manage Custom Games**
   - *As a Scorekeeper, I want to be able to save a custom game configuration (name, scoring type, rules) so that I can reuse it later without having to recreate it.*
   - *As a Scorekeeper, I want to be able to delete a custom game that I previously saved, so that I can keep my game catalog clean.*

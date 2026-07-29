@@ -116,23 +116,18 @@ body::before {
   margin: 14px 0 7px 2px;
 }
 
-.sh-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.sh-sub {
-  font-size: .75rem;
-  color: var(--sub);
-}
-
 /* ─── LAYOUT UTILS ───────────────────────────────────────────────── */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: calc(env(safe-area-inset-top, 16px) + 16px) 0 16px;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* ─── COMPOSANTS GLOBAUX (Boutons, etc.) ────────────────────────────────────────── */
@@ -185,25 +180,6 @@ body::before {
   box-shadow: none;
 }
 
-.btn-ghost {
-  width: 100%;
-  background: var(--raised);
-  border: 1px solid var(--bdr-md);
-  border-radius: var(--r-btn);
-  padding: 10px;
-  color: var(--txt);
-  font-family: var(--font-ui);
-  font-size: .85rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-  transition: background var(--t);
-}
-
-.btn-ghost:hover {
-  background: var(--input);
-}
-
 .btn-danger {
   background: var(--bg-danger-light);
   border: 1px solid rgba(248, 113, 113, .25);
@@ -216,6 +192,30 @@ body::before {
   cursor: pointer;
 }
 
+.btn-secondary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--raised);
+  border: 1px solid var(--bdr-md);
+  color: var(--txt);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--t), transform var(--t);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  background: var(--input);
+}
+
+.first-player-badge {
+  font-size: .6rem;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+
 /* ─── ENTRY PANEL (Scoring) ────────────────────────────────────────── */
 .entry-panel {
     background: var(--raised);
@@ -223,15 +223,6 @@ body::before {
     border-radius: var(--r-card);
     padding: 11px;
     animation: slideUp .2s ease;
-}
-
-.entry-panel-lbl {
-    font-size: .58rem;
-    font-weight: 600;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--sub);
-    margin-bottom: 9px;
 }
 
 .entry-row {

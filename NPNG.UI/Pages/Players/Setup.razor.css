@@ -1,12 +1,6 @@
 /* ─── SCOPED CSS FOR SETUP.RAZOR ─── */
 
 /* ─── HEADERS & BANNERS ──────────────────────────────────────── */
-.header-nav {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .header-count {
     font-size: .7rem;
     color: var(--sub);
@@ -91,13 +85,6 @@
     font-weight: 600;
     color: var(--txt);
     font-size: 0.95rem;
-}
-
-.first-player-badge {
-    font-size: .6rem;
-    color: var(--accent);
-    font-weight: 700;
-    letter-spacing: .05em;
 }
 
 .action-btn {

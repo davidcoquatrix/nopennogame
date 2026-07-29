@@ -30,10 +30,10 @@
     <p class="gp-sub">Choisis un jeu pour commencer</p>
 </div>
 
-<p class="section-lbl">Jeux disponibles</p>
+<p class="section-label">Jeux disponibles</p>
 
 <div class="catalogue" role="listbox" aria-label="Sélection du jeu">
-    @foreach (var game in games.Where(g => g.Id != Guid.Parse("55555555-5555-5555-5555-555555555555")))
+    @foreach (var game in games.Where(g => g.Id != Application.Models.GameCatalogueItem.CustomGameTemplateId))
     {
         var isSelected = selectedGame?.Id == game.Id;
         
@@ -68,7 +68,7 @@
     }
 
     @{
-        var createCustomGame = games.FirstOrDefault(g => g.Id == Guid.Parse("55555555-5555-5555-5555-555555555555"));
+        var createCustomGame = games.FirstOrDefault(g => g.Id == Application.Models.GameCatalogueItem.CustomGameTemplateId);
         if (createCustomGame != null)
         {
             var isSelected = selectedGame?.Id == createCustomGame.Id;
@@ -255,7 +255,7 @@
         showOverwriteConfirm = false;
         if (selectedGame != null)
         {
-            if (selectedGame.IsCustom && selectedGame.Id == Guid.Parse("55555555-5555-5555-5555-555555555555"))
+            if (selectedGame.IsCustom && selectedGame.Id == Application.Models.GameCatalogueItem.CustomGameTemplateId)
             {
                 NavigationManager.NavigateTo($"custom-game");
             }

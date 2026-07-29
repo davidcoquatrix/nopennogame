@@ -36,4 +36,4 @@ Ce projet suit une architecture stricte ("Flat Clean Architecture") et un manife
 5. Ouvrez votre navigateur sur `http://localhost:5152` (ou le port indiqué dans la console).
 
 ---
-*Ce projet est développé de manière assistée par l'IA (Gemini CLI) selon le paradigme de "Tech Lead AI & Agile Scribe".*
+*Ce projet est développé de manière assistée par l'IA (Claude Code) selon le paradigme de "Tech Lead AI & Agile Scribe".*

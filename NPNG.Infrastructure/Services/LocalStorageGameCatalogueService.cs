@@ -27,7 +27,7 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
         new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "🂡", "Rami", "Défausser toutes ses cartes en formant des combinaisons. Le joueur avec le score cumulé le plus élevé en fin de manche gagne.", "Le + haut gagne", "#4ADE80", ScoreType.Cumulative),
         new(Guid.Parse("33333333-3333-3333-3333-333333333333"), "🎴", "Uno", "Se débarrasser de toutes ses cartes en premier. Les cartes restantes en main sont comptées comme points de pénalité.", "Le + bas gagne", "#F87171", ScoreType.CumulativeLower),
         new(Guid.Parse("44444444-4444-4444-4444-444444444444"), "🏛️", "Accropolis", "Construire une cité en posant des tuiles par catégories. Chaque catégorie a son propre système de points. Le plus haut total gagne.", "Structuré", "var(--accent)", ScoreType.Structured),
-        new(Guid.Parse("55555555-5555-5555-5555-555555555555"), "⚙️", "Jeu personnalisé", "Définis ton propre nom de jeu, la règle de victoire (+ haut ou + bas) et les limites optionnelles de score ou de tours.", "Personnalisé", "", ScoreType.Cumulative, null, true)
+        new(GameCatalogueItem.CustomGameTemplateId, "⚙️", "Jeu personnalisé", "Définis ton propre nom de jeu, la règle de victoire (+ haut ou + bas) et les limites optionnelles de score ou de tours.", "Personnalisé", "", ScoreType.Cumulative, null, true)
     };
 
     public async Task<IEnumerable<GameCatalogueItem>> GetAvailableGamesAsync()

@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using NPNG.Application.Interfaces;
 using NPNG.Domain.Entities;
 using NPNG.Domain.Enums;
+using NPNG.Domain.Services;
 
 namespace NPNG.Application.State;
 
@@ -224,37 +225,7 @@ public class GameStateService
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
-        bool isGameFinished = false;
-
-        if (!CurrentSession.RulesOverridden)
-        {
-            // Check if MaxRounds is reached
-            if (CurrentSession.Template.Rules?.MaxRounds.HasValue == true)
-            {
-                if (CurrentSession.CurrentRound >= CurrentSession.Template.Rules.MaxRounds.Value)
-                {
-                    isGameFinished = true;
-                }
-            }
-
-            // Check if TargetScore is reached by any player
-            if (!isGameFinished && CurrentSession.Template.Rules?.TargetScore.HasValue == true)
-            {
-                var target = CurrentSession.Template.Rules.TargetScore.Value;
-                var playerIds = CurrentSession.Players.Select(p => p.PlayerId);
-                var leaderboard = Domain.Services.ScoreCalculator.CalculateLeaderboard(
-                    CurrentSession.Template.ScoreType,
-                    playerIds,
-                    CurrentSession.Scores);
-
-                if (leaderboard.Any(l => l.TotalScore >= target))
-                {
-                    isGameFinished = true;
-                }
-            }
-        }
-
-        if (isGameFinished)
+        if (IsGameFinished(CurrentSession))
         {
             CurrentSession = CurrentSession with
             {
@@ -264,78 +235,114 @@ public class GameStateService
         }
         else
         {
-            // Find current first player
-            var currentFirstIndex = CurrentSession.Players.ToList().FindIndex(p => p.IsFirstPlayer);
-            
-            var updatedPlayers = CurrentSession.Players.ToList();
-            
-            if (currentFirstIndex >= 0 && updatedPlayers.Count > 0)
+            CurrentSession = CurrentSession with
             {
-                // Remove first player flag from current
-                updatedPlayers[currentFirstIndex] = updatedPlayers[currentFirstIndex] with { IsFirstPlayer = false };
-                
-                var mechanic = CurrentSession.Template.Rules?.FirstPlayerMechanic ?? FirstPlayerMechanic.Sequential;
-                var nextIndex = currentFirstIndex;
-
-                if (mechanic == FirstPlayerMechanic.Sequential)
-                {
-                    // Assign to next player (looping back to 0)
-                    nextIndex = (currentFirstIndex + 1) % updatedPlayers.Count;
-                }
-                else if (mechanic == FirstPlayerMechanic.Winner || mechanic == FirstPlayerMechanic.Loser)
-                {
-                    var playerIds = CurrentSession.Players.Select(p => p.PlayerId);
-                    var leaderboard = Domain.Services.ScoreCalculator.CalculateLeaderboard(
-                        CurrentSession.Template.ScoreType,
-                        playerIds,
-                        CurrentSession.Scores);
-
-                    if (leaderboard.Any())
-                    {
-                        var targetPlayerId = mechanic == FirstPlayerMechanic.Winner
-                            ? leaderboard.First().PlayerId
-                            : leaderboard.Last().PlayerId;
-                            
-                        var foundIndex = updatedPlayers.FindIndex(p => p.PlayerId == targetPlayerId);
-                        if (foundIndex >= 0)
-                        {
-                            nextIndex = foundIndex;
-                        }
-                    }
-                }
-                else if (mechanic == FirstPlayerMechanic.HighestInPreviousRound || mechanic == FirstPlayerMechanic.LowestInPreviousRound)
-                {
-                    var previousRoundScores = CurrentSession.Scores
-                        .Where(s => s.Round == CurrentSession.CurrentRound)
-                        .ToList();
-
-                    if (previousRoundScores.Any())
-                    {
-                        var orderedScores = previousRoundScores.OrderByDescending(s => s.Value).ToList();
-                        var targetPlayerId = mechanic == FirstPlayerMechanic.HighestInPreviousRound
-                            ? orderedScores.First().PlayerId
-                            : orderedScores.Last().PlayerId;
-
-                        var foundIndex = updatedPlayers.FindIndex(p => p.PlayerId == targetPlayerId);
-                        if (foundIndex >= 0)
-                        {
-                            nextIndex = foundIndex;
-                        }
-                    }
-                }
-                // If mechanic == None, nextIndex remains currentFirstIndex (no change)
-
-                updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };
-            }
-
-            CurrentSession = CurrentSession with 
-            { 
                 CurrentRound = CurrentSession.CurrentRound + 1,
-                Players = updatedPlayers.ToImmutableArray()
+                Players = AdvanceFirstPlayer(CurrentSession)
             };
         }
 
         await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Détermine si la partie doit se terminer d'après les règles du jeu (tours max ou score cible atteint).
+    /// </summary>
+    private static bool IsGameFinished(Session session)
+    {
+        if (session.RulesOverridden) return false;
+
+        if (session.Template.Rules?.MaxRounds.HasValue == true
+            && session.CurrentRound >= session.Template.Rules.MaxRounds.Value)
+        {
+            return true;
+        }
+
+        if (session.Template.Rules?.TargetScore.HasValue == true)
+        {
+            var leaderboard = ScoreCalculator.CalculateLeaderboard(
+                session.Template.ScoreType,
+                session.Players.Select(p => p.PlayerId),
+                session.Scores);
+
+            return leaderboard.Any(l => l.TotalScore >= session.Template.Rules.TargetScore.Value);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Retire le badge de premier joueur du joueur actuel et l'attribue au suivant, selon la mécanique configurée.
+    /// </summary>
+    private static ImmutableArray<SessionPlayer> AdvanceFirstPlayer(Session session)
+    {
+        var players = session.Players.ToList();
+        var currentFirstIndex = players.FindIndex(p => p.IsFirstPlayer);
+
+        if (currentFirstIndex < 0 || players.Count == 0)
+        {
+            return players.ToImmutableArray();
+        }
+
+        players[currentFirstIndex] = players[currentFirstIndex] with { IsFirstPlayer = false };
+
+        var nextIndex = DetermineNextFirstPlayerIndex(session, players, currentFirstIndex);
+        players[nextIndex] = players[nextIndex] with { IsFirstPlayer = true };
+
+        return players.ToImmutableArray();
+    }
+
+    /// <summary>
+    /// Calcule l'index du prochain premier joueur en fonction de la mécanique configurée sur le jeu.
+    /// </summary>
+    private static int DetermineNextFirstPlayerIndex(Session session, List<SessionPlayer> players, int currentFirstIndex)
+    {
+        var mechanic = session.Template.Rules?.FirstPlayerMechanic ?? FirstPlayerMechanic.Sequential;
+
+        switch (mechanic)
+        {
+            case FirstPlayerMechanic.Sequential:
+                return (currentFirstIndex + 1) % players.Count;
+
+            case FirstPlayerMechanic.Winner:
+            case FirstPlayerMechanic.Loser:
+            {
+                var leaderboard = ScoreCalculator.CalculateLeaderboard(
+                    session.Template.ScoreType,
+                    players.Select(p => p.PlayerId),
+                    session.Scores);
+
+                if (!leaderboard.Any()) return currentFirstIndex;
+
+                var targetPlayerId = mechanic == FirstPlayerMechanic.Winner
+                    ? leaderboard.First().PlayerId
+                    : leaderboard.Last().PlayerId;
+
+                var foundIndex = players.FindIndex(p => p.PlayerId == targetPlayerId);
+                return foundIndex >= 0 ? foundIndex : currentFirstIndex;
+            }
+
+            case FirstPlayerMechanic.HighestInPreviousRound:
+            case FirstPlayerMechanic.LowestInPreviousRound:
+            {
+                var previousRoundScores = session.Scores
+                    .Where(s => s.Round == session.CurrentRound)
+                    .ToList();
+
+                if (previousRoundScores.Count == 0) return currentFirstIndex;
+
+                var orderedScores = previousRoundScores.OrderByDescending(s => s.Value).ToList();
+                var targetPlayerId = mechanic == FirstPlayerMechanic.HighestInPreviousRound
+                    ? orderedScores.First().PlayerId
+                    : orderedScores.Last().PlayerId;
+
+                var foundIndex = players.FindIndex(p => p.PlayerId == targetPlayerId);
+                return foundIndex >= 0 ? foundIndex : currentFirstIndex;
+            }
+
+            default: // None
+                return currentFirstIndex;
+        }
     }
 
     /// <summary>

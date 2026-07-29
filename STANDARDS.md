@@ -9,7 +9,7 @@ Ce document définit le niveau d'exigence et les conventions de code pour le pro
 *   **Boy Scout Rule :** Laissez toujours le code dans un état plus propre que celui dans lequel vous l'avez trouvé. Le refactoring continu (renommage, extraction de méthodes) fait partie du développement quotidien.
 *   **Séparation des Préoccupations (SoC) :** L'UI (composants Blazor) ne doit pas contenir de logique métier. Le Domaine (règles de calcul des scores, modèles) doit être pur et indépendant de l'UI.
 
-## 2. Modern C# 13 & .NET 9 (Clean Code)
+## 2. Modern C# 13 & .NET 10 (Clean Code)
 
 *   **Immuabilité par défaut :** Utilisez massivement les `record` pour les modèles du Domaine, les DTOs et l'état. Privilégiez les structures de données immuables.
 *   **Constructeurs Primaires (Primary Constructors) :** Utilisez-les pour réduire le code *boilerplate*, particulièrement pour l'injection de dépendances dans les services.
