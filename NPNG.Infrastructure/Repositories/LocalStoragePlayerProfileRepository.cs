@@ -7,39 +7,13 @@ namespace NPNG.Infrastructure.Repositories;
 
 public class LocalStoragePlayerProfileRepository(IJSRuntime jsRuntime) : IPlayerProfileRepository
 {
-    private const string ProfileKey = "npng_default_profile";
     private const string FavoritesKey = "npng_favorite_players";
-    
+
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
-
-    public async Task<Player?> GetDefaultProfileAsync()
-    {
-        var json = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", ProfileKey);
-
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<Player>(json, _jsonOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
-
-    public async Task SaveDefaultProfileAsync(Player profile)
-    {
-        var json = JsonSerializer.Serialize(profile, _jsonOptions);
-        await jsRuntime.InvokeVoidAsync("localStorage.setItem", ProfileKey, json);
-    }
 
     public async Task<IEnumerable<Player>> GetFavoritePlayersAsync()
     {
@@ -63,7 +37,7 @@ public class LocalStoragePlayerProfileRepository(IJSRuntime jsRuntime) : IPlayer
     public async Task AddFavoritePlayerAsync(Player player)
     {
         var favorites = (await GetFavoritePlayersAsync()).ToList();
-        
+
         // Prevent duplicates by name
         if (!favorites.Any(f => f.Name.Equals(player.Name, StringComparison.OrdinalIgnoreCase)))
         {
@@ -73,11 +47,24 @@ public class LocalStoragePlayerProfileRepository(IJSRuntime jsRuntime) : IPlayer
         }
     }
 
+    public async Task UpdateFavoritePlayerAsync(Player player)
+    {
+        var favorites = (await GetFavoritePlayersAsync()).ToList();
+        var index = favorites.FindIndex(f => f.Id == player.Id);
+
+        if (index >= 0)
+        {
+            favorites[index] = player;
+            var json = JsonSerializer.Serialize(favorites, _jsonOptions);
+            await jsRuntime.InvokeVoidAsync("localStorage.setItem", FavoritesKey, json);
+        }
+    }
+
     public async Task RemoveFavoritePlayerAsync(Guid playerId)
     {
         var favorites = (await GetFavoritePlayersAsync()).ToList();
         var itemToRemove = favorites.FirstOrDefault(f => f.Id == playerId);
-        
+
         if (itemToRemove != null)
         {
             favorites.Remove(itemToRemove);

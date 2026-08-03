@@ -91,7 +91,7 @@
 }
 
 .leaderboard-row.lead .rank {
-    color: var(--accent);
+    color: var(--accent-fg);
 }
 
 .av-m {
@@ -164,7 +164,7 @@
 
 .db.best {
     background: var(--bg-accent-light);
-    color: var(--accent);
+    color: var(--accent-fg);
 }
 
 .tot {
@@ -177,7 +177,7 @@
 }
 
 .leaderboard-row.lead .tot {
-    color: var(--accent);
+    color: var(--accent-fg);
 }
 
 /* end game panel */
@@ -192,7 +192,7 @@
 
 .end-panel-title {
     margin: 0 0 10px 0;
-    color: var(--accent);
+    color: var(--accent-fg);
     font-size: 1.5rem;
 }
 

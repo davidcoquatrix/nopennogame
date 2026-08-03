@@ -37,33 +37,18 @@
     {
         var isSelected = selectedGame?.Id == game.Id;
         
-        <button class="game-tile @(isSelected ? "selected" : "")" 
-                role="option" 
-                aria-selected="@isSelected.ToString().ToLower()" 
-                @onclick="() => SelectGame(game)">
-            
+        <button class="game-tile @(isSelected ? "selected" : "")"
+                role="option"
+                aria-selected="@isSelected.ToString().ToLower()"
+                @onclick="() => SelectGame(game)"
+                @ondblclick="() => SelectAndContinue(game)">
+
             <div class="tile-check" aria-hidden="true">✓</div>
             
             <span class="tile-emoji">@game.Emoji</span>
 
             <div class="tile-name">@game.Name</div>
             <div class="tile-rule">@game.Badge</div>
-            
-            @if (game.IsCustom)
-            {
-                <div class="delete-game-btn" @onclick="() => TryDeleteCustomGame(game.Id)" @onclick:stopPropagation="true" title="Supprimer ce jeu">
-                    ✕
-                </div>
-                <div class="edit-game-btn" @onclick="() => TryEditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
-                    ⚙️
-                </div>
-            }
-            else
-            {
-                <div class="edit-game-btn" @onclick="() => TryEditBaseGame(game)" @onclick:stopPropagation="true" title="Personnaliser les règles">
-                    ⚙️
-                </div>
-            }
         </button>
     }
 
@@ -72,11 +57,12 @@
         if (createCustomGame != null)
         {
             var isSelected = selectedGame?.Id == createCustomGame.Id;
-            <button class="game-tile new-custom-tile @(isSelected ? "selected" : "")" 
-                    role="option" 
-                    aria-selected="@isSelected.ToString().ToLower()" 
-                    @onclick="() => SelectGame(createCustomGame)">
-                
+            <button class="game-tile new-custom-tile @(isSelected ? "selected" : "")"
+                    role="option"
+                    aria-selected="@isSelected.ToString().ToLower()"
+                    @onclick="() => SelectGame(createCustomGame)"
+                    @ondblclick="() => SelectAndContinue(createCustomGame)">
+
                 <div class="tile-check" aria-hidden="true">✓</div>
                 
                 <span class="tile-emoji">➕</span>
@@ -147,8 +133,6 @@
     private bool showOverwriteConfirm = false;
     private bool showAbandonConfirm = false;
 
-    private bool isEditingGame = false;
-
     protected override async Task OnInitializedAsync()
     {
         GameState.OnStateChanged += StateHasChanged;
@@ -179,13 +163,13 @@
     {
         selectedGame = game;
     }
-    
-    private async Task TryDeleteCustomGame(Guid id)
+
+    private async Task SelectAndContinue(Application.Models.GameCatalogueItem game)
     {
-        await GameCatalogue.DeleteCustomGameAsync(id);
-        await LoadGamesAsync();
+        selectedGame = game;
+        await TryContinueToSetup();
     }
-    
+
     private void TryAbandonSession()
     {
         showAbandonConfirm = true;
@@ -219,7 +203,6 @@
 
     private async Task TryContinueToSetup()
     {
-        isEditingGame = false;
         if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
         {
             showOverwriteConfirm = true;
@@ -230,24 +213,9 @@
         }
     }
 
-    private void TryEditBaseGame(Application.Models.GameCatalogueItem game)
-    {
-        isEditingGame = true;
-        if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
-        {
-            selectedGame = game; // Make sure the right game is selected for context if we overwrite
-            showOverwriteConfirm = true; // Show the same modal for editing base games
-        }
-        else
-        {
-            EditBaseGame(game);
-        }
-    }
-
     private void CancelOverwrite()
     {
         showOverwriteConfirm = false;
-        isEditingGame = false;
     }
 
     private async Task ConfirmAndContinue()
@@ -259,10 +227,6 @@
             {
                 NavigationManager.NavigateTo($"custom-game");
             }
-            else if (isEditingGame)
-            {
-               EditBaseGame(selectedGame);
-            }
             else
             {
                 var template = selectedGame.ToGameTemplate();
@@ -270,13 +234,5 @@
                 NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(selectedGame.Name)}");
             }
         }
-        isEditingGame = false;
-    }
-
-    private void EditBaseGame(Application.Models.GameCatalogueItem game)
-    {
-        // En passant l'ID dans l'URL, la page custom-game pourra charger le template du jeu de base
-        // et préremplir le formulaire.
-        NavigationManager.NavigateTo($"custom-game?baseGameId={game.Id}");
     }
 }

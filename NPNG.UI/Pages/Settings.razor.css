@@ -1,0 +1,235 @@
+/* ─── SETTINGS SCOPED CSS ─── */
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.logo-ico {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    box-shadow: 0 3px 8px rgba(245, 230, 66, .3);
+}
+
+.logo-txt {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+
+/* ─── CARTES DE FORMULAIRE ───────────────────────────────────────── */
+.form-card {
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: var(--r-card);
+    padding: 13px;
+    margin-bottom: 8px;
+}
+
+.field-lbl {
+    font-size: .6rem;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--sub);
+    margin-bottom: 5px;
+}
+
+.field-input {
+    width: 100%;
+    background: var(--input);
+    border: 1px solid var(--bdr-md);
+    border-radius: 9px;
+    padding: 9px 11px;
+    color: var(--txt);
+    font-family: var(--font-ui);
+    font-size: .88rem;
+    font-weight: 600;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+.field-input:focus {
+    border-color: var(--accent);
+}
+
+.emoji-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.emoji-item {
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.toggle-row {
+    display: flex;
+    gap: 7px;
+}
+
+.toggle-opt {
+    flex: 1;
+    padding: 8px;
+    border-radius: 9px;
+    border: 1px solid var(--bdr-md);
+    text-align: center;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--input);
+    color: var(--sub);
+    transition: all var(--t);
+}
+
+.toggle-opt.on {
+    background: rgba(245, 230, 66, .12);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}
+
+.settings-save-btn {
+    margin-top: 4px;
+}
+
+.settings-save-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* ─── ÉTAT VIDE ───────────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--sub);
+    font-size: .85rem;
+    border: 1px dashed var(--bdr-md);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+/* ─── LISTES (FAVORIS / JEUX PERSONNALISÉS) ─────────────────────── */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.settings-row {
+    background: var(--surf);
+    border: 1px solid var(--bdr-md);
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-row-emoji {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.settings-row-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--txt);
+    font-size: .9rem;
+}
+
+.settings-edit-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.settings-edit-actions .btn-secondary {
+    width: auto;
+    flex: 1;
+    padding: 10px;
+    font-size: .82rem;
+}
+
+/* ─── DONNÉES ─────────────────────────────────────────────────────── */
+.settings-danger-desc {
+    color: var(--sub);
+    font-size: .78rem;
+    line-height: 1.4;
+    margin: 0 0 12px;
+}
+
+.settings-reset-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: .82rem;
+}
+
+/* ─── MODAL OVERLAY ─── */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    background: var(--surf);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 320px;
+    border: 1px solid var(--bdr);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: slideUp 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.modal-title {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: var(--warn);
+}
+
+.modal-desc {
+    color: var(--sub);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.modal-danger-btn {
+    background: var(--danger);
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

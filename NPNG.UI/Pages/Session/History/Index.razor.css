@@ -23,7 +23,7 @@
 }
 
 .total-cell.lead {
-    color: var(--accent);
+    color: var(--accent-fg);
 }
 
 .score-value-warn {
@@ -85,7 +85,7 @@
 .tt-btn.cur {
     background: var(--bg-accent-light);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-fg);
 }
 
 .tt-btn:hover:not(.cur) {

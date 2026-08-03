@@ -13,6 +13,29 @@
     <!-- CSS global et scoped Blazor -->
     <link href="css/app.css" rel="stylesheet" />
     <link href="NPNG.UI.styles.css" rel="stylesheet" />
+
+    <!-- Préférence de thème (Système/Clair/Sombre) : appliquée avant le chargement de Blazor pour éviter un flash -->
+    <script>
+        window.npngTheme = {
+            get: () => localStorage.getItem('npng_theme_preference') || 'system',
+            set: (value) => {
+                if (value === 'dark' || value === 'light') {
+                    localStorage.setItem('npng_theme_preference', value);
+                    document.documentElement.setAttribute('data-theme', value);
+                } else {
+                    localStorage.removeItem('npng_theme_preference');
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            },
+            apply: function () {
+                const stored = this.get();
+                if (stored === 'dark' || stored === 'light') {
+                    document.documentElement.setAttribute('data-theme', stored);
+                }
+            }
+        };
+        window.npngTheme.apply();
+    </script>
 </head>
 
 <body>

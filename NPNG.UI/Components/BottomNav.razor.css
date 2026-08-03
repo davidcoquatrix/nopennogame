@@ -51,7 +51,7 @@
 }
 
 .nav ::deep .ni.on .lbl {
-    color: var(--accent) !important;
+    color: var(--accent-fg) !important;
 }
 
 .nav ::deep .ndot {

@@ -1,0 +1,28 @@
+/* ─── LEGAL NOTICE SCOPED CSS ─── */
+
+.form-card {
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: var(--r-card);
+    padding: 13px;
+    margin-bottom: 8px;
+}
+
+.legal-text {
+    color: var(--txt);
+    font-size: .85rem;
+    line-height: 1.5;
+    margin: 0 0 10px;
+}
+
+.legal-text:last-child {
+    margin-bottom: 0;
+}
+
+.legal-footnote {
+    color: var(--sub);
+    font-size: .72rem;
+    line-height: 1.4;
+    text-align: center;
+    margin: 16px 0 8px;
+}

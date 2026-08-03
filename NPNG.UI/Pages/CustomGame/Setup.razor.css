@@ -58,7 +58,7 @@
 .toggle-opt.on {
     background: rgba(245,230,66,.12);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-fg);
 }
 
 .setting-row {

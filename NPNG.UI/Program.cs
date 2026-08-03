@@ -15,6 +15,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<ISessionRepository, LocalStorageSessionRepository>();
 builder.Services.AddScoped<IPlayerProfileRepository, LocalStoragePlayerProfileRepository>();
 builder.Services.AddScoped<IGameCatalogueService, NPNG.Infrastructure.Services.LocalStorageGameCatalogueService>();
+builder.Services.AddScoped<IThemeService, NPNG.Infrastructure.Services.LocalStorageThemeService>();
+builder.Services.AddScoped<IAppDataResetService, NPNG.Infrastructure.Services.LocalStorageAppDataResetService>();
 builder.Services.AddScoped<GameStateService>();
 
 await builder.Build().RunAsync();

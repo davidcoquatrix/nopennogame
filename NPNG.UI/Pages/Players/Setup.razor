@@ -162,20 +162,20 @@ else
             }
         }
 
+        await LoadFavoritesAsync();
+
         if (CurrentPlayerCount == 0)
         {
-            var profile = await ProfileRepository.GetDefaultProfileAsync();
-            if (profile != null)
+            var lastFavorite = favoritePlayers.LastOrDefault();
+            if (lastFavorite != null)
             {
-                newPlayerName = profile.Name;
-                if (availableEmojis.Contains(profile.DefaultEmoji))
+                newPlayerName = lastFavorite.Name;
+                if (availableEmojis.Contains(lastFavorite.DefaultEmoji))
                 {
-                    selectedEmoji = profile.DefaultEmoji;
+                    selectedEmoji = lastFavorite.DefaultEmoji;
                 }
             }
         }
-        
-        await LoadFavoritesAsync();
     }
     
     private async Task LoadFavoritesAsync()
@@ -248,7 +248,8 @@ else
 
         if (isFirstPlayerAdded)
         {
-            await ProfileRepository.SaveDefaultProfileAsync(new Player(Guid.NewGuid(), nameToAdding, selectedEmoji));
+            await ProfileRepository.AddFavoritePlayerAsync(new Player(Guid.NewGuid(), nameToAdding, selectedEmoji));
+            await LoadFavoritesAsync();
         }
 
         newPlayerName = "";

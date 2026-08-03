@@ -1,0 +1,284 @@
+@page "/settings"
+
+<div class="app-header">
+    <div class="logo">
+        <div class="logo-ico">⚙️</div>
+        <span class="logo-txt">Réglages</span>
+    </div>
+</div>
+
+<p class="section-label">Joueurs favoris</p>
+@if (favoritePlayers.Any())
+{
+    <div class="settings-list">
+        @foreach (var fav in favoritePlayers)
+        {
+            @if (editingFavoriteId == fav.Id)
+            {
+                <div class="form-card" @key="fav.Id">
+                    <div class="field-lbl">Nom</div>
+                    <input class="field-input" type="text" @bind="editName" @bind:event="oninput" />
+
+                    <div class="field-lbl">Emoji</div>
+                    <div class="emoji-list">
+                        @foreach (var emoji in availableEmojis)
+                        {
+                            <span class="emoji-item" style="opacity:@(editEmoji == emoji ? "1" : "0.5")"
+                                  @onclick="() => editEmoji = emoji">@emoji</span>
+                        }
+                    </div>
+
+                    <div class="settings-edit-actions">
+                        <button class="btn-secondary" disabled="@string.IsNullOrWhiteSpace(editName)" @onclick="SaveEditFavorite">✓ Enregistrer</button>
+                        <button class="btn-secondary" @onclick="CancelEditFavorite">Annuler</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="settings-row" @key="fav.Id">
+                    <span class="settings-row-emoji">@fav.DefaultEmoji</span>
+                    <span class="settings-row-name">@fav.Name</span>
+                    <button class="ico-btn" title="Modifier" @onclick="() => StartEditFavorite(fav)">✎</button>
+                    <button class="ico-btn" title="Supprimer des favoris" @onclick="() => RemoveFavoritePlayer(fav.Id)">✕</button>
+                </div>
+            }
+        }
+    </div>
+}
+
+<div class="form-card">
+    <div class="field-lbl">Ajouter un favori</div>
+    <input class="field-input" type="text" placeholder="Prénom…"
+           @bind="newFavoriteName" @bind:event="oninput" />
+
+    <div class="emoji-list">
+        @foreach (var emoji in availableEmojis)
+        {
+            <span class="emoji-item" style="opacity:@(newFavoriteEmoji == emoji ? "1" : "0.5")"
+                  @onclick="() => newFavoriteEmoji = emoji">@emoji</span>
+        }
+    </div>
+
+    <button class="btn-secondary settings-save-btn" disabled="@string.IsNullOrWhiteSpace(newFavoriteName)" @onclick="AddFavorite">
+        ＋ Ajouter
+    </button>
+</div>
+
+<p class="section-label">Jeux personnalisés</p>
+@if (!customGames.Any())
+{
+    <div class="empty-state">Aucun jeu personnalisé enregistré.</div>
+}
+else
+{
+    <div class="settings-list">
+        @foreach (var game in customGames)
+        {
+            <div class="settings-row" @key="game.Id">
+                <span class="settings-row-emoji">@game.Emoji</span>
+                <span class="settings-row-name">@game.Name</span>
+                <button class="ico-btn" title="Modifier les règles" @onclick="() => TryEditCustomGame(game)">⚙️</button>
+                <button class="ico-btn" title="Supprimer" @onclick="() => DeleteCustomGame(game.Id)">✕</button>
+            </div>
+        }
+    </div>
+}
+
+<p class="section-label">Thème</p>
+<div class="form-card">
+    <div class="toggle-row">
+        <button class="toggle-opt @(theme == Application.Models.ThemePreference.System ? "on" : "")"
+                @onclick='() => SetTheme(Application.Models.ThemePreference.System)'>🌓 Système</button>
+        <button class="toggle-opt @(theme == Application.Models.ThemePreference.Light ? "on" : "")"
+                @onclick='() => SetTheme(Application.Models.ThemePreference.Light)'>☀️ Clair</button>
+        <button class="toggle-opt @(theme == Application.Models.ThemePreference.Dark ? "on" : "")"
+                @onclick='() => SetTheme(Application.Models.ThemePreference.Dark)'>🌙 Sombre</button>
+    </div>
+</div>
+
+<p class="section-label">Données</p>
+<div class="form-card">
+    <p class="settings-danger-desc">
+        Efface définitivement les favoris, les jeux personnalisés et les parties enregistrées sur cet appareil.
+    </p>
+    <button class="btn-danger settings-reset-btn" @onclick="() => showResetConfirm = true">
+        🗑️ Réinitialiser toutes les données
+    </button>
+</div>
+
+<p class="section-label">À propos</p>
+<div class="form-card">
+    <button class="btn-secondary settings-legal-btn" @onclick='() => NavigationManager.NavigateTo("mentions-legales")'>
+        📄 Mentions légales
+    </button>
+</div>
+
+@if (showOverwriteConfirm)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">⚠️ Partie en cours</h3>
+            <p class="modal-desc">
+                Modifier <strong>@gameToEdit?.Name</strong> ouvrira l'écran de configuration ; si tu enregistres, cela remplacera
+                la partie de <strong>@GameState.CurrentSession?.Template.Name</strong> actuellement en cours.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cta modal-danger-btn" @onclick="ConfirmEditCustomGame">Continuer quand même</button>
+                <button class="btn-secondary" @onclick="CancelEditCustomGame">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showResetConfirm)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">🗑️ Réinitialiser toutes les données</h3>
+            <p class="modal-desc">
+                Cette action est irréversible : favoris, jeux personnalisés et parties enregistrées seront définitivement supprimés.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cta modal-danger-btn" @onclick="ConfirmResetData">Oui, tout effacer</button>
+                <button class="btn-secondary" @onclick="() => showResetConfirm = false">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] public GameStateService GameState { get; set; } = default!;
+    [Inject] public Application.Interfaces.IPlayerProfileRepository ProfileRepository { get; set; } = default!;
+    [Inject] public Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
+    [Inject] public Application.Interfaces.IThemeService ThemeService { get; set; } = default!;
+    [Inject] public Application.Interfaces.IAppDataResetService DataReset { get; set; } = default!;
+
+    private readonly List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
+
+    private List<Player> favoritePlayers = new();
+    private List<Application.Models.GameCatalogueItem> customGames = new();
+
+    private Guid? editingFavoriteId;
+    private string editName = "";
+    private string editEmoji = "🎯";
+
+    private string newFavoriteName = "";
+    private string newFavoriteEmoji = "🎯";
+
+    private Application.Models.ThemePreference theme = Application.Models.ThemePreference.System;
+
+    private Application.Models.GameCatalogueItem? gameToEdit;
+    private bool showOverwriteConfirm = false;
+    private bool showResetConfirm = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFavoritesAsync();
+        await LoadCustomGamesAsync();
+
+        theme = await ThemeService.GetPreferenceAsync();
+    }
+
+    private async Task LoadFavoritesAsync()
+    {
+        favoritePlayers = (await ProfileRepository.GetFavoritePlayersAsync()).ToList();
+    }
+
+    private async Task LoadCustomGamesAsync()
+    {
+        var games = await GameCatalogue.GetAvailableGamesAsync();
+        customGames = games
+            .Where(g => g.IsCustom && g.Id != Application.Models.GameCatalogueItem.CustomGameTemplateId)
+            .ToList();
+    }
+
+    private async Task RemoveFavoritePlayer(Guid playerId)
+    {
+        await ProfileRepository.RemoveFavoritePlayerAsync(playerId);
+        await LoadFavoritesAsync();
+    }
+
+    private void StartEditFavorite(Player favorite)
+    {
+        editingFavoriteId = favorite.Id;
+        editName = favorite.Name;
+        editEmoji = favorite.DefaultEmoji;
+    }
+
+    private void CancelEditFavorite()
+    {
+        editingFavoriteId = null;
+    }
+
+    private async Task SaveEditFavorite()
+    {
+        if (editingFavoriteId == null || string.IsNullOrWhiteSpace(editName)) return;
+
+        await ProfileRepository.UpdateFavoritePlayerAsync(new Player(editingFavoriteId.Value, editName.Trim(), editEmoji));
+        editingFavoriteId = null;
+        await LoadFavoritesAsync();
+    }
+
+    private async Task AddFavorite()
+    {
+        if (string.IsNullOrWhiteSpace(newFavoriteName)) return;
+
+        await ProfileRepository.AddFavoritePlayerAsync(new Player(Guid.NewGuid(), newFavoriteName.Trim(), newFavoriteEmoji));
+        newFavoriteName = "";
+        await LoadFavoritesAsync();
+    }
+
+    private async Task DeleteCustomGame(Guid id)
+    {
+        await GameCatalogue.DeleteCustomGameAsync(id);
+        await LoadCustomGamesAsync();
+    }
+
+    private void TryEditCustomGame(Application.Models.GameCatalogueItem game)
+    {
+        gameToEdit = game;
+        if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
+        {
+            showOverwriteConfirm = true;
+        }
+        else
+        {
+            NavigateToEditGame(game);
+        }
+    }
+
+    private void ConfirmEditCustomGame()
+    {
+        showOverwriteConfirm = false;
+        if (gameToEdit != null)
+        {
+            NavigateToEditGame(gameToEdit);
+        }
+    }
+
+    private void CancelEditCustomGame()
+    {
+        showOverwriteConfirm = false;
+        gameToEdit = null;
+    }
+
+    private void NavigateToEditGame(Application.Models.GameCatalogueItem game)
+    {
+        NavigationManager.NavigateTo($"custom-game?baseGameId={game.Id}");
+    }
+
+    private async Task SetTheme(Application.Models.ThemePreference preference)
+    {
+        theme = preference;
+        await ThemeService.SetPreferenceAsync(preference);
+    }
+
+    private async Task ConfirmResetData()
+    {
+        showResetConfirm = false;
+        await DataReset.ResetAllDataAsync();
+        NavigationManager.NavigateTo("", forceLoad: true);
+    }
+}

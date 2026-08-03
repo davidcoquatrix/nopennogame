@@ -22,9 +22,12 @@
     --input:#1E3249;
     --txt:#EEF2F7; 
     --sub:#7A9AB5; 
-    --bdr:rgba(255,255,255,0.07); 
+    --bdr:rgba(255,255,255,0.07);
     --bdr-md:rgba(255,255,255,0.13);
     --sh:0 8px 32px rgba(0,0,0,.5);
+
+    /* Variante de --accent lisible en texte (identique à --accent en sombre, plus foncée en clair) */
+    --accent-fg: #F5E642;
 
     /* Transparent Backgrounds for Badges/Buttons */
     --bg-danger-light: rgba(248, 113, 113, .15);
@@ -37,7 +40,7 @@
   }
 }
 
-@media (prefers-color-scheme: light) { 
+@media (prefers-color-scheme: light) {
   :root {
     --bg:#EFF3F8; 
     --surf:#FFF; 
@@ -45,9 +48,12 @@
     --input:#F5F8FB;
     --txt:#0D1B2A; 
     --sub:#527090; 
-    --bdr:rgba(0,0,0,.07); 
+    --bdr:rgba(0,0,0,.07);
     --bdr-md:rgba(0,0,0,.13);
     --sh:0 8px 32px rgba(13,27,42,.15);
+
+    /* Variante de --accent lisible en texte : le jaune pur est illisible sur fond clair */
+    --accent-fg: #8A7A00;
 
     /* Transparent Backgrounds for Badges/Buttons */
     --bg-danger-light: rgba(248, 113, 113, .15);
@@ -58,6 +64,53 @@
     --bg-accent-hover: rgba(245, 230, 66, .35);
     --bg-warn-light: rgba(251, 146, 30, .2);
   }
+}
+
+/* ─── OVERRIDE MANUEL DU THÈME (Réglages) ───────────────────────────
+   Priment sur les @media prefers-color-scheme ci-dessus grâce à la
+   spécificité du sélecteur d'attribut ; posés par window.npngTheme (index.html). */
+:root[data-theme="dark"] {
+  --bg:#0D1B2A;
+  --surf:#152233;
+  --raised:#1C2F44;
+  --input:#1E3249;
+  --txt:#EEF2F7;
+  --sub:#7A9AB5;
+  --bdr:rgba(255,255,255,0.07);
+  --bdr-md:rgba(255,255,255,0.13);
+  --sh:0 8px 32px rgba(0,0,0,.5);
+
+  --accent-fg: #F5E642;
+
+  --bg-danger-light: rgba(248, 113, 113, .15);
+  --bg-danger-subtle: rgba(248, 113, 113, .1);
+  --bg-success-light: rgba(74, 222, 128, .12);
+  --bg-accent-light: rgba(245, 230, 66, .15);
+  --bg-accent-subtle: rgba(245, 230, 66, .1);
+  --bg-accent-hover: rgba(245, 230, 66, .18);
+  --bg-warn-light: rgba(251, 146, 30, .2);
+}
+
+:root[data-theme="light"] {
+  --bg:#EFF3F8;
+  --surf:#FFF;
+  --raised:#E2EAF2;
+  --input:#F5F8FB;
+  --txt:#0D1B2A;
+  --sub:#527090;
+  --bdr:rgba(0,0,0,.07);
+  --bdr-md:rgba(0,0,0,.13);
+  --sh:0 8px 32px rgba(13,27,42,.15);
+
+  --accent-fg: #8A7A00;
+
+  --bg-danger-light: rgba(248, 113, 113, .15);
+  --bg-danger-subtle: rgba(248, 113, 113, .1);
+  --bg-success-light: rgba(74, 222, 128, .12);
+  --bg-accent-light: rgba(245, 230, 66, .25);
+  --bg-accent-subtle: rgba(245, 230, 66, .15);
+  --bg-accent-hover: rgba(245, 230, 66, .35);
+  --bg-warn-light: rgba(251, 146, 30, .2);
 }
 
 /* ─── BASE RESET ───────────────────────────────────────────────────── */
@@ -211,7 +264,7 @@ body::before {
 
 .first-player-badge {
   font-size: .6rem;
-  color: var(--accent);
+  color: var(--accent-fg);
   font-weight: 700;
   letter-spacing: .05em;
 }
