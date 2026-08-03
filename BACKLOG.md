@@ -64,6 +64,13 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 - [x] **Story 2.6: Save and Manage Custom Games**
   - *As a Scorekeeper, I want to be able to save a custom game configuration (name, scoring type, rules) so that I can reuse it later without having to recreate it.*
   - *As a Scorekeeper, I want to be able to delete a custom game that I previously saved, so that I can keep my game catalog clean.*
+- [ ] **Story 2.7: Team Scoring (Belote-style "Nous/Vous")**
+  - *As a Scorekeeper, I want to group session players into teams that share a single score, so that I can track games like Belote or Tarot where teammates play together instead of individually.*
+  - *Teams are formed by grouping existing session players; not hard-limited to 2 teams of 2, to leave room for other team formats and uneven splits.*
+  - *Each team gets a display name generated from its members (e.g. "David & Marion"), with the option to rename it — e.g. back to the classic "Nous"/"Vous" convention.*
+  - *Score entry becomes one input per team per round instead of one per player; the leaderboard shows the team total with its members listed underneath.*
+  - *First-player mechanics stay tied to individual players and are unaffected by team grouping.*
+  - *Architecture note: this is a player-grouping concern layered on top of the existing `ScoreType` (Cumulative/CumulativeLower), not a new ScoreType by itself — likely needs a `Team` concept in the Domain plus an optional team assignment on `SessionPlayer`.*
 
 ### Epic: Social (Offline)
 - **Story 2.3: Share Score Sheet**
