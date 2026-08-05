@@ -3,6 +3,7 @@
 @using NPNG.Domain.Enums
 @using NPNG.Domain.Services
 @inject SessionHistoryService HistoryService
+@inject NavigationManager NavigationManager
 
 <div class="app-header">
     <div class="logo">
@@ -22,13 +23,13 @@ else
     <div class="history-list">
         @foreach (var session in sessions)
         {
-            <div class="history-row" @key="session.Id">
+            <div class="history-row" @key="session.Id" @onclick="() => OpenRecap(session.Id)">
                 <span class="history-row-emoji">@(session.Status == SessionStatus.Finished ? "🏆" : "🗑️")</span>
                 <div class="history-row-info">
                     <div class="history-row-name">@session.Template.Name</div>
                     <div class="history-row-meta">@BuildSummary(session)</div>
                 </div>
-                <button class="ico-btn" title="Supprimer" @onclick="() => TryDelete(session.Id)">✕</button>
+                <button class="ico-btn" title="Supprimer" @onclick="() => TryDelete(session.Id)" @onclick:stopPropagation="true">✕</button>
             </div>
         }
     </div>
@@ -87,6 +88,11 @@ else
 
         var winner = session.Players.First(p => p.PlayerId == winnerEntry.PlayerId);
         return $"{date} • {playerCount} • {winner.Emoji} {winner.Name} ({winnerEntry.TotalScore})";
+    }
+
+    private void OpenRecap(Guid sessionId)
+    {
+        NavigationManager.NavigateTo($"history/{sessionId}");
     }
 
     private void TryDelete(Guid sessionId)

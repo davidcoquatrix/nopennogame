@@ -1,0 +1,42 @@
+@page "/history/{SessionId:guid}"
+@using NPNG.Domain.Entities
+@inject SessionHistoryService HistoryService
+@inject NavigationManager NavigationManager
+
+<div class="app-header">
+    <div class="header-nav">
+        <BackButton />
+        <span class="header-title">@(session?.Template.Name ?? "Historique")</span>
+    </div>
+</div>
+
+@if (session is null)
+{
+    <div class="empty-state">Partie introuvable — elle a peut-être été supprimée.</div>
+}
+else
+{
+    <GameRecapPanel Session="session" />
+
+    @if (session.Scores.Length > 0)
+    {
+        <button class="btn-secondary" @onclick="GoToRounds">Voir le détail des tours →</button>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid SessionId { get; set; }
+
+    private Session? session;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        session = await HistoryService.GetSessionByIdAsync(SessionId);
+    }
+
+    private void GoToRounds()
+    {
+        NavigationManager.NavigateTo($"history/{SessionId}/rounds");
+    }
+}

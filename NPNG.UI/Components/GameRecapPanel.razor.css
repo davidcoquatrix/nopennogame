@@ -1,50 +1,24 @@
-/* ─── SCOPED CSS FOR ACTIVE SESSION ─── */
+/* ─── GAME RECAP PANEL SCOPED CSS ─── */
 
-.no-session {
-    padding: 20px;
+.end-panel {
     text-align: center;
+    padding: 40px 20px;
+    background: var(--raised);
+    border-radius: 16px;
+    margin: 20px 0;
+    border: 2px dashed var(--accent);
+}
+
+.end-panel-title {
+    margin: 0 0 10px 0;
+    color: var(--accent-fg);
+    font-size: 1.5rem;
+}
+
+.end-panel-desc {
+    margin: 0;
     color: var(--sub);
-}
-
-.header-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.header-round-counter {
-    font-size: .65rem;
-    font-family: var(--font-mono);
-    color: var(--sub);
-}
-
-.tt-btn {
-    font-size: .75rem;
-}
-
-.finish-btn {
-    font-size: .75rem;
-    color: var(--danger);
-}
-
-.mt-20 {
-    margin-top: 20px;
-}
-
-/* ─── SCORE ENTRY ────────────────────────────────────────────── */
-.entry-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.entry-name-override {
-    flex: unset !important;
+    font-size: 0.9rem;
 }
 
 /* leaderboard */
@@ -123,38 +97,12 @@
     margin-bottom: 2px;
 }
 
-.pips {
-    display: flex;
-    gap: 3px;
-    flex-wrap: wrap;
-}
-
-.pip {
-    font-size: .53rem;
-    font-family: var(--font-mono);
-    color: var(--sub);
-    background: var(--raised);
-    border-radius: 3px;
-    padding: 1px 4px;
-}
-
-.pip.edit {
-    background: var(--bg-warn-light);
-    color: var(--warn);
-    cursor: pointer;
-}
-
 .db {
     font-size: .57rem;
     font-family: var(--font-mono);
     border-radius: 5px;
     padding: 1px 5px;
     font-weight: 700;
-}
-
-.db.neg {
-    background: var(--bg-danger-light);
-    color: var(--danger);
 }
 
 .db.pos {
@@ -178,8 +126,4 @@
 
 .leaderboard-row.lead .tot {
     color: var(--accent-fg);
-}
-
-.btn-secondary {
-    margin-top: 10px;
 }

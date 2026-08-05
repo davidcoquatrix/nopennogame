@@ -1,0 +1,111 @@
+/* ─── HISTORY ROUNDS (READ-ONLY REPLAY) SCOPED CSS ─── */
+
+.header-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--sub);
+    font-size: .85rem;
+    border: 1px dashed var(--bdr-md);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+/* ─── ROUND TABLE ────────────────────────────────────────────── */
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+}
+
+.round-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.round-table th {
+    font-size: .6rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--sub);
+    padding: 5px 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--bdr-md);
+}
+
+.round-table th:first-child {
+    text-align: left;
+    padding-left: 8px;
+}
+
+.round-table td {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    padding: 6px 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--bdr);
+    color: var(--txt);
+}
+
+.round-table td:first-child {
+    text-align: left;
+    padding-left: 8px;
+    font-family: var(--font-ui);
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.round-table tr:last-child td {
+    border-bottom: none;
+}
+
+.total-cell {
+    font-weight: 700;
+    color: var(--txt);
+}
+
+.total-cell.lead {
+    color: var(--accent-fg);
+}
+
+/* ─── AKROPOLIS READ-ONLY RECAP ──────────────────────────────── */
+.akr-recap-card {
+    background: var(--surf);
+    border: 1px solid var(--bdr-md);
+    border-radius: 12px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+}
+
+.akr-recap-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.akr-recap-total {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--accent-fg);
+}
+
+.akr-recap-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: .8rem;
+    color: var(--sub);
+    padding: 3px 0;
+}
+
+.akr-recap-row span:last-child {
+    font-family: var(--font-mono);
+    color: var(--txt);
+}

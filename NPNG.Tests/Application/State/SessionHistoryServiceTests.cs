@@ -48,6 +48,22 @@ public class SessionHistoryServiceTests
     }
 
     [Fact]
+    public async Task GetSessionByIdAsync_DelegatesToRepository()
+    {
+        // Arrange
+        var session = CreateSession(SessionStatus.Finished, DateTime.UtcNow);
+        _sessionRepositoryMock
+            .Setup(repo => repo.GetSessionAsync(session.Id))
+            .ReturnsAsync(session);
+
+        // Act
+        var result = await _sut.GetSessionByIdAsync(session.Id);
+
+        // Assert
+        Assert.Equal(session.Id, result?.Id);
+    }
+
+    [Fact]
     public async Task DeleteSessionAsync_WhenDeletingCurrentSession_ClearsCurrentSessionInGameState()
     {
         // Arrange

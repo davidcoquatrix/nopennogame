@@ -1,0 +1,79 @@
+@using System.Collections.Immutable
+@using NPNG.Domain.Entities
+@using NPNG.Domain.Enums
+@using NPNG.Domain.Models
+@using NPNG.Domain.Services
+
+<div class="end-panel">
+    @if (Session.Status == SessionStatus.Abandoned)
+    {
+        <h2 class="end-panel-title">🏳️ Partie abandonnée</h2>
+        <p class="end-panel-desc">Abandonnée au tour @Session.CurrentRound.</p>
+    }
+    else
+    {
+        <h2 class="end-panel-title">🎉 Partie Terminée !</h2>
+        <p class="end-panel-desc">
+            @if (!Session.RulesOverridden && Session.Template.Rules?.TargetScore.HasValue == true)
+            {
+                <span>L'objectif de @Session.Template.Rules.TargetScore pts a été atteint.</span>
+            }
+            else if (!Session.RulesOverridden && Session.Template.Rules?.MaxRounds.HasValue == true)
+            {
+                <span>La limite de @Session.Template.Rules.MaxRounds tours a été atteinte.</span>
+            }
+            else
+            {
+                <span>La partie a été terminée manuellement.</span>
+            }
+        </p>
+    }
+</div>
+
+<div class="section-label">Classement Final</div>
+<div class="leaderboard">
+    @foreach (var pScore in leaderboard)
+    {
+        var player = Session.Players.First(p => p.PlayerId == pScore.PlayerId);
+        var isLeader = pScore.Rank == 1;
+
+        <div class="leaderboard-row @(isLeader ? "lead" : "")">
+            <span class="rank">@pScore.Rank</span>
+            <div class="av-m">@player.Emoji</div>
+            <div class="leaderboard-info">
+                <div class="leaderboard-name">@player.Name</div>
+            </div>
+
+            @if (Session.Status == SessionStatus.Finished)
+            {
+                @if (isLeader)
+                {
+                    <span class="db best">vainqueur</span>
+                }
+                else
+                {
+                    var bestScore = leaderboard.First().TotalScore;
+                    var diff = pScore.TotalScore - bestScore;
+                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                }
+            }
+
+            <div class="tot">@pScore.TotalScore</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Session Session { get; set; } = default!;
+
+    private ImmutableArray<PlayerScore> leaderboard;
+
+    protected override void OnParametersSet()
+    {
+        leaderboard = ScoreCalculator.CalculateLeaderboard(
+            Session.Template.ScoreType,
+            Session.Players.Select(p => p.PlayerId),
+            Session.Scores);
+    }
+}

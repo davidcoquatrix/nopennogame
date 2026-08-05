@@ -24,6 +24,11 @@ public class SessionHistoryService(ISessionRepository sessionRepository, GameSta
     }
 
     /// <summary>
+    /// Récupère une session par son id, quel que soit son statut.
+    /// </summary>
+    public Task<Session?> GetSessionByIdAsync(Guid sessionId) => sessionRepository.GetSessionAsync(sessionId);
+
+    /// <summary>
     /// Supprime définitivement une session de l'historique.
     /// </summary>
     public async Task DeleteSessionAsync(Guid sessionId)

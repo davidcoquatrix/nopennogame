@@ -1,0 +1,111 @@
+@page "/history/{SessionId:guid}/rounds"
+@using NPNG.Domain.Entities
+@using NPNG.Domain.Enums
+@using NPNG.Domain.Models
+@using NPNG.Domain.Services
+@using NPNG.Application.State
+@inject SessionHistoryService HistoryService
+
+<div class="app-header">
+    <div class="header-nav">
+        <BackButton />
+        <span class="header-title">@(session?.Template.Name ?? "Historique")</span>
+    </div>
+</div>
+
+@if (session is null)
+{
+    <div class="empty-state">Partie introuvable — elle a peut-être été supprimée.</div>
+}
+else if (session.Template.ScoreType == ScoreType.Structured)
+{
+    <div class="section-label">Détail des scores</div>
+    @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+    {
+        var detail = session.Scores
+            .FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == GameStateService.AkropolisScoringRound)
+            ?.AkropolisDetail ?? AkropolisScoreDetail.Empty;
+
+        <div class="akr-recap-card">
+            <div class="akr-recap-header">
+                <span class="entry-avatar">@player.Emoji</span>
+                <span class="entry-name">@player.Name</span>
+                <span class="akr-recap-total">@detail.Total pts</span>
+            </div>
+            <div class="akr-recap-row"><span>Carrières</span><span>@detail.Carrieres.Multiplicateur × @detail.Carrieres.Quartiers = @detail.Carrieres.Subtotal</span></div>
+            <div class="akr-recap-row"><span>Habitations</span><span>@detail.Habitations.Multiplicateur × @detail.Habitations.Quartiers = @detail.Habitations.Subtotal</span></div>
+            <div class="akr-recap-row"><span>Marchés</span><span>@detail.Marches.Multiplicateur × @detail.Marches.Quartiers = @detail.Marches.Subtotal</span></div>
+            <div class="akr-recap-row"><span>Casernes</span><span>@detail.Casernes.Multiplicateur × @detail.Casernes.Quartiers = @detail.Casernes.Subtotal</span></div>
+            <div class="akr-recap-row"><span>Jardins</span><span>@detail.Jardins.Multiplicateur × @detail.Jardins.Quartiers = @detail.Jardins.Subtotal</span></div>
+            <div class="akr-recap-row"><span>Pierres restantes</span><span>@detail.PierresRestantes</span></div>
+        </div>
+    }
+}
+else
+{
+    <div class="section-label">Détail des tours</div>
+    <div class="table-container">
+        <table class="round-table">
+            <thead>
+                <tr>
+                    <th>Joueur</th>
+                    @for (int i = 1; i <= maxRound; i++)
+                    {
+                        <th>T.@i</th>
+                    }
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+                {
+                    var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
+
+                    <tr>
+                        <td>@player.Emoji @player.Name</td>
+                        @for (int i = 1; i <= maxRound; i++)
+                        {
+                            <td>@GetScoreForRound(player.PlayerId, i)</td>
+                        }
+                        <td class="total-cell @(isLeader ? "lead" : "")">
+                            @GetTotalScore(player.PlayerId)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid SessionId { get; set; }
+
+    private Session? session;
+    private int maxRound;
+    private List<PlayerScore> leaderboard = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        session = await HistoryService.GetSessionByIdAsync(SessionId);
+        if (session is null) return;
+
+        maxRound = session.Scores.Length > 0 ? session.Scores.Max(s => s.Round) : 0;
+
+        leaderboard = ScoreCalculator.CalculateLeaderboard(
+            session.Template.ScoreType,
+            session.Players.Select(p => p.PlayerId),
+            session.Scores).ToList();
+    }
+
+    private int GetScoreForRound(Guid playerId, int round)
+    {
+        var entry = session?.Scores.FirstOrDefault(s => s.PlayerId == playerId && s.Round == round);
+        return entry?.Value ?? 0;
+    }
+
+    private int GetTotalScore(Guid playerId)
+    {
+        return leaderboard.FirstOrDefault(l => l.PlayerId == playerId)?.TotalScore ?? 0;
+    }
+}

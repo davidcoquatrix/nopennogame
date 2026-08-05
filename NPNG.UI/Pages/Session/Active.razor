@@ -19,54 +19,7 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
         </div>
     </div>
 
-    <div class="end-panel">
-        <h2 class="end-panel-title">🎉 Partie Terminée !</h2>
-        <p class="end-panel-desc">
-            @if (!GameState.CurrentSession.RulesOverridden && GameState.CurrentSession.Template.Rules?.TargetScore.HasValue == true)
-            {
-                <span>L'objectif de @GameState.CurrentSession.Template.Rules.TargetScore pts a été atteint.</span>
-            }
-            else if (!GameState.CurrentSession.RulesOverridden && GameState.CurrentSession.Template.Rules?.MaxRounds.HasValue == true)
-            {
-                <span>La limite de @GameState.CurrentSession.Template.Rules.MaxRounds tours a été atteinte.</span>
-            }
-            else
-            {
-                <span>La partie a été terminée manuellement.</span>
-            }
-        </p>
-    </div>
-
-    <!-- CLASSEMENT FINAL -->
-    <div class="section-label">Classement Final</div>
-    <div class="leaderboard">
-        @foreach (var pScore in leaderboard)
-        {
-            var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
-            var isLeader = pScore.Rank == 1;
-
-            <div class="leaderboard-row @(isLeader ? "lead" : "")">
-                <span class="rank">@pScore.Rank</span>
-                <div class="av-m">@player.Emoji</div>
-                <div class="leaderboard-info">
-                    <div class="leaderboard-name">@player.Name</div>
-                </div>
-
-                @if (isLeader)
-                {
-                    <span class="db best">vainqueur</span>
-                }
-                else
-                {
-                    var bestScore = leaderboard.First().TotalScore;
-                    var diff = pScore.TotalScore - bestScore;
-                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
-                }
-
-                <div class="tot">@pScore.TotalScore</div>
-            </div>
-        }
-    </div>
+    <GameRecapPanel Session="GameState.CurrentSession" />
 
     <button class="btn-cta mt-20" @onclick="GoToHome">Retour à l'accueil</button>
     @if (GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)

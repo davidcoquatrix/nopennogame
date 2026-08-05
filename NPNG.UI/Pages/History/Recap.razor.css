@@ -1,0 +1,16 @@
+/* ─── HISTORY RECAP SCOPED CSS ─── */
+
+.header-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--sub);
+    font-size: .85rem;
+    border: 1px dashed var(--bdr-md);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
