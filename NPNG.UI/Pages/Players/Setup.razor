@@ -143,29 +143,32 @@ else
     }
 }
 
-<div class="section-label">Ajouter un joueur</div>
-<div class="add-player-row">
-    <input class="add-input @(showDuplicateError ? "error" : "")" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput"
-           @onkeyup="HandleKeyUp"/>
-    <button class="add-btn" @onclick="AddPlayer"
-            disabled="@(string.IsNullOrWhiteSpace(newPlayerName) || CurrentPlayerCount >= MaxPlayers)">＋ Ajouter
-    </button>
-</div>
-@if (showDuplicateError)
+@if (CurrentPlayerCount < MaxPlayers)
 {
-    <div class="error-msg">Ce joueur est déjà dans la partie !</div>
-}
-
-<div class="emoji-picker-container">
-    <div class="section-label emoji-picker-label">Emojis disponibles</div>
-    <div class="emoji-list">
-        @foreach (var emoji in availableEmojis)
-        {
-            <span class="emoji-item" style="opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
-                  @onclick="() => SelectEmoji(emoji)">@emoji</span>
-        }
+    <div class="section-label">Ajouter un joueur</div>
+    <div class="add-player-row">
+        <input class="add-input @(showDuplicateError ? "error" : "")" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput"
+               @onkeyup="HandleKeyUp"/>
+        <button class="add-btn" @onclick="AddPlayer"
+                disabled="@string.IsNullOrWhiteSpace(newPlayerName)">＋ Ajouter
+        </button>
     </div>
-</div>
+    @if (showDuplicateError)
+    {
+        <div class="error-msg">Ce joueur est déjà dans la partie !</div>
+    }
+
+    <div class="emoji-picker-container">
+        <div class="section-label emoji-picker-label">Emojis disponibles</div>
+        <div class="emoji-list">
+            @foreach (var emoji in availableEmojis)
+            {
+                <span class="emoji-item" style="opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
+                      @onclick="() => SelectEmoji(emoji)">@emoji</span>
+            }
+        </div>
+    </div>
+}
 
 @if (favoritePlayers.Any())
 {

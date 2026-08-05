@@ -31,10 +31,7 @@
 
     <div class="setting-row">
         <div class="field-lbl">Passage du 1er joueur</div>
-        <label class="toggle-switch">
-            <input type="checkbox" @bind="enableFirstPlayer" />
-            <span class="toggle-slider"></span>
-        </label>
+        <input type="checkbox" class="chk" @bind="enableFirstPlayer" />
     </div>
 
     @if (enableFirstPlayer)
@@ -73,11 +70,8 @@
     </div>
 
     <div class="setting-row">
-        <div class="field-lbl">🤝 Jouer en équipes par défaut</div>
-        <label class="toggle-switch">
-            <input type="checkbox" @bind="teamsEnabled" />
-            <span class="toggle-slider"></span>
-        </label>
+        <div class="field-lbl">🤝 Jeu en équipe</div>
+        <input type="checkbox" class="chk" @bind="teamsEnabled" />
     </div>
 </div>
 
@@ -91,7 +85,7 @@
 </div>
 
 <div class="save-game-row">
-    <input type="checkbox" id="saveGame" @bind="saveToCatalogue" class="save-game-checkbox" />
+    <input type="checkbox" id="saveGame" @bind="saveToCatalogue" class="chk" />
     <label for="saveGame" class="save-game-lbl">Sauvegarder ce modèle dans mon catalogue</label>
 </div>
 
