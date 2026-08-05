@@ -88,4 +88,10 @@ public class LocalStorageSessionRepository(IJSRuntime jsRuntime) : ISessionRepos
 
         return sessions.OrderByDescending(s => s.StartedAt);
     }
+
+    public async Task DeleteSessionAsync(Guid id)
+    {
+        var key = $"{StorageKeyPrefix}{id}";
+        await jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
+    }
 }

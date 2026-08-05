@@ -72,6 +72,14 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *First-player mechanics stay tied to individual players and are unaffected by team grouping.*
   - *Architecture note: this is a player-grouping concern layered on top of the existing `ScoreType` (Cumulative/CumulativeLower), not a new ScoreType by itself — likely needs a `Team` concept in the Domain plus an optional team assignment on `SessionPlayer`.*
 
+### Epic: History
+- [x] **Story 2.8: Session History Screen**
+  - *As a Scorekeeper, I want to browse the list of my past games (finished or abandoned mid-way) so that I can look back at previous results.*
+  - *Implemented via `SessionHistoryService` (Application) filtering `ISessionRepository.GetAllSessionsAsync()` through `SessionHistoryFilter` (Domain), and a new `Pages/History/Index.razor` screen at `/history` — the route the `BottomNav` "Histo." tab already pointed to.*
+  - *Abandoned sessions only appear once at least one round has been scored, to avoid cluttering the list with sessions abandoned before they ever started.*
+  - *Sessions can be deleted from the history (with confirmation), via a new `ISessionRepository.DeleteSessionAsync`.*
+  - *IndexedDB migration remains a separate, not-yet-started item — see `AGENT.md` Phase 2.*
+
 ### Epic: Social (Offline)
 - **Story 2.3: Share Score Sheet**
   - *As a Scorekeeper, I want to generate an image or text summary of the final scoreboard to share it via WhatsApp/SMS with my friends.*

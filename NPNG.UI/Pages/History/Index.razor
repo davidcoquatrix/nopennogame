@@ -1,0 +1,110 @@
+@page "/history"
+@using NPNG.Domain.Entities
+@using NPNG.Domain.Enums
+@using NPNG.Domain.Services
+@inject SessionHistoryService HistoryService
+
+<div class="app-header">
+    <div class="logo">
+        <div class="logo-ico">📋</div>
+        <span class="logo-txt">Historique</span>
+    </div>
+</div>
+
+<p class="section-label">Parties passées</p>
+
+@if (!sessions.Any())
+{
+    <div class="empty-state">Aucune partie dans l'historique pour l'instant.</div>
+}
+else
+{
+    <div class="history-list">
+        @foreach (var session in sessions)
+        {
+            <div class="history-row" @key="session.Id">
+                <span class="history-row-emoji">@(session.Status == SessionStatus.Finished ? "🏆" : "🗑️")</span>
+                <div class="history-row-info">
+                    <div class="history-row-name">@session.Template.Name</div>
+                    <div class="history-row-meta">@BuildSummary(session)</div>
+                </div>
+                <button class="ico-btn" title="Supprimer" @onclick="() => TryDelete(session.Id)">✕</button>
+            </div>
+        }
+    </div>
+}
+
+@if (pendingDeleteId.HasValue)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">🗑️ Supprimer la partie</h3>
+            <p class="modal-desc">
+                Cette action est irréversible : la partie sera définitivement retirée de l'historique.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cta modal-danger-btn" @onclick="ConfirmDelete">Oui, supprimer</button>
+                <button class="btn-secondary" @onclick="CancelDelete">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<Session> sessions = Array.Empty<Session>();
+    private Guid? pendingDeleteId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistoryAsync();
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        sessions = await HistoryService.GetHistoryAsync();
+    }
+
+    private string BuildSummary(Session session)
+    {
+        var date = session.StartedAt.ToLocalTime().ToString("dd/MM/yyyy");
+        var playerCount = $"{session.Players.Length} joueur{(session.Players.Length > 1 ? "s" : "")}";
+
+        if (session.Status == SessionStatus.Abandoned)
+        {
+            return $"{date} • {playerCount} • Abandonnée au tour {session.CurrentRound}";
+        }
+
+        var leaderboard = ScoreCalculator.CalculateLeaderboard(
+            session.Template.ScoreType,
+            session.Players.Select(p => p.PlayerId),
+            session.Scores);
+
+        var winnerEntry = leaderboard.FirstOrDefault(l => l.Rank == 1);
+        if (winnerEntry is null)
+        {
+            return $"{date} • {playerCount}";
+        }
+
+        var winner = session.Players.First(p => p.PlayerId == winnerEntry.PlayerId);
+        return $"{date} • {playerCount} • {winner.Emoji} {winner.Name} ({winnerEntry.TotalScore})";
+    }
+
+    private void TryDelete(Guid sessionId)
+    {
+        pendingDeleteId = sessionId;
+    }
+
+    private void CancelDelete()
+    {
+        pendingDeleteId = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (pendingDeleteId is null) return;
+
+        await HistoryService.DeleteSessionAsync(pendingDeleteId.Value);
+        pendingDeleteId = null;
+        await LoadHistoryAsync();
+    }
+}

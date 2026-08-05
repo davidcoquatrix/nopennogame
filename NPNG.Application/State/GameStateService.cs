@@ -453,6 +453,19 @@ public class GameStateService
     }
 
     /// <summary>
+    /// Efface la session actuellement chargée en mémoire si elle correspond à l'id donné.
+    /// Utilisé lorsqu'une session est supprimée de l'historique pendant qu'elle est encore chargée.
+    /// </summary>
+    public void ClearCurrentSessionIfMatches(Guid sessionId)
+    {
+        if (CurrentSession?.Id == sessionId)
+        {
+            CurrentSession = null;
+            NotifyStateChanged();
+        }
+    }
+
+    /// <summary>
     /// Sauvegarde la session en cours via le repository et notifie l'UI du changement.
     /// </summary>
     private async Task SaveStateAsync()

@@ -18,5 +18,6 @@ builder.Services.AddScoped<IGameCatalogueService, NPNG.Infrastructure.Services.L
 builder.Services.AddScoped<IThemeService, NPNG.Infrastructure.Services.LocalStorageThemeService>();
 builder.Services.AddScoped<IAppDataResetService, NPNG.Infrastructure.Services.LocalStorageAppDataResetService>();
 builder.Services.AddScoped<GameStateService>();
+builder.Services.AddScoped<SessionHistoryService>();
 
 await builder.Build().RunAsync();

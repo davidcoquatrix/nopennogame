@@ -11,4 +11,5 @@ public interface ISessionRepository
     Task SaveSessionAsync(Session session);
     Task<Session?> GetSessionAsync(Guid id);
     Task<IEnumerable<Session>> GetAllSessionsAsync();
+    Task DeleteSessionAsync(Guid id);
 }

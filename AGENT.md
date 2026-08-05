@@ -89,7 +89,7 @@ enum SessionStatus
 
 ### Phase 2 — History
 - [ ] IndexedDB persistence of finished sessions
-- [ ] Session history screen (browsing past finished games — not to be confused with the existing
+- [x] Session history screen (browsing past finished games — not to be confused with the existing
       "Time Travel" round-correction screen at `session/history`, which only edits the active session)
 - [x] End-of-game summary screen (winner banner + final leaderboard recap, in `Session/Active.razor`)
 
