@@ -122,7 +122,7 @@ else
 }
 
 @code {
-    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] public NavigationHistoryTracker NavigationHistory { get; set; } = default!;
 
     private int maxCompletedRound = 0;
     private int editingRound = 1;
@@ -155,7 +155,7 @@ else
 
     private async Task GoBack()
     {
-        await JSRuntime.InvokeVoidAsync("goBack");
+        await NavigationHistory.GoBackOrHomeAsync();
     }
 
     private void LoadRoundToEdit(int round)

@@ -4,6 +4,7 @@ using NPNG.Application.Interfaces;
 using NPNG.Application.State;
 using NPNG.Infrastructure.Repositories;
 using NPNG.UI;
+using NPNG.UI.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -19,5 +20,6 @@ builder.Services.AddScoped<IThemeService, NPNG.Infrastructure.Services.LocalStor
 builder.Services.AddScoped<IAppDataResetService, NPNG.Infrastructure.Services.LocalStorageAppDataResetService>();
 builder.Services.AddScoped<GameStateService>();
 builder.Services.AddScoped<SessionHistoryService>();
+builder.Services.AddScoped<NavigationHistoryTracker>();
 
 await builder.Build().RunAsync();
