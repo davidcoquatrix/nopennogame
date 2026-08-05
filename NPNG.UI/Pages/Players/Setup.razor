@@ -261,19 +261,6 @@ else
             || GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
 
         await LoadFavoritesAsync();
-
-        if (CurrentPlayerCount == 0)
-        {
-            var lastFavorite = favoritePlayers.LastOrDefault();
-            if (lastFavorite != null)
-            {
-                newPlayerName = lastFavorite.Name;
-                if (availableEmojis.Contains(lastFavorite.DefaultEmoji))
-                {
-                    selectedEmoji = lastFavorite.DefaultEmoji;
-                }
-            }
-        }
     }
     
     private async Task LoadFavoritesAsync()

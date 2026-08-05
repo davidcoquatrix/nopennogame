@@ -56,7 +56,7 @@ else
         <table class="round-table editing-mode">
             <thead>
                 <tr>
-                    <th>Joueur</th>
+                    <th>@(IsTeamMode ? "Équipe" : "Joueur")</th>
                     @for (int i = 1; i <= maxCompletedRound; i++)
                     {
                         if (i == editingRound)
@@ -72,29 +72,61 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+                @if (IsTeamMode)
                 {
-                    var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
+                    @foreach (var teamId in TeamOrder)
+                    {
+                        var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Players);
+                        var representativePlayerId = GameState.CurrentSession.Players.First(p => p.TeamId == teamId).PlayerId;
+                        var isLeader = teamLeaderboard.FirstOrDefault()?.TeamId == teamId;
 
-                    <tr>
-                        <td>@player.Emoji @player.Name</td>
-                        @for (int i = 1; i <= maxCompletedRound; i++)
-                        {
-                            if (i == editingRound)
+                        <tr>
+                            <td>🤝 @teamName</td>
+                            @for (int i = 1; i <= maxCompletedRound; i++)
                             {
-                                <td class="editable-col">
-                                    <span class="score-value score-value-warn">@(tempScores.GetValueOrDefault(player.PlayerId, 0))</span>
-                                </td>
+                                if (i == editingRound)
+                                {
+                                    <td class="editable-col">
+                                        <span class="score-value score-value-warn">@(tempScores.GetValueOrDefault(representativePlayerId, 0))</span>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>@(GetScoreForRound(representativePlayerId, i))</td>
+                                }
                             }
-                            else
+                            <td class="total-cell @(isLeader ? "lead" : "")">
+                                @GetProjectedTotalScore(representativePlayerId)
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+                    {
+                        var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
+
+                        <tr>
+                            <td>@player.Emoji @player.Name</td>
+                            @for (int i = 1; i <= maxCompletedRound; i++)
                             {
-                                <td>@(GetScoreForRound(player.PlayerId, i))</td>
+                                if (i == editingRound)
+                                {
+                                    <td class="editable-col">
+                                        <span class="score-value score-value-warn">@(tempScores.GetValueOrDefault(player.PlayerId, 0))</span>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>@(GetScoreForRound(player.PlayerId, i))</td>
+                                }
                             }
-                        }
-                        <td class="total-cell @(isLeader ? "lead" : "")">
-                            @GetProjectedTotalScore(player.PlayerId)
-                        </td>
-                    </tr>
+                            <td class="total-cell @(isLeader ? "lead" : "")">
+                                @GetProjectedTotalScore(player.PlayerId)
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -103,20 +135,41 @@ else
     <!-- correction in progress -->
     <div class="entry-panel">
         <div class="entry-panel-label">Correction — Tour @editingRound</div>
-        
-        @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+
+        @if (IsTeamMode)
         {
-            <div class="entry-row">
-                <div class="entry-avatar">@player.Emoji</div>
-                <span class="entry-name">@player.Name</span>
-                <ScoreInput 
-                    InputClass="score-value-warn"
-                    Value="@(tempScores.GetValueOrDefault(player.PlayerId, 0))"
-                    OnScoreAdjusted="@((int amount) => AdjustEditScore(player.PlayerId, amount))"
-                    OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
-            </div>
+            @foreach (var teamId in TeamOrder)
+            {
+                var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Players);
+                var representativePlayerId = GameState.CurrentSession.Players.First(p => p.TeamId == teamId).PlayerId;
+
+                <div class="entry-row">
+                    <div class="entry-avatar">🤝</div>
+                    <span class="entry-name">@teamName</span>
+                    <ScoreInput
+                        InputClass="score-value-warn"
+                        Value="@(tempScores.GetValueOrDefault(representativePlayerId, 0))"
+                        OnScoreAdjusted="@((int amount) => AdjustTeamEditScore(teamId, amount))"
+                        OnValueChanged="@((int val) => OnTeamScoreInputChange(teamId, new ChangeEventArgs { Value = val }))" />
+                </div>
+            }
         }
-        
+        else
+        {
+            @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
+            {
+                <div class="entry-row">
+                    <div class="entry-avatar">@player.Emoji</div>
+                    <span class="entry-name">@player.Name</span>
+                    <ScoreInput
+                        InputClass="score-value-warn"
+                        Value="@(tempScores.GetValueOrDefault(player.PlayerId, 0))"
+                        OnScoreAdjusted="@((int amount) => AdjustEditScore(player.PlayerId, amount))"
+                        OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
+                </div>
+            }
+        }
+
         <button class="validate-btn mt-15" @onclick="ConfirmEdit">✓ Confirmer le Tour @editingRound</button>
     </div>
 }
@@ -128,6 +181,17 @@ else
     private int editingRound = 1;
     private Dictionary<Guid, int> tempScores = new();
     private List<PlayerScore> leaderboard = new();
+    private List<TeamScore> teamLeaderboard = new();
+
+    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
+
+    private IEnumerable<Guid> TeamOrder =>
+        GameState.CurrentSession?.Players
+            .Where(p => p.TeamId.HasValue)
+            .GroupBy(p => p.TeamId!.Value)
+            .OrderBy(g => g.Min(p => p.DisplayOrder))
+            .Select(g => g.Key)
+        ?? Enumerable.Empty<Guid>();
 
     protected override void OnInitialized()
     {
@@ -203,23 +267,58 @@ else
     private void CalculateCurrentLeaderboard()
     {
         if (GameState.CurrentSession == null) return;
-        
+
         var playerIds = GameState.CurrentSession.Players.Select(p => p.PlayerId).ToList();
-        
+
         var projectedScores = GameState.CurrentSession.Scores
             .Where(s => s.Round <= maxCompletedRound && s.Round != editingRound)
             .ToList();
-        
+
         foreach (var kvp in tempScores)
         {
             projectedScores.Add(new ScoreEntry(Guid.NewGuid(), GameState.CurrentSession.Id, kvp.Key, editingRound, kvp.Value));
         }
 
-        leaderboard = ScoreCalculator.CalculateLeaderboard(
+        var computed = ScoreCalculator.CalculateLeaderboard(
             GameState.CurrentSession.Template.ScoreType,
             playerIds,
             projectedScores
-        ).ToList();
+        );
+        leaderboard = computed.ToList();
+
+        teamLeaderboard = IsTeamMode
+            ? ScoreCalculator.GroupIntoTeams(computed, GameState.CurrentSession.Players).ToList()
+            : new List<TeamScore>();
+    }
+
+    private void AdjustTeamEditScore(Guid teamId, int amount)
+    {
+        if (GameState.CurrentSession == null) return;
+
+        var memberIds = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).Select(p => p.PlayerId);
+        foreach (var playerId in memberIds)
+        {
+            if (tempScores.ContainsKey(playerId))
+            {
+                tempScores[playerId] += amount;
+            }
+        }
+
+        CalculateCurrentLeaderboard();
+    }
+
+    private void OnTeamScoreInputChange(Guid teamId, ChangeEventArgs e)
+    {
+        if (GameState.CurrentSession == null) return;
+        if (!int.TryParse(e.Value?.ToString(), out var result)) return;
+
+        var memberIds = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).Select(p => p.PlayerId);
+        foreach (var playerId in memberIds)
+        {
+            tempScores[playerId] = result;
+        }
+
+        CalculateCurrentLeaderboard();
     }
 
     private void OnScoreInputChange(Guid playerId, ChangeEventArgs e)

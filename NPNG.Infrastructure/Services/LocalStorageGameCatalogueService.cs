@@ -35,21 +35,21 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
         return _baseGames.Concat(customGames);
     }
 
-    public async Task SaveCustomGameAsync(GameTemplate template, string color)
+    public async Task SaveCustomGameAsync(GameTemplate template, string color, string emoji)
     {
         var customGames = (await GetCustomGamesAsync()).ToList();
 
         // Convert GameTemplate to GameCatalogueItem
-        var description = template.Rules != null 
+        var description = template.Rules != null
             ? $"Règles personnalisées. Type de score : {template.ScoreType}"
             : "Jeu personnalisé";
 
         var winRule = template.ScoreType == ScoreType.CumulativeLower ? "Le + bas gagne" : "Le + haut gagne";
 
         var item = new GameCatalogueItem(
-            template.Id, 
-            "📌", // Emoji par défaut pour un jeu perso
-            template.Name, 
+            template.Id,
+            emoji,
+            template.Name,
             description, 
             winRule, 
             color, 

@@ -48,7 +48,7 @@ else
         <table class="round-table">
             <thead>
                 <tr>
-                    <th>Joueur</th>
+                    <th>@(IsTeamMode ? "Équipe" : "Joueur")</th>
                     @for (int i = 1; i <= maxRound; i++)
                     {
                         <th>T.@i</th>
@@ -57,20 +57,43 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+                @if (IsTeamMode)
                 {
-                    var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
+                    @foreach (var teamId in TeamOrder)
+                    {
+                        var teamName = TeamNameFormatter.GetDisplayName(teamId, session.Players);
+                        var representativePlayerId = session.Players.First(p => p.TeamId == teamId).PlayerId;
+                        var isLeader = teamLeaderboard.FirstOrDefault()?.TeamId == teamId;
 
-                    <tr>
-                        <td>@player.Emoji @player.Name</td>
-                        @for (int i = 1; i <= maxRound; i++)
-                        {
-                            <td>@GetScoreForRound(player.PlayerId, i)</td>
-                        }
-                        <td class="total-cell @(isLeader ? "lead" : "")">
-                            @GetTotalScore(player.PlayerId)
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>🤝 @teamName</td>
+                            @for (int i = 1; i <= maxRound; i++)
+                            {
+                                <td>@GetScoreForRound(representativePlayerId, i)</td>
+                            }
+                            <td class="total-cell @(isLeader ? "lead" : "")">
+                                @GetTotalScore(representativePlayerId)
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+                    {
+                        var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
+
+                        <tr>
+                            <td>@player.Emoji @player.Name</td>
+                            @for (int i = 1; i <= maxRound; i++)
+                            {
+                                <td>@GetScoreForRound(player.PlayerId, i)</td>
+                            }
+                            <td class="total-cell @(isLeader ? "lead" : "")">
+                                @GetTotalScore(player.PlayerId)
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -84,6 +107,17 @@ else
     private Session? session;
     private int maxRound;
     private List<PlayerScore> leaderboard = new();
+    private List<TeamScore> teamLeaderboard = new();
+
+    private bool IsTeamMode => session?.Players.Any(p => p.TeamId.HasValue) == true;
+
+    private IEnumerable<Guid> TeamOrder =>
+        session?.Players
+            .Where(p => p.TeamId.HasValue)
+            .GroupBy(p => p.TeamId!.Value)
+            .OrderBy(g => g.Min(p => p.DisplayOrder))
+            .Select(g => g.Key)
+        ?? Enumerable.Empty<Guid>();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -92,10 +126,15 @@ else
 
         maxRound = session.Scores.Length > 0 ? session.Scores.Max(s => s.Round) : 0;
 
-        leaderboard = ScoreCalculator.CalculateLeaderboard(
+        var computed = ScoreCalculator.CalculateLeaderboard(
             session.Template.ScoreType,
             session.Players.Select(p => p.PlayerId),
-            session.Scores).ToList();
+            session.Scores);
+        leaderboard = computed.ToList();
+
+        teamLeaderboard = IsTeamMode
+            ? ScoreCalculator.GroupIntoTeams(computed, session.Players).ToList()
+            : new List<TeamScore>();
     }
 
     private int GetScoreForRound(Guid playerId, int round)

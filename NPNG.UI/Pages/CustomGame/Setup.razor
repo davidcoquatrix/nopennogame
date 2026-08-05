@@ -14,6 +14,15 @@
     <div class="field-lbl">Nom du jeu</div>
     <input class="field-input" type="text" @bind="gameName" placeholder="Ex: Belote maison" />
 
+    <div class="field-lbl">Emoji</div>
+    <div class="emoji-list">
+        @foreach (var emoji in availableEmojis)
+        {
+            <span class="emoji-item" style="opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
+                  @onclick="() => SelectEmoji(emoji)">@emoji</span>
+        }
+    </div>
+
     <div class="field-lbl">Qui gagne ?</div>
     <div class="toggle-row">
         <button class="toggle-opt @(winCondition == "high" ? "on" : "")" @onclick='() => SetWinCondition("high")'>🏆 Le + haut</button>
@@ -86,6 +95,8 @@
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
 
     private string gameName = "Belote maison";
+    private string selectedEmoji = "⚙️";
+    private readonly List<string> availableEmojis = new() { "⚙️", "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
     private string winCondition = "high";
     private string scoreLimit = "";
     private string roundLimit = "";
@@ -108,6 +119,7 @@
             if (baseGame != null)
             {
                 gameName = baseGame.Name;
+                selectedEmoji = baseGame.Emoji;
                 winCondition = baseGame.ScoreType == ScoreType.CumulativeLower ? "low" : "high";
                 
                 if (baseGame.Rules != null)
@@ -125,6 +137,11 @@
                 }
             }
         }
+    }
+
+    private void SelectEmoji(string emoji)
+    {
+        selectedEmoji = emoji;
     }
 
     private void SetWinCondition(string condition)
@@ -162,7 +179,7 @@
         
         if (saveToCatalogue)
         {
-            await GameCatalogueService.SaveCustomGameAsync(template, "var(--warn)");
+            await GameCatalogueService.SaveCustomGameAsync(template, "var(--warn)", selectedEmoji);
         }
         
         await GameState.InitializeNewSessionAsync(template);

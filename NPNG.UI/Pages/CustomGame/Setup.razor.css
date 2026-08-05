@@ -35,6 +35,18 @@
     border-color: var(--accent);
 }
 
+.emoji-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.emoji-item {
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
 .toggle-row {
     display: flex;
     gap: 7px;
