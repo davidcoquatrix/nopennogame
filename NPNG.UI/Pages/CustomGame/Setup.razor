@@ -60,6 +60,18 @@
         </div>
     </div>
 
+    <div class="input-group-row">
+        <div class="input-group-col">
+            <div class="field-lbl">Joueurs min (opt.)</div>
+            <input class="field-input" type="number" @bind="minPlayers" placeholder="ex : 2" />
+        </div>
+
+        <div class="input-group-col">
+            <div class="field-lbl">Joueurs max (opt.)</div>
+            <input class="field-input" type="number" @bind="maxPlayers" placeholder="ex : 6" />
+        </div>
+    </div>
+
     <div class="setting-row">
         <div class="field-lbl">🤝 Jouer en équipes par défaut</div>
         <label class="toggle-switch">
@@ -100,6 +112,8 @@
     private string winCondition = "high";
     private string scoreLimit = "";
     private string roundLimit = "";
+    private string minPlayers = "";
+    private string maxPlayers = "";
     private string incrementType = "1_10";
     private bool enableFirstPlayer = true;
     private FirstPlayerMechanic firstPlayerMechanic = FirstPlayerMechanic.Sequential;
@@ -126,6 +140,8 @@
                 {
                     scoreLimit = baseGame.Rules.TargetScore?.ToString() ?? "";
                     roundLimit = baseGame.Rules.MaxRounds?.ToString() ?? "";
+                    minPlayers = baseGame.Rules.MinPlayers?.ToString() ?? "";
+                    maxPlayers = baseGame.Rules.MaxPlayers?.ToString() ?? "";
                     firstPlayerMechanic = baseGame.Rules.FirstPlayerMechanic;
                     teamsEnabled = baseGame.Rules.TeamsEnabled;
                     
@@ -167,13 +183,17 @@
         
         int? parsedScoreLimit = int.TryParse(scoreLimit, out var s) ? s : null;
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
-        
+        int? parsedMinPlayers = int.TryParse(minPlayers, out var minP) ? minP : null;
+        int? parsedMaxPlayers = int.TryParse(maxPlayers, out var maxP) ? maxP : null;
+
         var finalMechanic = enableFirstPlayer ? firstPlayerMechanic : FirstPlayerMechanic.None;
         var rules = new GameRules(
             TargetScore: parsedScoreLimit,
             MaxRounds: parsedRoundLimit,
             FirstPlayerMechanic: finalMechanic,
-            TeamsEnabled: teamsEnabled);
+            MaxPlayers: parsedMaxPlayers,
+            TeamsEnabled: teamsEnabled,
+            MinPlayers: parsedMinPlayers);
 
         var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
         

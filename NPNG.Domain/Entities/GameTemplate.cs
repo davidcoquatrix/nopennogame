@@ -10,7 +10,8 @@ public record GameRules(
     int? MaxRounds = null,
     FirstPlayerMechanic FirstPlayerMechanic = FirstPlayerMechanic.Sequential,
     int? MaxPlayers = null,
-    bool TeamsEnabled = false);
+    bool TeamsEnabled = false,
+    int? MinPlayers = null);
 
 /// <summary>
 /// Représente le modèle de base d'un jeu (ses règles, son type de score).

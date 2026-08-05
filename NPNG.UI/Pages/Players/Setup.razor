@@ -19,6 +19,16 @@
     </div>
 }
 
+@if (CanUseTeams)
+{
+    <div class="team-toggle-row">
+        <label class="team-toggle-lbl">
+            <input type="checkbox" class="chk" checked="@teamModeEnabled" @onchange="ToggleTeamMode" />
+            🤝 Jouer en équipes
+        </label>
+    </div>
+}
+
 <div class="section-label">Ordre et 1er joueur</div>
 
 @if (GameState.CurrentSession == null || GameState.CurrentSession.Players.Length == 0)
@@ -87,59 +97,49 @@ else
     </div>
 }
 
-@if (CanUseTeams)
+@if (CanUseTeams && teamModeEnabled)
 {
-    <div class="team-toggle-row">
-        <label class="team-toggle-lbl">
-            <input type="checkbox" class="chk" checked="@teamModeEnabled" @onchange="ToggleTeamMode" />
-            🤝 Jouer en équipes
-        </label>
-    </div>
-
-    @if (teamModeEnabled)
+    @if (UnteamedPlayers.Any())
     {
-        @if (Teams.Any())
-        {
-            <div class="section-label">Équipes</div>
-            <div class="team-list">
-                @foreach (var team in Teams)
-                {
-                    <div class="team-card" @key="team.TeamId">
-                        @if (editingTeamId == team.TeamId)
-                        {
-                            <div class="field-lbl">Nom de l'équipe</div>
-                            <input class="field-input" type="text" @bind="editTeamName" @bind:event="oninput" />
-                            <div class="team-edit-actions">
-                                <button class="btn-cta" disabled="@string.IsNullOrWhiteSpace(editTeamName)" @onclick="SaveTeamName">✓ Enregistrer</button>
-                                <button class="btn-secondary" @onclick="CancelEditTeamName">Annuler</button>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="team-card-header">
-                                <span class="team-card-name">@team.DisplayName</span>
-                                <button class="ico-btn" title="Renommer" @onclick="() => StartEditTeamName(team.TeamId, team.DisplayName)">✎</button>
-                                <button class="btn-danger" title="Supprimer l'équipe" @onclick="() => DeleteTeam(team.TeamId)">🗑</button>
-                            </div>
-                        }
-                        <div class="team-members">
-                            @foreach (var member in team.Members)
-                            {
-                                <span class="team-member-chip">
-                                    @member.Emoji @member.Name
-                                    <button class="team-member-remove-btn" title="Retirer de l'équipe" @onclick="() => RemovePlayerFromTeam(member.PlayerId)">✕</button>
-                                </span>
-                            }
-                        </div>
-                    </div>
-                }
-            </div>
-        }
+        <button class="btn-cta team-create-btn" disabled="@(!selectedForTeam.Any())" @onclick="CreateTeam">➕ Créer une équipe avec la sélection</button>
+    }
 
-        @if (UnteamedPlayers.Any())
-        {
-            <button class="btn-secondary" disabled="@(!selectedForTeam.Any())" @onclick="CreateTeam">➕ Créer une équipe avec la sélection</button>
-        }
+    @if (Teams.Any())
+    {
+        <div class="section-label">Équipes</div>
+        <div class="team-list">
+            @foreach (var team in Teams)
+            {
+                <div class="team-card" @key="team.TeamId">
+                    @if (editingTeamId == team.TeamId)
+                    {
+                        <div class="field-lbl">Nom de l'équipe</div>
+                        <input class="field-input" type="text" @bind="editTeamName" @bind:event="oninput" />
+                        <div class="team-edit-actions">
+                            <button class="btn-cta" disabled="@string.IsNullOrWhiteSpace(editTeamName)" @onclick="SaveTeamName">✓ Enregistrer</button>
+                            <button class="btn-secondary" @onclick="CancelEditTeamName">Annuler</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="team-card-header">
+                            <span class="team-card-name">@team.DisplayName</span>
+                            <button class="ico-btn" title="Renommer" @onclick="() => StartEditTeamName(team.TeamId, team.DisplayName)">✎</button>
+                            <button class="btn-danger" title="Supprimer l'équipe" @onclick="() => DeleteTeam(team.TeamId)">🗑</button>
+                        </div>
+                    }
+                    <div class="team-members">
+                        @foreach (var member in team.Members)
+                        {
+                            <span class="team-member-chip">
+                                @member.Emoji @member.Name
+                                <button class="team-member-remove-btn" title="Retirer de l'équipe" @onclick="() => RemovePlayerFromTeam(member.PlayerId)">✕</button>
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
     }
 }
 
@@ -210,11 +210,16 @@ else
     private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA", "#F472B6" };
 
     private const int DefaultMaxPlayers = 8;
+    private const int DefaultMinPlayers = 2;
 
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
     private int MaxPlayers => GameState.CurrentSession?.Template.Rules?.MaxPlayers ?? DefaultMaxPlayers;
+    private int MinPlayers => GameState.CurrentSession?.Template.Rules?.MinPlayers ?? DefaultMinPlayers;
 
-    private bool StartDisabled => CurrentPlayerCount < 2 || (teamModeEnabled && UnteamedPlayers.Any());
+    // En mode équipe, le minimum s'applique au nombre d'équipes plutôt qu'au nombre de joueurs.
+    private bool StartDisabled => teamModeEnabled
+        ? (Teams.Count < MinPlayers || UnteamedPlayers.Any())
+        : CurrentPlayerCount < MinPlayers;
 
     private record TeamViewModel(Guid TeamId, string DisplayName, List<SessionPlayer> Members);
 

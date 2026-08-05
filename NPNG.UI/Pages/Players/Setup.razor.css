@@ -312,7 +312,11 @@
 }
 
 .team-toggle-row {
-    margin-bottom: 10px;
+    margin-bottom: 16px;
+}
+
+.team-create-btn {
+    margin-bottom: 12px;
 }
 
 .team-toggle-lbl {

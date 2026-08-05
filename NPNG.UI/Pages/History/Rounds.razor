@@ -65,8 +65,13 @@ else
                         var representativePlayerId = session.Players.First(p => p.TeamId == teamId).PlayerId;
                         var isLeader = teamLeaderboard.FirstOrDefault()?.TeamId == teamId;
 
+                        var members = session.Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
+
                         <tr>
-                            <td>🤝 @teamName</td>
+                            <td>
+                                <div class="team-row-name">🤝 @teamName</div>
+                                <div class="team-row-members">@string.Join(" · ", members.Select(m => $"{m.Emoji} {m.Name}"))</div>
+                            </td>
                             @for (int i = 1; i <= maxRound; i++)
                             {
                                 <td>@GetScoreForRound(representativePlayerId, i)</td>

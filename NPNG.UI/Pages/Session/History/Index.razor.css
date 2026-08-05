@@ -139,6 +139,22 @@
     border-bottom: none;
 }
 
+.team-row-name {
+    font-family: var(--font-ui);
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--txt);
+}
+
+.team-row-members {
+    font-family: var(--font-ui);
+    font-size: .65rem;
+    font-weight: 500;
+    color: var(--sub);
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
 .round-table .total-row td {
     font-weight: 700;
     color: var(--txt);
