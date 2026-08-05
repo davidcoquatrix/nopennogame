@@ -32,34 +32,77 @@
 
 <div class="section-label">Classement Final</div>
 <div class="leaderboard">
-    @foreach (var pScore in leaderboard)
+    @if (IsTeamMode)
     {
-        var player = Session.Players.First(p => p.PlayerId == pScore.PlayerId);
-        var isLeader = pScore.Rank == 1;
+        @foreach (var tScore in teamLeaderboard)
+        {
+            var isLeader = tScore.Rank == 1;
+            var members = Session.Players
+                .Where(p => tScore.MemberPlayerIds.Contains(p.PlayerId))
+                .OrderBy(p => p.DisplayOrder);
 
-        <div class="leaderboard-row @(isLeader ? "lead" : "")">
-            <span class="rank">@pScore.Rank</span>
-            <div class="av-m">@player.Emoji</div>
-            <div class="leaderboard-info">
-                <div class="leaderboard-name">@player.Name</div>
+            <div class="leaderboard-row @(isLeader ? "lead" : "")">
+                <span class="rank">@tScore.Rank</span>
+                <div class="av-m">🤝</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">@tScore.DisplayName</div>
+                    <div class="pips">
+                        @foreach (var member in members)
+                        {
+                            <span class="pip">@member.Emoji @member.Name</span>
+                        }
+                    </div>
+                </div>
+
+                @if (Session.Status == SessionStatus.Finished)
+                {
+                    @if (isLeader)
+                    {
+                        <span class="db best">vainqueur</span>
+                    }
+                    else
+                    {
+                        var bestScore = teamLeaderboard.First().TotalScore;
+                        var diff = tScore.TotalScore - bestScore;
+                        <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                    }
+                }
+
+                <div class="tot">@tScore.TotalScore</div>
             </div>
+        }
+    }
+    else
+    {
+        @foreach (var pScore in leaderboard)
+        {
+            var player = Session.Players.First(p => p.PlayerId == pScore.PlayerId);
+            var isLeader = pScore.Rank == 1;
 
-            @if (Session.Status == SessionStatus.Finished)
-            {
-                @if (isLeader)
-                {
-                    <span class="db best">vainqueur</span>
-                }
-                else
-                {
-                    var bestScore = leaderboard.First().TotalScore;
-                    var diff = pScore.TotalScore - bestScore;
-                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
-                }
-            }
+            <div class="leaderboard-row @(isLeader ? "lead" : "")">
+                <span class="rank">@pScore.Rank</span>
+                <div class="av-m">@player.Emoji</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">@player.Name</div>
+                </div>
 
-            <div class="tot">@pScore.TotalScore</div>
-        </div>
+                @if (Session.Status == SessionStatus.Finished)
+                {
+                    @if (isLeader)
+                    {
+                        <span class="db best">vainqueur</span>
+                    }
+                    else
+                    {
+                        var bestScore = leaderboard.First().TotalScore;
+                        var diff = pScore.TotalScore - bestScore;
+                        <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                    }
+                }
+
+                <div class="tot">@pScore.TotalScore</div>
+            </div>
+        }
     }
 </div>
 
@@ -68,6 +111,9 @@
     public Session Session { get; set; } = default!;
 
     private ImmutableArray<PlayerScore> leaderboard;
+    private ImmutableArray<TeamScore> teamLeaderboard;
+
+    private bool IsTeamMode => Session.Players.Any(p => p.TeamId.HasValue);
 
     protected override void OnParametersSet()
     {
@@ -75,5 +121,9 @@
             Session.Template.ScoreType,
             Session.Players.Select(p => p.PlayerId),
             Session.Scores);
+
+        teamLeaderboard = IsTeamMode
+            ? ScoreCalculator.GroupIntoTeams(leaderboard, Session.Players)
+            : ImmutableArray<TeamScore>.Empty;
     }
 }

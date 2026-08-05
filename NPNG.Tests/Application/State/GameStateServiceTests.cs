@@ -232,4 +232,132 @@ public class GameStateServiceTests
         Assert.Equal(1, entry.Round);
         Assert.Equal(15, entry.Value);
     }
+
+    [Fact]
+    public async Task CreateTeamAsync_AssignsSharedTeamIdToSelectedPlayersOnly()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF");
+        var alice = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice");
+        var bob = _sut.CurrentSession.Players.Single(p => p.Name == "Bob");
+
+        // Act
+        await _sut.CreateTeamAsync([alice.PlayerId, bob.PlayerId]);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        var updatedAlice = players.Single(p => p.Name == "Alice");
+        var updatedBob = players.Single(p => p.Name == "Bob");
+        var charlie = players.Single(p => p.Name == "Charlie");
+
+        Assert.NotNull(updatedAlice.TeamId);
+        Assert.Equal(updatedAlice.TeamId, updatedBob.TeamId);
+        Assert.Null(charlie.TeamId);
+    }
+
+    [Fact]
+    public async Task RenameTeamAsync_UpdatesCustomNameForAllCurrentMembers()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId);
+        await _sut.CreateTeamAsync(playerIds);
+        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+
+        // Act
+        await _sut.RenameTeamAsync(teamId, "Nous");
+
+        // Assert
+        Assert.All(_sut.CurrentSession.Players, p => Assert.Equal("Nous", p.TeamCustomName));
+    }
+
+    [Fact]
+    public async Task DeleteTeamAsync_ClearsTeamIdAndCustomNameForAllMembers()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId);
+        await _sut.CreateTeamAsync(playerIds);
+        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        await _sut.RenameTeamAsync(teamId, "Nous");
+
+        // Act
+        await _sut.DeleteTeamAsync(teamId);
+
+        // Assert
+        Assert.All(_sut.CurrentSession.Players, p =>
+        {
+            Assert.Null(p.TeamId);
+            Assert.Null(p.TeamCustomName);
+        });
+    }
+
+    [Fact]
+    public async Task RemovePlayerFromTeamAsync_OnlyClearsTheGivenPlayer()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var alice = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice");
+        var bob = _sut.CurrentSession.Players.Single(p => p.Name == "Bob");
+        await _sut.CreateTeamAsync([alice.PlayerId, bob.PlayerId]);
+
+        // Act
+        await _sut.RemovePlayerFromTeamAsync(alice.PlayerId);
+
+        // Assert
+        Assert.Null(_sut.CurrentSession.Players.Single(p => p.Name == "Alice").TeamId);
+        Assert.NotNull(_sut.CurrentSession.Players.Single(p => p.Name == "Bob").TeamId);
+    }
+
+    [Fact]
+    public async Task RecordTeamScoreAsync_WritesIdenticalScoreEntryToEveryMember()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId).ToList();
+        await _sut.CreateTeamAsync(playerIds);
+        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        await _sut.StartSessionAsync();
+
+        // Act
+        await _sut.RecordTeamScoreAsync(teamId, 1, 42);
+
+        // Assert
+        Assert.Equal(2, _sut.CurrentSession.Scores.Length);
+        Assert.All(_sut.CurrentSession.Scores, s => Assert.Equal(42, s.Value));
+        Assert.Equal(playerIds.ToHashSet(), _sut.CurrentSession.Scores.Select(s => s.PlayerId).ToHashSet());
+    }
+
+    [Fact]
+    public async Task RecordTeamScoreAsync_ThenAdvanceToNextRoundAsync_BehavesLikeIndividualScoring()
+    {
+        // Arrange
+        var rules = new GameRules(TargetScore: 50);
+        var template = new GameTemplate(Guid.NewGuid(), "Team Game", ScoreType.Cumulative, null, rules);
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId).ToList();
+        await _sut.CreateTeamAsync(playerIds);
+        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        await _sut.StartSessionAsync();
+
+        // Act - target score reached by the team's shared total
+        await _sut.RecordTeamScoreAsync(teamId, 1, 60);
+        await _sut.AdvanceToNextRoundAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Finished, _sut.CurrentSession!.Status);
+    }
 }

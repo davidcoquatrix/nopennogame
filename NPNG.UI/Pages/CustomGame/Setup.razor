@@ -50,6 +50,14 @@
             <input class="field-input" type="number" @bind="roundLimit" placeholder="ex : 10" />
         </div>
     </div>
+
+    <div class="setting-row">
+        <div class="field-lbl">🤝 Jouer en équipes par défaut</div>
+        <label class="toggle-switch">
+            <input type="checkbox" @bind="teamsEnabled" />
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
 </div>
 
 <div class="form-card">
@@ -84,6 +92,7 @@
     private string incrementType = "1_10";
     private bool enableFirstPlayer = true;
     private FirstPlayerMechanic firstPlayerMechanic = FirstPlayerMechanic.Sequential;
+    private bool teamsEnabled = false;
     private bool saveToCatalogue = false;
 
     [SupplyParameterFromQuery(Name = "baseGameId")]
@@ -106,6 +115,7 @@
                     scoreLimit = baseGame.Rules.TargetScore?.ToString() ?? "";
                     roundLimit = baseGame.Rules.MaxRounds?.ToString() ?? "";
                     firstPlayerMechanic = baseGame.Rules.FirstPlayerMechanic;
+                    teamsEnabled = baseGame.Rules.TeamsEnabled;
                     
                     if (firstPlayerMechanic == FirstPlayerMechanic.None)
                     {
@@ -142,7 +152,11 @@
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
         
         var finalMechanic = enableFirstPlayer ? firstPlayerMechanic : FirstPlayerMechanic.None;
-        var rules = new GameRules(TargetScore: parsedScoreLimit, MaxRounds: parsedRoundLimit, FirstPlayerMechanic: finalMechanic);
+        var rules = new GameRules(
+            TargetScore: parsedScoreLimit,
+            MaxRounds: parsedRoundLimit,
+            FirstPlayerMechanic: finalMechanic,
+            TeamsEnabled: teamsEnabled);
 
         var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
         

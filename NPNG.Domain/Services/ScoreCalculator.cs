@@ -38,24 +38,70 @@ public static class ScoreCalculator
         };
 
         // 3. Assigner les rangs (gérer les égalités)
-        var leaderboard = new List<PlayerScore>();
+        return AssignRanks(sortedScores, kvp => kvp.Value, (kvp, rank) => new PlayerScore(kvp.Key, kvp.Value, rank));
+    }
+
+    /// <summary>
+    /// Regroupe un classement individuel déjà calculé par équipe (chaque coéquipier partage le même
+    /// score total par construction, puisque la même valeur est enregistrée chez tous les membres).
+    /// Le rang est recalculé au niveau de l'équipe, pas du joueur.
+    /// </summary>
+    public static ImmutableArray<TeamScore> GroupIntoTeams(
+        ImmutableArray<PlayerScore> leaderboard,
+        ImmutableArray<SessionPlayer> players)
+    {
+        var playersById = players.ToDictionary(p => p.PlayerId);
+
+        var teams = leaderboard
+            .GroupBy(ps => playersById[ps.PlayerId].TeamId
+                ?? throw new InvalidOperationException("Tous les joueurs doivent appartenir à une équipe."))
+            .Select(g => new
+            {
+                TeamId = g.Key,
+                TotalScore = g.First().TotalScore,
+                MemberPlayerIds = g.Select(ps => ps.PlayerId).ToImmutableArray()
+            })
+            .ToList();
+
+        return AssignRanks(
+            teams,
+            t => t.TotalScore,
+            (t, rank) => new TeamScore(
+                t.TeamId,
+                TeamNameFormatter.GetDisplayName(t.TeamId, players),
+                t.MemberPlayerIds,
+                t.TotalScore,
+                rank));
+    }
+
+    /// <summary>
+    /// Assigne un rang à chaque élément d'une liste déjà triée du meilleur au moins bon,
+    /// en attribuant le même rang aux ex-aequo et en sautant les rangs suivants.
+    /// </summary>
+    private static ImmutableArray<TResult> AssignRanks<TItem, TResult>(
+        List<TItem> orderedBestToWorst,
+        Func<TItem, int> scoreSelector,
+        Func<TItem, int, TResult> resultSelector)
+    {
+        var results = new List<TResult>();
         int currentRank = 1;
         int displayedRank = 1;
         int? previousScore = null;
 
-        foreach (var kvp in sortedScores)
+        foreach (var item in orderedBestToWorst)
         {
-            if (previousScore.HasValue && previousScore != kvp.Value)
+            var score = scoreSelector(item);
+            if (previousScore.HasValue && previousScore != score)
             {
                 displayedRank = currentRank;
             }
 
-            leaderboard.Add(new PlayerScore(kvp.Key, kvp.Value, displayedRank));
-            
-            previousScore = kvp.Value;
+            results.Add(resultSelector(item, displayedRank));
+
+            previousScore = score;
             currentRank++;
         }
 
-        return [.. leaderboard];
+        return [.. results];
     }
 }

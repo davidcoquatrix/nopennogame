@@ -47,6 +47,11 @@
     flex: unset !important;
 }
 
+.entry-team-members {
+    font-size: .68rem;
+    color: var(--sub);
+}
+
 /* leaderboard */
 .leaderboard {
     display: flex;

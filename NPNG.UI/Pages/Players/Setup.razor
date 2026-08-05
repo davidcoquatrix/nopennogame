@@ -1,4 +1,5 @@
 @page "/players"
+@using NPNG.Domain.Services
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
@@ -40,6 +41,17 @@ else
             var isLastInList = i == playersList.Count - 1;
 
             <div class="player-row" @key="player.PlayerId">
+                @if (teamModeEnabled)
+                {
+                    @if (player.TeamId.HasValue)
+                    {
+                        <span class="player-team-tag" title="@TeamNameFormatter.GetDisplayName(player.TeamId.Value, GameState.CurrentSession!.Players)">🤝</span>
+                    }
+                    else
+                    {
+                        <input type="checkbox" class="chk" checked="@selectedForTeam.Contains(player.PlayerId)" @onchange="() => ToggleSelectedForTeam(player.PlayerId)" />
+                    }
+                }
                 <div class="player-order-controls">
                     <button class="ico-btn move-btn" disabled="@isFirstInList" @onclick="() => MovePlayerUp(player.PlayerId)">▲</button>
                     <button class="ico-btn move-btn" disabled="@isLastInList" @onclick="() => MovePlayerDown(player.PlayerId)">▼</button>
@@ -73,6 +85,62 @@ else
             </div>
         }
     </div>
+}
+
+@if (CanUseTeams)
+{
+    <div class="team-toggle-row">
+        <label class="team-toggle-lbl">
+            <input type="checkbox" class="chk" checked="@teamModeEnabled" @onchange="ToggleTeamMode" />
+            🤝 Jouer en équipes
+        </label>
+    </div>
+
+    @if (teamModeEnabled)
+    {
+        @if (Teams.Any())
+        {
+            <div class="section-label">Équipes</div>
+            <div class="team-list">
+                @foreach (var team in Teams)
+                {
+                    <div class="team-card" @key="team.TeamId">
+                        @if (editingTeamId == team.TeamId)
+                        {
+                            <div class="field-lbl">Nom de l'équipe</div>
+                            <input class="field-input" type="text" @bind="editTeamName" @bind:event="oninput" />
+                            <div class="team-edit-actions">
+                                <button class="btn-cta" disabled="@string.IsNullOrWhiteSpace(editTeamName)" @onclick="SaveTeamName">✓ Enregistrer</button>
+                                <button class="btn-secondary" @onclick="CancelEditTeamName">Annuler</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="team-card-header">
+                                <span class="team-card-name">@team.DisplayName</span>
+                                <button class="ico-btn" title="Renommer" @onclick="() => StartEditTeamName(team.TeamId, team.DisplayName)">✎</button>
+                                <button class="btn-danger" title="Supprimer l'équipe" @onclick="() => DeleteTeam(team.TeamId)">🗑</button>
+                            </div>
+                        }
+                        <div class="team-members">
+                            @foreach (var member in team.Members)
+                            {
+                                <span class="team-member-chip">
+                                    @member.Emoji @member.Name
+                                    <button class="team-member-remove-btn" title="Retirer de l'équipe" @onclick="() => RemovePlayerFromTeam(member.PlayerId)">✕</button>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (UnteamedPlayers.Any())
+        {
+            <button class="btn-secondary" disabled="@(!selectedForTeam.Any())" @onclick="CreateTeam">➕ Créer une équipe avec la sélection</button>
+        }
+    }
 }
 
 <div class="section-label">Ajouter un joueur</div>
@@ -120,7 +188,7 @@ else
     </div>
 }
 
-<button class="btn-cta" disabled="@(CurrentPlayerCount < 2)" @onclick="StartGame">
+<button class="btn-cta" disabled="@StartDisabled" @onclick="StartGame">
     Lancer la partie ▶
 </button>
 
@@ -146,6 +214,32 @@ else
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
     private int MaxPlayers => GameState.CurrentSession?.Template.Rules?.MaxPlayers ?? DefaultMaxPlayers;
 
+    private bool StartDisabled => CurrentPlayerCount < 2 || (teamModeEnabled && UnteamedPlayers.Any());
+
+    private record TeamViewModel(Guid TeamId, string DisplayName, List<SessionPlayer> Members);
+
+    private bool teamModeEnabled;
+    private readonly HashSet<Guid> selectedForTeam = new();
+    private Guid? editingTeamId;
+    private string editTeamName = "";
+
+    private bool CanUseTeams => GameState.CurrentSession?.Template.ScoreType != ScoreType.Structured;
+
+    private List<TeamViewModel> Teams =>
+        GameState.CurrentSession?.Players
+            .Where(p => p.TeamId.HasValue)
+            .GroupBy(p => p.TeamId!.Value)
+            .Select(g => new TeamViewModel(
+                g.Key,
+                TeamNameFormatter.GetDisplayName(g.Key, GameState.CurrentSession.Players),
+                g.OrderBy(p => p.DisplayOrder).ToList()))
+            .ToList()
+        ?? new List<TeamViewModel>();
+
+    private List<SessionPlayer> UnteamedPlayers =>
+        GameState.CurrentSession?.Players.Where(p => !p.TeamId.HasValue).OrderBy(p => p.DisplayOrder).ToList()
+        ?? new List<SessionPlayer>();
+
     protected override async Task OnInitializedAsync()
     {
         GameState.OnStateChanged += StateHasChanged;
@@ -161,6 +255,10 @@ else
                 return;
             }
         }
+
+        // Activé par défaut si la config du jeu le prévoit, ou si des équipes existent déjà (reprise après F5)
+        teamModeEnabled = GameState.CurrentSession?.Template.Rules?.TeamsEnabled == true
+            || GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
 
         await LoadFavoritesAsync();
 
@@ -292,6 +390,66 @@ else
     {
         await GameState.StartSessionAsync();
         NavigationManager.NavigateTo("session");
+    }
+
+    private async Task ToggleTeamMode(ChangeEventArgs e)
+    {
+        teamModeEnabled = e.Value is bool enabled && enabled;
+
+        if (!teamModeEnabled)
+        {
+            // On dissout les équipes existantes pour rester cohérent avec l'état du switch
+            var teamIds = Teams.Select(t => t.TeamId).ToList();
+            foreach (var teamId in teamIds)
+            {
+                await GameState.DeleteTeamAsync(teamId);
+            }
+        }
+    }
+
+    private void ToggleSelectedForTeam(Guid playerId)
+    {
+        if (!selectedForTeam.Add(playerId))
+        {
+            selectedForTeam.Remove(playerId);
+        }
+    }
+
+    private async Task CreateTeam()
+    {
+        if (!selectedForTeam.Any()) return;
+
+        await GameState.CreateTeamAsync(selectedForTeam);
+        selectedForTeam.Clear();
+    }
+
+    private void StartEditTeamName(Guid teamId, string currentName)
+    {
+        editingTeamId = teamId;
+        editTeamName = currentName;
+    }
+
+    private void CancelEditTeamName()
+    {
+        editingTeamId = null;
+    }
+
+    private async Task SaveTeamName()
+    {
+        if (editingTeamId is null || string.IsNullOrWhiteSpace(editTeamName)) return;
+
+        await GameState.RenameTeamAsync(editingTeamId.Value, editTeamName.Trim());
+        editingTeamId = null;
+    }
+
+    private async Task DeleteTeam(Guid teamId)
+    {
+        await GameState.DeleteTeamAsync(teamId);
+    }
+
+    private async Task RemovePlayerFromTeam(Guid playerId)
+    {
+        await GameState.RemovePlayerFromTeamAsync(playerId);
     }
 
 }

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using NPNG.Domain.Entities;
 using NPNG.Domain.Enums;
 using NPNG.Domain.Services;
@@ -9,6 +10,7 @@ public class ScoreCalculatorTests
     private readonly Guid _player1 = Guid.NewGuid();
     private readonly Guid _player2 = Guid.NewGuid();
     private readonly Guid _player3 = Guid.NewGuid();
+    private readonly Guid _player4 = Guid.NewGuid();
     private readonly Guid _sessionId = Guid.NewGuid();
 
     private List<Guid> PlayerIds => [_player1, _player2, _player3];
@@ -148,5 +150,103 @@ public class ScoreCalculatorTests
         Assert.Equal(_player1, result[2].PlayerId);
         Assert.Equal(10, result[2].TotalScore);
         Assert.Equal(3, result[2].Rank);
+    }
+
+    [Fact]
+    public void GroupIntoTeams_TwoTeamsOfTwo_AssignsSequentialTeamRanks()
+    {
+        // Arrange
+        var teamA = Guid.NewGuid();
+        var teamB = Guid.NewGuid();
+        var players = ImmutableArray.Create(
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: teamA),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: teamA),
+            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", TeamId: teamB),
+            new SessionPlayer(_player4, "P4", "🦊", 3, "#fff", TeamId: teamB));
+
+        var entries = new List<ScoreEntry>
+        {
+            new(Guid.NewGuid(), _sessionId, _player1, 1, 30),
+            new(Guid.NewGuid(), _sessionId, _player2, 1, 30),
+            new(Guid.NewGuid(), _sessionId, _player3, 1, 50),
+            new(Guid.NewGuid(), _sessionId, _player4, 1, 50),
+        };
+
+        var leaderboard = ScoreCalculator.CalculateLeaderboard(ScoreType.Cumulative, players.Select(p => p.PlayerId), entries);
+
+        // Act
+        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players);
+
+        // Assert
+        Assert.Equal(2, result.Length);
+
+        var winner = result.Single(t => t.TeamId == teamB);
+        Assert.Equal(50, winner.TotalScore);
+        Assert.Equal(1, winner.Rank);
+        Assert.Equal(2, winner.MemberPlayerIds.Length);
+
+        var second = result.Single(t => t.TeamId == teamA);
+        Assert.Equal(30, second.TotalScore);
+        Assert.Equal(2, second.Rank); // pas 3, malgré les 2 individus devant elle
+    }
+
+    [Fact]
+    public void GroupIntoTeams_UnevenSplit_GroupsCorrectlyRegardlessOfTeamSize()
+    {
+        // Arrange
+        var soloTeam = Guid.NewGuid();
+        var duoTeam = Guid.NewGuid();
+        var players = ImmutableArray.Create(
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: soloTeam),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: duoTeam),
+            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", TeamId: duoTeam));
+
+        var entries = new List<ScoreEntry>
+        {
+            new(Guid.NewGuid(), _sessionId, _player1, 1, 40),
+            new(Guid.NewGuid(), _sessionId, _player2, 1, 20),
+            new(Guid.NewGuid(), _sessionId, _player3, 1, 20),
+        };
+
+        var leaderboard = ScoreCalculator.CalculateLeaderboard(ScoreType.Cumulative, players.Select(p => p.PlayerId), entries);
+
+        // Act
+        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players);
+
+        // Assert
+        Assert.Equal(2, result.Length);
+
+        var solo = result.Single(t => t.TeamId == soloTeam);
+        Assert.Single(solo.MemberPlayerIds);
+        Assert.Equal(1, solo.Rank);
+
+        var duo = result.Single(t => t.TeamId == duoTeam);
+        Assert.Equal(2, duo.MemberPlayerIds.Length);
+        Assert.Equal(2, duo.Rank);
+    }
+
+    [Fact]
+    public void GroupIntoTeams_WhenTwoTeamsTie_AssignsSameRank()
+    {
+        // Arrange
+        var teamA = Guid.NewGuid();
+        var teamB = Guid.NewGuid();
+        var players = ImmutableArray.Create(
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: teamA),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: teamB));
+
+        var entries = new List<ScoreEntry>
+        {
+            new(Guid.NewGuid(), _sessionId, _player1, 1, 30),
+            new(Guid.NewGuid(), _sessionId, _player2, 1, 30),
+        };
+
+        var leaderboard = ScoreCalculator.CalculateLeaderboard(ScoreType.Cumulative, players.Select(p => p.PlayerId), entries);
+
+        // Act
+        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players);
+
+        // Assert
+        Assert.All(result, t => Assert.Equal(1, t.Rank));
     }
 }

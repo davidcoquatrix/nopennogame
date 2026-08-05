@@ -64,13 +64,15 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 - [x] **Story 2.6: Save and Manage Custom Games**
   - *As a Scorekeeper, I want to be able to save a custom game configuration (name, scoring type, rules) so that I can reuse it later without having to recreate it.*
   - *As a Scorekeeper, I want to be able to delete a custom game that I previously saved, so that I can keep my game catalog clean.*
-- [ ] **Story 2.7: Team Scoring (Belote-style "Nous/Vous")**
+- [x] **Story 2.7: Team Scoring (Belote-style "Nous/Vous")**
   - *As a Scorekeeper, I want to group session players into teams that share a single score, so that I can track games like Belote or Tarot where teammates play together instead of individually.*
-  - *Teams are formed by grouping existing session players; not hard-limited to 2 teams of 2, to leave room for other team formats and uneven splits.*
+  - *Teams are formed by grouping existing session players (multi-select + "Créer une équipe" in `Players/Setup.razor`); not hard-limited to 2 teams of 2 — uneven splits are supported. When team mode is on, every player must belong to a team before starting (no mixed individual/team state).*
+  - *A custom game (`CustomGame/Setup.razor`) can set "Jouer en équipes par défaut" (`GameRules.TeamsEnabled`), so a game always played in teams (e.g. Belote) pre-enables the toggle on `Players/Setup.razor` for every new session — still overridable per-session.*
   - *Each team gets a display name generated from its members (e.g. "David & Marion"), with the option to rename it — e.g. back to the classic "Nous"/"Vous" convention.*
   - *Score entry becomes one input per team per round instead of one per player; the leaderboard shows the team total with its members listed underneath.*
   - *First-player mechanics stay tied to individual players and are unaffected by team grouping.*
-  - *Architecture note: this is a player-grouping concern layered on top of the existing `ScoreType` (Cumulative/CumulativeLower), not a new ScoreType by itself — likely needs a `Team` concept in the Domain plus an optional team assignment on `SessionPlayer`.*
+  - *Implementation note: no separate `Team` entity/collection — a team is just the set of `SessionPlayer`s sharing the same `TeamId`, with an optional `TeamCustomName` denormalized across members (`NPNG.Domain.Entities.SessionPlayer`). This avoids adding an `ImmutableArray<Team>` to `Session`, whose C# default can't be `.Empty` (not a compile-time constant) and would deserialize old localStorage sessions into a crash-prone default array. `GameStateService.RecordTeamScoreAsync` writes the same value to every member's individual `ScoreEntry`, so `RecordScoreAsync`, `AdvanceToNextRoundAsync`, `IsGameFinished` and first-player advancement all stay unmodified — teams are purely a presentation grouping (`ScoreCalculator.GroupIntoTeams`, `TeamNameFormatter`).*
+  - *Deliberately out of scope: Time Travel (`Session/History/Index.razor`) and the history round-replay screen (`Pages/History/Rounds.razor`) still show one row per individual player (duplicated-but-correct scores per teammate) rather than one row per team — a natural follow-up story.*
 
 ### Epic: History
 - [x] **Story 2.8: Session History Screen**

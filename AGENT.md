@@ -51,6 +51,8 @@ SessionPlayer
   DisplayOrder: int             // Order around the table
   Color: string                 // hex color assigned to this player in this session
   IsFirstPlayer: bool           // Track who starts the current round
+  TeamId: Guid?                 // Groups players sharing one score (Belote/Tarot-style teams); null = individual
+  TeamCustomName: string?       // Optional rename (e.g. "Nous"); null = auto-generated from member names
 
 Player
   Id: Guid

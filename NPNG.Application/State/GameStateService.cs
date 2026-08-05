@@ -177,6 +177,85 @@ public class GameStateService
         }
     }
 
+    /// <summary>
+    /// Regroupe les joueurs donnés en une nouvelle équipe partageant un même score (ex: Belote).
+    /// Le nom est laissé à null pour être généré automatiquement à partir des membres.
+    /// </summary>
+    public async Task CreateTeamAsync(IEnumerable<Guid> memberPlayerIds)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+
+        var teamId = Guid.NewGuid();
+        var memberIds = memberPlayerIds.ToHashSet();
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => memberIds.Contains(p.PlayerId) ? p with { TeamId = teamId, TeamCustomName = null } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Ajoute un joueur non affecté à une équipe existante.
+    /// </summary>
+    public async Task AssignPlayerToTeamAsync(Guid playerId, Guid teamId)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.PlayerId == playerId ? p with { TeamId = teamId, TeamCustomName = null } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Retire un joueur de son équipe : il redevient non affecté.
+    /// </summary>
+    public async Task RemovePlayerFromTeamAsync(Guid playerId)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.PlayerId == playerId ? p with { TeamId = null, TeamCustomName = null } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Renomme une équipe : le nom personnalisé est appliqué à tous ses membres actuels.
+    /// </summary>
+    public async Task RenameTeamAsync(Guid teamId, string newName)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.TeamId == teamId ? p with { TeamCustomName = newName } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Dissout une équipe : ses membres redeviennent non affectés.
+    /// </summary>
+    public async Task DeleteTeamAsync(Guid teamId)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.TeamId == teamId ? p with { TeamId = null, TeamCustomName = null } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
     public async Task StartSessionAsync()
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
@@ -225,6 +304,26 @@ public class GameStateService
 
         CurrentSession = CurrentSession with { Scores = newScores };
         await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Enregistre le score d'une équipe pour un tour : la même valeur est écrite chez chaque membre,
+    /// ce qui laisse RecordScoreAsync, AdvanceToNextRoundAsync et le calcul du premier joueur inchangés
+    /// (les coéquipiers sont simplement à égalité entre eux).
+    /// </summary>
+    public async Task RecordTeamScoreAsync(Guid teamId, int round, int value)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
+
+        var memberIds = CurrentSession.Players
+            .Where(p => p.TeamId == teamId)
+            .Select(p => p.PlayerId)
+            .ToList();
+
+        foreach (var playerId in memberIds)
+        {
+            await RecordScoreAsync(playerId, round, value);
+        }
     }
 
     /// <summary>

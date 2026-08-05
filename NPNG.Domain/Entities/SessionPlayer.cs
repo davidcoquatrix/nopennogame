@@ -10,4 +10,6 @@ public record SessionPlayer(
     string Emoji,
     int DisplayOrder,
     string Color,
-    bool IsFirstPlayer = false);
+    bool IsFirstPlayer = false,
+    Guid? TeamId = null,
+    string? TeamCustomName = null);
