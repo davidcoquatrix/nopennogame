@@ -214,15 +214,16 @@ else
 
     private const int DefaultMaxPlayers = 8;
     private const int DefaultMinPlayers = 2;
+    private const int MinTeamsRequired = 2;
 
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
     private int MaxPlayers => GameState.CurrentSession?.Template.Rules?.MaxPlayers ?? DefaultMaxPlayers;
     private int MinPlayers => GameState.CurrentSession?.Template.Rules?.MinPlayers ?? DefaultMinPlayers;
 
-    // En mode équipe, le minimum s'applique au nombre d'équipes plutôt qu'au nombre de joueurs.
-    private bool StartDisabled => teamModeEnabled
-        ? (Teams.Count < MinPlayers || UnteamedPlayers.Any())
-        : CurrentPlayerCount < MinPlayers;
+    // MinPlayers décrit toujours le nombre de joueurs physiques, peu importe le mode.
+    // En mode équipe, on exige en plus qu'au moins 2 équipes soient formées (une seule équipe n'a pas de sens).
+    private bool StartDisabled => CurrentPlayerCount < MinPlayers
+        || (teamModeEnabled && (UnteamedPlayers.Any() || Teams.Count < MinTeamsRequired));
 
     private record TeamViewModel(Guid TeamId, string DisplayName, List<SessionPlayer> Members);
 
