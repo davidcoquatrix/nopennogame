@@ -76,7 +76,7 @@ else
         {
             @foreach (var tScore in teamLeaderboard)
             {
-                var isLeader = tScore.Rank == 1;
+                var isLeader = HasProgress && tScore.Rank == 1;
                 var members = GameState.CurrentSession.Players
                     .Where(p => tScore.MemberPlayerIds.Contains(p.PlayerId))
                     .OrderBy(p => p.DisplayOrder);
@@ -98,7 +98,7 @@ else
                     {
                         <span class="db best">meilleur</span>
                     }
-                    else
+                    else if (HasProgress)
                     {
                         var bestScore = teamLeaderboard.First().TotalScore;
                         var diff = tScore.TotalScore - bestScore;
@@ -114,7 +114,7 @@ else
             @foreach (var pScore in leaderboard)
             {
                 var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
-                var isLeader = pScore.Rank == 1;
+                var isLeader = HasProgress && pScore.Rank == 1;
 
                 <div class="leaderboard-row @(isLeader ? "lead" : "")">
                     <span class="rank">@pScore.Rank</span>
@@ -136,7 +136,7 @@ else
                     {
                         <span class="db best">meilleur</span>
                     }
-                    else
+                    else if (HasProgress)
                     {
                         var bestScore = leaderboard.First().TotalScore;
                         var diff = pScore.TotalScore - bestScore;
@@ -211,6 +211,9 @@ else
     private List<TeamScore> teamLeaderboard = new();
 
     private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
+
+    // Au tour 1 sans score saisi, tout le monde est à égalité à 0 — "meilleur" n'aurait aucun sens.
+    private bool HasProgress => GameState.CurrentSession?.HasProgress == true;
 
     // Une fois la partie démarrée, il n'y a plus d'écran valide vers lequel revenir
     // (l'écran joueurs se verrouille dès qu'un score existe) — on masque donc le bouton retour.
