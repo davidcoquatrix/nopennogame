@@ -12,8 +12,8 @@ public class TeamNameFormatterTests
         var teamId = Guid.NewGuid();
         var players = new List<SessionPlayer>
         {
-            new(Guid.NewGuid(), "Marion", "🐱", 1, "#FF0000", TeamId: teamId),
-            new(Guid.NewGuid(), "David", "🐶", 0, "#00FF00", TeamId: teamId),
+            new(Guid.NewGuid(), "Marion", "🐱", 1, "#FF0000", Team: new TeamMembership(teamId)),
+            new(Guid.NewGuid(), "David", "🐶", 0, "#00FF00", Team: new TeamMembership(teamId)),
         };
 
         // Act
@@ -30,8 +30,8 @@ public class TeamNameFormatterTests
         var teamId = Guid.NewGuid();
         var players = new List<SessionPlayer>
         {
-            new(Guid.NewGuid(), "Marion", "🐱", 0, "#FF0000", TeamId: teamId, TeamCustomName: "Nous"),
-            new(Guid.NewGuid(), "David", "🐶", 1, "#00FF00", TeamId: teamId, TeamCustomName: "Nous"),
+            new(Guid.NewGuid(), "Marion", "🐱", 0, "#FF0000", Team: new TeamMembership(teamId, CustomName: "Nous")),
+            new(Guid.NewGuid(), "David", "🐶", 1, "#00FF00", Team: new TeamMembership(teamId, CustomName: "Nous")),
         };
 
         // Act
@@ -49,8 +49,8 @@ public class TeamNameFormatterTests
         var otherTeamId = Guid.NewGuid();
         var players = new List<SessionPlayer>
         {
-            new(Guid.NewGuid(), "David", "🐶", 0, "#00FF00", TeamId: teamId),
-            new(Guid.NewGuid(), "Alice", "🐱", 1, "#FF0000", TeamId: otherTeamId),
+            new(Guid.NewGuid(), "David", "🐶", 0, "#00FF00", Team: new TeamMembership(teamId)),
+            new(Guid.NewGuid(), "Alice", "🐱", 1, "#FF0000", Team: new TeamMembership(otherTeamId)),
         };
 
         // Act

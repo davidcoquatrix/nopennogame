@@ -253,9 +253,9 @@ public class GameStateServiceTests
         var updatedBob = players.Single(p => p.Name == "Bob");
         var charlie = players.Single(p => p.Name == "Charlie");
 
-        Assert.NotNull(updatedAlice.TeamId);
-        Assert.Equal(updatedAlice.TeamId, updatedBob.TeamId);
-        Assert.Null(charlie.TeamId);
+        Assert.NotNull(updatedAlice.Team);
+        Assert.Equal(updatedAlice.Team!.TeamId, updatedBob.Team!.TeamId);
+        Assert.Null(charlie.Team);
     }
 
     [Fact]
@@ -267,17 +267,17 @@ public class GameStateServiceTests
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
         var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId);
         await _sut.CreateTeamAsync(playerIds);
-        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        var teamId = _sut.CurrentSession.Players[0].Team!.TeamId;
 
         // Act
         await _sut.RenameTeamAsync(teamId, "Nous");
 
         // Assert
-        Assert.All(_sut.CurrentSession.Players, p => Assert.Equal("Nous", p.TeamCustomName));
+        Assert.All(_sut.CurrentSession.Players, p => Assert.Equal("Nous", p.Team?.CustomName));
     }
 
     [Fact]
-    public async Task DeleteTeamAsync_ClearsTeamIdAndCustomNameForAllMembers()
+    public async Task UpdateTeamEmojiAsync_UpdatesCustomEmojiForAllCurrentMembers()
     {
         // Arrange
         await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
@@ -285,18 +285,49 @@ public class GameStateServiceTests
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
         var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId);
         await _sut.CreateTeamAsync(playerIds);
-        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        var teamId = _sut.CurrentSession.Players[0].Team!.TeamId;
+
+        // Act
+        await _sut.UpdateTeamEmojiAsync(teamId, "🏆");
+
+        // Assert
+        Assert.All(_sut.CurrentSession.Players, p => Assert.Equal("🏆", p.Team?.CustomEmoji));
+    }
+
+    [Fact]
+    public async Task UpdatePlayerEmojiAsync_ChangesOnlyTheGivenPlayersEmoji()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var alice = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice");
+
+        // Act
+        await _sut.UpdatePlayerEmojiAsync(alice.PlayerId, "🦊");
+
+        // Assert
+        Assert.Equal("🦊", _sut.CurrentSession.Players.Single(p => p.Name == "Alice").Emoji);
+        Assert.Equal("🐶", _sut.CurrentSession.Players.Single(p => p.Name == "Bob").Emoji);
+    }
+
+    [Fact]
+    public async Task DeleteTeamAsync_ClearsTeamMembershipForAllMembers()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId);
+        await _sut.CreateTeamAsync(playerIds);
+        var teamId = _sut.CurrentSession.Players[0].Team!.TeamId;
         await _sut.RenameTeamAsync(teamId, "Nous");
 
         // Act
         await _sut.DeleteTeamAsync(teamId);
 
         // Assert
-        Assert.All(_sut.CurrentSession.Players, p =>
-        {
-            Assert.Null(p.TeamId);
-            Assert.Null(p.TeamCustomName);
-        });
+        Assert.All(_sut.CurrentSession.Players, p => Assert.Null(p.Team));
     }
 
     [Fact]
@@ -314,8 +345,8 @@ public class GameStateServiceTests
         await _sut.RemovePlayerFromTeamAsync(alice.PlayerId);
 
         // Assert
-        Assert.Null(_sut.CurrentSession.Players.Single(p => p.Name == "Alice").TeamId);
-        Assert.NotNull(_sut.CurrentSession.Players.Single(p => p.Name == "Bob").TeamId);
+        Assert.Null(_sut.CurrentSession.Players.Single(p => p.Name == "Alice").Team);
+        Assert.NotNull(_sut.CurrentSession.Players.Single(p => p.Name == "Bob").Team);
     }
 
     [Fact]
@@ -327,7 +358,7 @@ public class GameStateServiceTests
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
         var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId).ToList();
         await _sut.CreateTeamAsync(playerIds);
-        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        var teamId = _sut.CurrentSession.Players[0].Team!.TeamId;
         await _sut.StartSessionAsync();
 
         // Act
@@ -350,7 +381,7 @@ public class GameStateServiceTests
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
         var playerIds = _sut.CurrentSession!.Players.Select(p => p.PlayerId).ToList();
         await _sut.CreateTeamAsync(playerIds);
-        var teamId = _sut.CurrentSession.Players[0].TeamId!.Value;
+        var teamId = _sut.CurrentSession.Players[0].Team!.TeamId;
         await _sut.StartSessionAsync();
 
         // Act - target score reached by the team's shared total

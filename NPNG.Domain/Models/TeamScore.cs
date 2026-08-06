@@ -8,6 +8,7 @@ namespace NPNG.Domain.Models;
 public record TeamScore(
     Guid TeamId,
     string DisplayName,
+    string DisplayEmoji,
     ImmutableArray<Guid> MemberPlayerIds,
     int TotalScore,
     int Rank);

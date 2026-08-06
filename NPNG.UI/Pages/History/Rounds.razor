@@ -62,14 +62,15 @@ else
                     @foreach (var teamId in TeamOrder)
                     {
                         var teamName = TeamNameFormatter.GetDisplayName(teamId, session.Players);
-                        var representativePlayerId = session.Players.First(p => p.TeamId == teamId).PlayerId;
+                        var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, session.Players);
+                        var representativePlayerId = session.Players.First(p => p.Team?.TeamId == teamId).PlayerId;
                         var isLeader = teamLeaderboard.FirstOrDefault()?.TeamId == teamId;
 
-                        var members = session.Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
+                        var members = session.Players.Where(p => p.Team?.TeamId == teamId).OrderBy(p => p.DisplayOrder);
 
                         <tr>
                             <td>
-                                <div class="team-row-name">🤝 @teamName</div>
+                                <div class="team-row-name">@teamEmoji @teamName</div>
                                 <div class="team-row-members">@string.Join(" · ", members.Select(m => $"{m.Emoji} {m.Name}"))</div>
                             </td>
                             @for (int i = 1; i <= maxRound; i++)
@@ -114,12 +115,12 @@ else
     private List<PlayerScore> leaderboard = new();
     private List<TeamScore> teamLeaderboard = new();
 
-    private bool IsTeamMode => session?.Players.Any(p => p.TeamId.HasValue) == true;
+    private bool IsTeamMode => session?.Players.Any(p => p.Team is not null) == true;
 
     private IEnumerable<Guid> TeamOrder =>
         session?.Players
-            .Where(p => p.TeamId.HasValue)
-            .GroupBy(p => p.TeamId!.Value)
+            .Where(p => p.Team is not null)
+            .GroupBy(p => p.Team!.TeamId)
             .OrderBy(g => g.Min(p => p.DisplayOrder))
             .Select(g => g.Key)
         ?? Enumerable.Empty<Guid>();

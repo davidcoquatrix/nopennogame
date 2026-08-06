@@ -77,13 +77,14 @@ else
                     @foreach (var teamId in TeamOrder)
                     {
                         var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Players);
-                        var representativePlayerId = GameState.CurrentSession.Players.First(p => p.TeamId == teamId).PlayerId;
+                        var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, GameState.CurrentSession.Players);
+                        var representativePlayerId = GameState.CurrentSession.Players.First(p => p.Team?.TeamId == teamId).PlayerId;
                         var isLeader = teamLeaderboard.FirstOrDefault()?.TeamId == teamId;
-                        var members = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
+                        var members = GameState.CurrentSession.Players.Where(p => p.Team?.TeamId == teamId).OrderBy(p => p.DisplayOrder);
 
                         <tr>
                             <td>
-                                <div class="team-row-name">🤝 @teamName</div>
+                                <div class="team-row-name">@teamEmoji @teamName</div>
                                 <div class="team-row-members">@string.Join(" · ", members.Select(m => $"{m.Emoji} {m.Name}"))</div>
                             </td>
                             @for (int i = 1; i <= maxCompletedRound; i++)
@@ -145,10 +146,11 @@ else
             @foreach (var teamId in TeamOrder)
             {
                 var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Players);
-                var representativePlayerId = GameState.CurrentSession.Players.First(p => p.TeamId == teamId).PlayerId;
+                var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, GameState.CurrentSession.Players);
+                var representativePlayerId = GameState.CurrentSession.Players.First(p => p.Team?.TeamId == teamId).PlayerId;
 
                 <div class="entry-row">
-                    <div class="entry-avatar">🤝</div>
+                    <div class="entry-avatar">@teamEmoji</div>
                     <span class="entry-name">@teamName</span>
                     <ScoreInput
                         InputClass="score-value-warn"
@@ -187,12 +189,12 @@ else
     private List<PlayerScore> leaderboard = new();
     private List<TeamScore> teamLeaderboard = new();
 
-    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
+    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.Team is not null) == true;
 
     private IEnumerable<Guid> TeamOrder =>
         GameState.CurrentSession?.Players
-            .Where(p => p.TeamId.HasValue)
-            .GroupBy(p => p.TeamId!.Value)
+            .Where(p => p.Team is not null)
+            .GroupBy(p => p.Team!.TeamId)
             .OrderBy(g => g.Min(p => p.DisplayOrder))
             .Select(g => g.Key)
         ?? Enumerable.Empty<Guid>();
@@ -299,7 +301,7 @@ else
     {
         if (GameState.CurrentSession == null) return;
 
-        var memberIds = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).Select(p => p.PlayerId);
+        var memberIds = GameState.CurrentSession.Players.Where(p => p.Team?.TeamId == teamId).Select(p => p.PlayerId);
         foreach (var playerId in memberIds)
         {
             if (tempScores.ContainsKey(playerId))
@@ -316,7 +318,7 @@ else
         if (GameState.CurrentSession == null) return;
         if (!int.TryParse(e.Value?.ToString(), out var result)) return;
 
-        var memberIds = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).Select(p => p.PlayerId);
+        var memberIds = GameState.CurrentSession.Players.Where(p => p.Team?.TeamId == teamId).Select(p => p.PlayerId);
         foreach (var playerId in memberIds)
         {
             tempScores[playerId] = result;

@@ -159,10 +159,10 @@ public class ScoreCalculatorTests
         var teamA = Guid.NewGuid();
         var teamB = Guid.NewGuid();
         var players = ImmutableArray.Create(
-            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: teamA),
-            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: teamA),
-            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", TeamId: teamB),
-            new SessionPlayer(_player4, "P4", "🦊", 3, "#fff", TeamId: teamB));
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", Team: new TeamMembership(teamA)),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", Team: new TeamMembership(teamA)),
+            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", Team: new TeamMembership(teamB)),
+            new SessionPlayer(_player4, "P4", "🦊", 3, "#fff", Team: new TeamMembership(teamB)));
 
         var entries = new List<ScoreEntry>
         {
@@ -197,9 +197,9 @@ public class ScoreCalculatorTests
         var soloTeam = Guid.NewGuid();
         var duoTeam = Guid.NewGuid();
         var players = ImmutableArray.Create(
-            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: soloTeam),
-            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: duoTeam),
-            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", TeamId: duoTeam));
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", Team: new TeamMembership(soloTeam)),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", Team: new TeamMembership(duoTeam)),
+            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", Team: new TeamMembership(duoTeam)));
 
         var entries = new List<ScoreEntry>
         {
@@ -232,8 +232,8 @@ public class ScoreCalculatorTests
         var teamA = Guid.NewGuid();
         var teamB = Guid.NewGuid();
         var players = ImmutableArray.Create(
-            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: teamA),
-            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: teamB));
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", Team: new TeamMembership(teamA)),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", Team: new TeamMembership(teamB)));
 
         var entries = new List<ScoreEntry>
         {

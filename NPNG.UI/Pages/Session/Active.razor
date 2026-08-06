@@ -83,7 +83,7 @@ else
 
                 <div class="leaderboard-row @(isLeader ? "lead" : "")">
                     <span class="rank">@tScore.Rank</span>
-                    <div class="av-m">🤝</div>
+                    <div class="av-m">@tScore.DisplayEmoji</div>
                     <div class="leaderboard-info">
                         <div class="leaderboard-name">@tScore.DisplayName</div>
                         <div class="pips">
@@ -157,10 +157,11 @@ else
             @foreach (var teamId in TeamEntryOrder)
             {
                 var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Players);
-                var members = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
+                var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, GameState.CurrentSession.Players);
+                var members = GameState.CurrentSession.Players.Where(p => p.Team?.TeamId == teamId).OrderBy(p => p.DisplayOrder);
 
                 <div class="entry-row">
-                    <div class="entry-avatar">🤝</div>
+                    <div class="entry-avatar">@teamEmoji</div>
                     <div class="entry-info">
                         <span class="entry-name entry-name-override">@teamName</span>
                         <span class="entry-team-members">@string.Join(" · ", members.Select(m => $"{m.Emoji} {m.Name}"))</span>
@@ -209,7 +210,7 @@ else
     private Dictionary<Guid, int> currentTeamInputs = new();
     private List<TeamScore> teamLeaderboard = new();
 
-    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
+    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.Team is not null) == true;
 
     // Une fois la partie démarrée, il n'y a plus d'écran valide vers lequel revenir
     // (l'écran joueurs se verrouille dès qu'un score existe) — on masque donc le bouton retour.
@@ -217,8 +218,8 @@ else
 
     private IEnumerable<Guid> TeamEntryOrder =>
         GameState.CurrentSession?.Players
-            .Where(p => p.TeamId.HasValue)
-            .GroupBy(p => p.TeamId!.Value)
+            .Where(p => p.Team is not null)
+            .GroupBy(p => p.Team!.TeamId)
             .OrderBy(g => g.Min(p => p.DisplayOrder))
             .Select(g => g.Key)
         ?? Enumerable.Empty<Guid>();

@@ -113,6 +113,21 @@ public class GameStateService
     }
 
     /// <summary>
+    /// Change l'emoji d'un joueur (avatar individuel, y compris s'il appartient à une équipe).
+    /// </summary>
+    public async Task UpdatePlayerEmojiAsync(Guid playerId, string emoji)
+    {
+        if (CurrentSession is null || (CurrentSession.Status != SessionStatus.Active && CurrentSession.Status != SessionStatus.Setup)) return;
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.PlayerId == playerId ? p with { Emoji = emoji } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
     /// Force manuellement le statut de Premier Joueur.
     /// </summary>
     public async Task SetFirstPlayerManuallyAsync(Guid playerId)
@@ -189,22 +204,7 @@ public class GameStateService
         var memberIds = memberPlayerIds.ToHashSet();
 
         var updatedPlayers = CurrentSession.Players
-            .Select(p => memberIds.Contains(p.PlayerId) ? p with { TeamId = teamId, TeamCustomName = null } : p)
-            .ToImmutableArray();
-
-        CurrentSession = CurrentSession with { Players = updatedPlayers };
-        await SaveStateAsync();
-    }
-
-    /// <summary>
-    /// Ajoute un joueur non affecté à une équipe existante.
-    /// </summary>
-    public async Task AssignPlayerToTeamAsync(Guid playerId, Guid teamId)
-    {
-        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
-
-        var updatedPlayers = CurrentSession.Players
-            .Select(p => p.PlayerId == playerId ? p with { TeamId = teamId, TeamCustomName = null } : p)
+            .Select(p => memberIds.Contains(p.PlayerId) ? p with { Team = new TeamMembership(teamId) } : p)
             .ToImmutableArray();
 
         CurrentSession = CurrentSession with { Players = updatedPlayers };
@@ -219,7 +219,7 @@ public class GameStateService
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
         var updatedPlayers = CurrentSession.Players
-            .Select(p => p.PlayerId == playerId ? p with { TeamId = null, TeamCustomName = null } : p)
+            .Select(p => p.PlayerId == playerId ? p with { Team = null } : p)
             .ToImmutableArray();
 
         CurrentSession = CurrentSession with { Players = updatedPlayers };
@@ -234,7 +234,22 @@ public class GameStateService
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
         var updatedPlayers = CurrentSession.Players
-            .Select(p => p.TeamId == teamId ? p with { TeamCustomName = newName } : p)
+            .Select(p => p.Team is { } team && team.TeamId == teamId ? p with { Team = team with { CustomName = newName } } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
+    /// Change l'emoji d'une équipe : appliqué à tous ses membres actuels (dénormalisé, comme le nom).
+    /// </summary>
+    public async Task UpdateTeamEmojiAsync(Guid teamId, string emoji)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.Team is { } team && team.TeamId == teamId ? p with { Team = team with { CustomEmoji = emoji } } : p)
             .ToImmutableArray();
 
         CurrentSession = CurrentSession with { Players = updatedPlayers };
@@ -249,7 +264,7 @@ public class GameStateService
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
         var updatedPlayers = CurrentSession.Players
-            .Select(p => p.TeamId == teamId ? p with { TeamId = null, TeamCustomName = null } : p)
+            .Select(p => p.Team?.TeamId == teamId ? p with { Team = null } : p)
             .ToImmutableArray();
 
         CurrentSession = CurrentSession with { Players = updatedPlayers };
@@ -316,7 +331,7 @@ public class GameStateService
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
         var memberIds = CurrentSession.Players
-            .Where(p => p.TeamId == teamId)
+            .Where(p => p.Team?.TeamId == teamId)
             .Select(p => p.PlayerId)
             .ToList();
 

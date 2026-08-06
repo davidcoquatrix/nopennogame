@@ -53,7 +53,7 @@ public static class ScoreCalculator
         var playersById = players.ToDictionary(p => p.PlayerId);
 
         var teams = leaderboard
-            .GroupBy(ps => playersById[ps.PlayerId].TeamId
+            .GroupBy(ps => playersById[ps.PlayerId].Team?.TeamId
                 ?? throw new InvalidOperationException("Tous les joueurs doivent appartenir à une équipe."))
             .Select(g => new
             {
@@ -69,6 +69,7 @@ public static class ScoreCalculator
             (t, rank) => new TeamScore(
                 t.TeamId,
                 TeamNameFormatter.GetDisplayName(t.TeamId, players),
+                TeamEmojiFormatter.GetDisplayEmoji(t.TeamId, players),
                 t.MemberPlayerIds,
                 t.TotalScore,
                 rank));

@@ -45,9 +45,9 @@ else
             <div class="player-row" @key="player.PlayerId">
                 @if (teamModeEnabled)
                 {
-                    @if (player.TeamId.HasValue)
+                    @if (player.Team is not null)
                     {
-                        <span class="player-team-tag" title="@TeamNameFormatter.GetDisplayName(player.TeamId.Value, GameState.CurrentSession!.Players)">🤝</span>
+                        <span class="player-team-tag" title="@TeamNameFormatter.GetDisplayName(player.Team.TeamId, GameState.CurrentSession!.Players)">@TeamEmojiFormatter.GetDisplayEmoji(player.Team.TeamId, GameState.CurrentSession!.Players)</span>
                     }
                     else
                     {
@@ -58,7 +58,8 @@ else
                     <button class="ico-btn move-btn" disabled="@isFirstInList" @onclick="() => MovePlayerUp(player.PlayerId)">▲</button>
                     <button class="ico-btn move-btn" disabled="@isLastInList" @onclick="() => MovePlayerDown(player.PlayerId)">▼</button>
                 </div>
-                <div class="player-avatar" style="border-color:@player.Color">@player.Emoji</div>
+                <EmojiAvatarPicker Categories="EmojiPalette.PlayerCategories" BorderColor="@player.Color"
+                                    SelectedEmoji="@player.Emoji" SelectedEmojiChanged="@(e => UpdatePlayerEmoji(player.PlayerId, e))" />
 
                 <div class="player-info">
                     <span class="player-name">@player.Name</span>
@@ -115,6 +116,8 @@ else
                     else
                     {
                         <div class="team-card-header">
+                            <EmojiAvatarPicker Categories="EmojiPalette.GameCategories" Small="true"
+                                                SelectedEmoji="@team.DisplayEmoji" SelectedEmojiChanged="@(e => UpdateTeamEmoji(team.TeamId, e))" />
                             <span class="team-card-name">@team.DisplayName</span>
                             <button class="ico-btn" title="Renommer" @onclick="() => StartEditTeamName(team.TeamId, team.DisplayName)">✎</button>
                             <button class="btn-danger" title="Supprimer l'équipe" @onclick="() => DeleteTeam(team.TeamId)">🗑</button>
@@ -139,6 +142,7 @@ else
 {
     <div class="section-label">Ajouter un joueur</div>
     <div class="add-player-row">
+        <EmojiAvatarPicker Categories="EmojiPalette.PlayerCategories" BorderColor="@NextPlayerColor" @bind-SelectedEmoji="selectedEmoji" />
         <input class="add-input @(showDuplicateError ? "error" : "")" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput"
                @onkeyup="HandleKeyUp"/>
         <button class="add-btn" @onclick="AddPlayer"
@@ -149,17 +153,6 @@ else
     {
         <div class="error-msg">Ce joueur est déjà dans la partie !</div>
     }
-
-    <div class="emoji-picker-container">
-        <div class="section-label emoji-picker-label">Emojis disponibles</div>
-        <div class="emoji-list">
-            @foreach (var emoji in availableEmojis)
-            {
-                <span class="emoji-item" style="opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
-                      @onclick="() => SelectEmoji(emoji)">@emoji</span>
-            }
-        </div>
-    </div>
 }
 
 @if (favoritePlayers.Any())
@@ -201,7 +194,6 @@ else
     
     private List<Player> favoritePlayers = new();
 
-    private List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
     private List<string> availableColors = new() { "#7C9EBF", "#4ADE80", "var(--accent)", "#F87171", "#A78BFA", "#FCD34D", "#60A5FA", "#F472B6" };
 
     private const int DefaultMaxPlayers = 8;
@@ -211,13 +203,14 @@ else
     private int CurrentPlayerCount => GameState.CurrentSession?.Players.Length ?? 0;
     private int MaxPlayers => GameState.CurrentSession?.Template.Rules?.MaxPlayers ?? DefaultMaxPlayers;
     private int MinPlayers => GameState.CurrentSession?.Template.Rules?.MinPlayers ?? DefaultMinPlayers;
+    private string NextPlayerColor => availableColors[CurrentPlayerCount % availableColors.Count];
 
     // MinPlayers décrit toujours le nombre de joueurs physiques, peu importe le mode.
     // En mode équipe, on exige en plus qu'au moins 2 équipes soient formées (une seule équipe n'a pas de sens).
     private bool StartDisabled => CurrentPlayerCount < MinPlayers
         || (teamModeEnabled && (UnteamedPlayers.Any() || Teams.Count < MinTeamsRequired));
 
-    private record TeamViewModel(Guid TeamId, string DisplayName, List<SessionPlayer> Members);
+    private record TeamViewModel(Guid TeamId, string DisplayName, string DisplayEmoji, List<SessionPlayer> Members);
 
     private bool teamModeEnabled;
     private readonly HashSet<Guid> selectedForTeam = new();
@@ -228,17 +221,18 @@ else
 
     private List<TeamViewModel> Teams =>
         GameState.CurrentSession?.Players
-            .Where(p => p.TeamId.HasValue)
-            .GroupBy(p => p.TeamId!.Value)
+            .Where(p => p.Team is not null)
+            .GroupBy(p => p.Team!.TeamId)
             .Select(g => new TeamViewModel(
                 g.Key,
                 TeamNameFormatter.GetDisplayName(g.Key, GameState.CurrentSession.Players),
+                TeamEmojiFormatter.GetDisplayEmoji(g.Key, GameState.CurrentSession.Players),
                 g.OrderBy(p => p.DisplayOrder).ToList()))
             .ToList()
         ?? new List<TeamViewModel>();
 
     private List<SessionPlayer> UnteamedPlayers =>
-        GameState.CurrentSession?.Players.Where(p => !p.TeamId.HasValue).OrderBy(p => p.DisplayOrder).ToList()
+        GameState.CurrentSession?.Players.Where(p => p.Team is null).OrderBy(p => p.DisplayOrder).ToList()
         ?? new List<SessionPlayer>();
 
     protected override async Task OnInitializedAsync()
@@ -267,7 +261,7 @@ else
 
         // Activé par défaut si la config du jeu le prévoit, ou si des équipes existent déjà (reprise après F5)
         teamModeEnabled = GameState.CurrentSession?.Template.Rules?.TeamsEnabled == true
-            || GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
+            || GameState.CurrentSession?.Players.Any(p => p.Team is not null) == true;
 
         await LoadFavoritesAsync();
     }
@@ -301,8 +295,7 @@ else
     private async Task AddFavoritePlayerToGame(Player fav)
     {
         if (CurrentPlayerCount >= MaxPlayers) return;
-        var color = availableColors[CurrentPlayerCount % availableColors.Count];
-        await GameState.AddPlayerToSetupAsync(fav.Name, fav.DefaultEmoji, color);
+        await GameState.AddPlayerToSetupAsync(fav.Name, fav.DefaultEmoji, NextPlayerColor);
     }
 
     private async Task RemoveFavoritePlayer(Guid favId)
@@ -314,11 +307,6 @@ else
     public void Dispose()
     {
         GameState.OnStateChanged -= StateHasChanged;
-    }
-
-    private void SelectEmoji(string emoji)
-    {
-        selectedEmoji = emoji;
     }
 
     private bool showDuplicateError = false;
@@ -336,9 +324,8 @@ else
         }
 
         var isFirstPlayerAdded = CurrentPlayerCount == 0;
-        var color = availableColors[CurrentPlayerCount % availableColors.Count];
-        
-        await GameState.AddPlayerToSetupAsync(nameToAdding, selectedEmoji, color);
+
+        await GameState.AddPlayerToSetupAsync(nameToAdding, selectedEmoji, NextPlayerColor);
 
         if (isFirstPlayerAdded)
         {
@@ -349,8 +336,8 @@ else
         newPlayerName = "";
         showDuplicateError = false;
 
-        var rnd = new Random();
-        selectedEmoji = availableEmojis[rnd.Next(availableEmojis.Count)];
+        var allEmojis = EmojiPalette.PlayerCategories.SelectMany(c => c.Emojis).ToList();
+        selectedEmoji = allEmojis[Random.Shared.Next(allEmojis.Count)];
     }
 
     private async Task HandleKeyUp(KeyboardEventArgs e)
@@ -365,6 +352,16 @@ else
     private async Task RemovePlayer(Guid playerId)
     {
         await GameState.RemovePlayerFromSetupAsync(playerId);
+    }
+
+    private async Task UpdatePlayerEmoji(Guid playerId, string emoji)
+    {
+        await GameState.UpdatePlayerEmojiAsync(playerId, emoji);
+    }
+
+    private async Task UpdateTeamEmoji(Guid teamId, string emoji)
+    {
+        await GameState.UpdateTeamEmojiAsync(teamId, emoji);
     }
 
     private async Task SetFirstPlayer(Guid playerId)

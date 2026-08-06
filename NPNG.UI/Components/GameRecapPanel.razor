@@ -43,7 +43,7 @@
 
             <div class="leaderboard-row @(isLeader ? "lead" : "")">
                 <span class="rank">@tScore.Rank</span>
-                <div class="av-m">🤝</div>
+                <div class="av-m">@tScore.DisplayEmoji</div>
                 <div class="leaderboard-info">
                     <div class="leaderboard-name">@tScore.DisplayName</div>
                     <div class="pips">
@@ -113,7 +113,7 @@
     private ImmutableArray<PlayerScore> leaderboard;
     private ImmutableArray<TeamScore> teamLeaderboard;
 
-    private bool IsTeamMode => Session.Players.Any(p => p.TeamId.HasValue);
+    private bool IsTeamMode => Session.Players.Any(p => p.Team is not null);
 
     protected override void OnParametersSet()
     {

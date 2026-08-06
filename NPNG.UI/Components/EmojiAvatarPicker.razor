@@ -1,0 +1,64 @@
+@using NPNG.UI.Constants
+
+<div class="emoji-avatar-picker">
+    <button type="button" class="emoji-avatar-trigger @(Small ? "sm" : "")"
+            style="@(BorderColor is not null ? $"border-color:{BorderColor}" : null)"
+            title="Changer l'emoji" aria-label="Changer l'emoji"
+            aria-haspopup="true" aria-expanded="@(isOpen ? "true" : "false")"
+            @onclick="TogglePicker">
+        @SelectedEmoji
+    </button>
+
+    @if (isOpen)
+    {
+        <div class="emoji-avatar-backdrop" @onclick="ClosePicker"></div>
+        <div class="emoji-avatar-popover" @onkeydown="HandlePopoverKeyDown">
+            <EmojiPicker Categories="Categories" SelectedEmoji="@SelectedEmoji" SelectedEmojiChanged="HandleSelected" />
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EmojiCategory> Categories { get; set; } = Array.Empty<EmojiCategory>();
+
+    [Parameter]
+    public string SelectedEmoji { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> SelectedEmojiChanged { get; set; }
+
+    [Parameter]
+    public string? BorderColor { get; set; }
+
+    /// <summary>Variante réduite, utilisée pour le trigger d'équipe à côté de son nom.</summary>
+    [Parameter]
+    public bool Small { get; set; }
+
+    private bool isOpen;
+
+    private void TogglePicker()
+    {
+        isOpen = !isOpen;
+    }
+
+    private void ClosePicker()
+    {
+        isOpen = false;
+    }
+
+    private void HandlePopoverKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            isOpen = false;
+        }
+    }
+
+    private async Task HandleSelected(string emoji)
+    {
+        isOpen = false;
+        SelectedEmoji = emoji;
+        await SelectedEmojiChanged.InvokeAsync(emoji);
+    }
+}

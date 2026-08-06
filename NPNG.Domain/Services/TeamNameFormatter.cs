@@ -11,11 +11,11 @@ public static class TeamNameFormatter
     public static string GetDisplayName(Guid teamId, IEnumerable<SessionPlayer> allPlayers)
     {
         var members = allPlayers
-            .Where(p => p.TeamId == teamId)
+            .Where(p => p.Team?.TeamId == teamId)
             .OrderBy(p => p.DisplayOrder)
             .ToList();
 
-        var customName = members.FirstOrDefault()?.TeamCustomName;
+        var customName = members.FirstOrDefault()?.Team?.CustomName;
 
         return !string.IsNullOrWhiteSpace(customName)
             ? customName
