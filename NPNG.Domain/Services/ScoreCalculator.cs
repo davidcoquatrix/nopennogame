@@ -48,12 +48,13 @@ public static class ScoreCalculator
     /// </summary>
     public static ImmutableArray<TeamScore> GroupIntoTeams(
         ImmutableArray<PlayerScore> leaderboard,
-        ImmutableArray<SessionPlayer> players)
+        ImmutableArray<SessionPlayer> players,
+        ImmutableArray<Team> teams)
     {
         var playersById = players.ToDictionary(p => p.PlayerId);
 
-        var teams = leaderboard
-            .GroupBy(ps => playersById[ps.PlayerId].Team?.TeamId
+        var groupedTeams = leaderboard
+            .GroupBy(ps => playersById[ps.PlayerId].TeamId
                 ?? throw new InvalidOperationException("Tous les joueurs doivent appartenir à une équipe."))
             .Select(g => new
             {
@@ -64,12 +65,12 @@ public static class ScoreCalculator
             .ToList();
 
         return AssignRanks(
-            teams,
+            groupedTeams,
             t => t.TotalScore,
             (t, rank) => new TeamScore(
                 t.TeamId,
-                TeamNameFormatter.GetDisplayName(t.TeamId, players),
-                TeamEmojiFormatter.GetDisplayEmoji(t.TeamId, players),
+                TeamNameFormatter.GetDisplayName(t.TeamId, teams, players),
+                TeamEmojiFormatter.GetDisplayEmoji(t.TeamId, teams),
                 t.MemberPlayerIds,
                 t.TotalScore,
                 rank));

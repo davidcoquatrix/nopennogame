@@ -204,55 +204,68 @@ public class GameStateService
         var memberIds = memberPlayerIds.ToHashSet();
 
         var updatedPlayers = CurrentSession.Players
-            .Select(p => memberIds.Contains(p.PlayerId) ? p with { Team = new TeamMembership(teamId) } : p)
+            .Select(p => memberIds.Contains(p.PlayerId) ? p with { TeamId = teamId } : p)
             .ToImmutableArray();
 
-        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        CurrentSession = CurrentSession with
+        {
+            Players = updatedPlayers,
+            Teams = CurrentSession.Teams.Add(new Team(teamId))
+        };
         await SaveStateAsync();
     }
 
     /// <summary>
-    /// Retire un joueur de son équipe : il redevient non affecté.
+    /// Retire un joueur de son équipe : il redevient non affecté. Si c'était le dernier membre,
+    /// l'équipe elle-même est supprimée pour ne pas laisser d'équipe fantôme sans joueur.
     /// </summary>
     public async Task RemovePlayerFromTeamAsync(Guid playerId)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
+        var leavingPlayer = CurrentSession.Players.FirstOrDefault(p => p.PlayerId == playerId);
+        if (leavingPlayer?.TeamId is not { } teamId) return;
+
         var updatedPlayers = CurrentSession.Players
-            .Select(p => p.PlayerId == playerId ? p with { Team = null } : p)
+            .Select(p => p.PlayerId == playerId ? p with { TeamId = null } : p)
             .ToImmutableArray();
 
-        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        var teamStillHasMembers = updatedPlayers.Any(p => p.TeamId == teamId);
+        var updatedTeams = teamStillHasMembers
+            ? CurrentSession.Teams
+            : CurrentSession.Teams.RemoveAll(t => t.TeamId == teamId);
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers, Teams = updatedTeams };
         await SaveStateAsync();
     }
 
     /// <summary>
-    /// Renomme une équipe : le nom personnalisé est appliqué à tous ses membres actuels.
+    /// Renomme une équipe.
     /// </summary>
     public async Task RenameTeamAsync(Guid teamId, string newName)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
-        var updatedPlayers = CurrentSession.Players
-            .Select(p => p.Team is { } team && team.TeamId == teamId ? p with { Team = team with { CustomName = newName } } : p)
+        var updatedTeams = CurrentSession.Teams
+            .Select(t => t.TeamId == teamId ? t with { CustomName = newName } : t)
             .ToImmutableArray();
 
-        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        CurrentSession = CurrentSession with { Teams = updatedTeams };
         await SaveStateAsync();
     }
 
     /// <summary>
-    /// Change l'emoji d'une équipe : appliqué à tous ses membres actuels (dénormalisé, comme le nom).
+    /// Change l'emoji d'une équipe.
     /// </summary>
     public async Task UpdateTeamEmojiAsync(Guid teamId, string emoji)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
-        var updatedPlayers = CurrentSession.Players
-            .Select(p => p.Team is { } team && team.TeamId == teamId ? p with { Team = team with { CustomEmoji = emoji } } : p)
+        var updatedTeams = CurrentSession.Teams
+            .Select(t => t.TeamId == teamId ? t with { CustomEmoji = emoji } : t)
             .ToImmutableArray();
 
-        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        CurrentSession = CurrentSession with { Teams = updatedTeams };
         await SaveStateAsync();
     }
 
@@ -264,10 +277,14 @@ public class GameStateService
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
 
         var updatedPlayers = CurrentSession.Players
-            .Select(p => p.Team?.TeamId == teamId ? p with { Team = null } : p)
+            .Select(p => p.TeamId == teamId ? p with { TeamId = null } : p)
             .ToImmutableArray();
 
-        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        CurrentSession = CurrentSession with
+        {
+            Players = updatedPlayers,
+            Teams = CurrentSession.Teams.RemoveAll(t => t.TeamId == teamId)
+        };
         await SaveStateAsync();
     }
 
@@ -331,7 +348,7 @@ public class GameStateService
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
         var memberIds = CurrentSession.Players
-            .Where(p => p.Team?.TeamId == teamId)
+            .Where(p => p.TeamId == teamId)
             .Select(p => p.PlayerId)
             .ToList();
 

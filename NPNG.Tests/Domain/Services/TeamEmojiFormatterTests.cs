@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using NPNG.Domain.Entities;
 using NPNG.Domain.Services;
 
@@ -10,51 +11,41 @@ public class TeamEmojiFormatterTests
     {
         // Arrange
         var teamId = Guid.NewGuid();
-        var players = new List<SessionPlayer>
-        {
-            new(Guid.NewGuid(), "Marion", "🐱", 1, "#FF0000", Team: new TeamMembership(teamId)),
-            new(Guid.NewGuid(), "David", "🐶", 0, "#00FF00", Team: new TeamMembership(teamId)),
-        };
+        var teams = ImmutableArray.Create(new Team(teamId));
 
         // Act
-        var result = TeamEmojiFormatter.GetDisplayEmoji(teamId, players);
+        var result = TeamEmojiFormatter.GetDisplayEmoji(teamId, teams);
 
         // Assert
         Assert.Equal(TeamEmojiFormatter.DefaultEmoji, result);
     }
 
     [Fact]
-    public void GetDisplayEmoji_WhenCustomEmojiSet_ReturnsCustomEmojiRegardlessOfMembers()
+    public void GetDisplayEmoji_WhenCustomEmojiSet_ReturnsCustomEmoji()
     {
         // Arrange
         var teamId = Guid.NewGuid();
-        var players = new List<SessionPlayer>
-        {
-            new(Guid.NewGuid(), "Marion", "🐱", 0, "#FF0000", Team: new TeamMembership(teamId, CustomEmoji: "🏆")),
-            new(Guid.NewGuid(), "David", "🐶", 1, "#00FF00", Team: new TeamMembership(teamId, CustomEmoji: "🏆")),
-        };
+        var teams = ImmutableArray.Create(new Team(teamId, CustomEmoji: "🏆"));
 
         // Act
-        var result = TeamEmojiFormatter.GetDisplayEmoji(teamId, players);
+        var result = TeamEmojiFormatter.GetDisplayEmoji(teamId, teams);
 
         // Assert
         Assert.Equal("🏆", result);
     }
 
     [Fact]
-    public void GetDisplayEmoji_IgnoresPlayersFromOtherTeams()
+    public void GetDisplayEmoji_IgnoresOtherTeams()
     {
         // Arrange
         var teamId = Guid.NewGuid();
         var otherTeamId = Guid.NewGuid();
-        var players = new List<SessionPlayer>
-        {
-            new(Guid.NewGuid(), "David", "🐶", 0, "#00FF00", Team: new TeamMembership(teamId, CustomEmoji: "🏆")),
-            new(Guid.NewGuid(), "Alice", "🐱", 1, "#FF0000", Team: new TeamMembership(otherTeamId, CustomEmoji: "🎲")),
-        };
+        var teams = ImmutableArray.Create(
+            new Team(teamId, CustomEmoji: "🏆"),
+            new Team(otherTeamId, CustomEmoji: "🎲"));
 
         // Act
-        var result = TeamEmojiFormatter.GetDisplayEmoji(teamId, players);
+        var result = TeamEmojiFormatter.GetDisplayEmoji(teamId, teams);
 
         // Assert
         Assert.Equal("🏆", result);

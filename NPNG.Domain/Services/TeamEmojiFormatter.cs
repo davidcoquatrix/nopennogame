@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using NPNG.Domain.Entities;
 
 namespace NPNG.Domain.Services;
@@ -10,13 +11,9 @@ public static class TeamEmojiFormatter
 {
     public const string DefaultEmoji = "🤝";
 
-    public static string GetDisplayEmoji(Guid teamId, IEnumerable<SessionPlayer> allPlayers)
+    public static string GetDisplayEmoji(Guid teamId, ImmutableArray<Team> teams)
     {
-        var customEmoji = allPlayers
-            .Where(p => p.Team?.TeamId == teamId)
-            .OrderBy(p => p.DisplayOrder)
-            .FirstOrDefault()
-            ?.Team?.CustomEmoji;
+        var customEmoji = teams.FirstOrDefault(t => t.TeamId == teamId)?.CustomEmoji;
 
         return !string.IsNullOrWhiteSpace(customEmoji) ? customEmoji : DefaultEmoji;
     }

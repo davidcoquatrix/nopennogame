@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using NPNG.Domain.Entities;
 
 namespace NPNG.Domain.Services;
@@ -8,17 +9,18 @@ namespace NPNG.Domain.Services;
 /// </summary>
 public static class TeamNameFormatter
 {
-    public static string GetDisplayName(Guid teamId, IEnumerable<SessionPlayer> allPlayers)
+    public static string GetDisplayName(Guid teamId, ImmutableArray<Team> teams, IEnumerable<SessionPlayer> allPlayers)
     {
+        var customName = teams.FirstOrDefault(t => t.TeamId == teamId)?.CustomName;
+        if (!string.IsNullOrWhiteSpace(customName))
+        {
+            return customName;
+        }
+
         var members = allPlayers
-            .Where(p => p.Team?.TeamId == teamId)
-            .OrderBy(p => p.DisplayOrder)
-            .ToList();
+            .Where(p => p.TeamId == teamId)
+            .OrderBy(p => p.DisplayOrder);
 
-        var customName = members.FirstOrDefault()?.Team?.CustomName;
-
-        return !string.IsNullOrWhiteSpace(customName)
-            ? customName
-            : string.Join(" & ", members.Select(p => p.Name));
+        return string.Join(" & ", members.Select(p => p.Name));
     }
 }

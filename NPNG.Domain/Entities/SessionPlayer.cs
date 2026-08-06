@@ -11,4 +11,4 @@ public record SessionPlayer(
     int DisplayOrder,
     string Color,
     bool IsFirstPlayer = false,
-    TeamMembership? Team = null);
+    Guid? TeamId = null);

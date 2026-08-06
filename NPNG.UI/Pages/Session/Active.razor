@@ -156,9 +156,9 @@ else
         {
             @foreach (var teamId in TeamEntryOrder)
             {
-                var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Players);
-                var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, GameState.CurrentSession.Players);
-                var members = GameState.CurrentSession.Players.Where(p => p.Team?.TeamId == teamId).OrderBy(p => p.DisplayOrder);
+                var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Teams, GameState.CurrentSession.Players);
+                var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, GameState.CurrentSession.Teams);
+                var members = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
 
                 <div class="entry-row">
                     <div class="entry-avatar">@teamEmoji</div>
@@ -210,7 +210,7 @@ else
     private Dictionary<Guid, int> currentTeamInputs = new();
     private List<TeamScore> teamLeaderboard = new();
 
-    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.Team is not null) == true;
+    private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
 
     // Une fois la partie démarrée, il n'y a plus d'écran valide vers lequel revenir
     // (l'écran joueurs se verrouille dès qu'un score existe) — on masque donc le bouton retour.
@@ -218,8 +218,8 @@ else
 
     private IEnumerable<Guid> TeamEntryOrder =>
         GameState.CurrentSession?.Players
-            .Where(p => p.Team is not null)
-            .GroupBy(p => p.Team!.TeamId)
+            .Where(p => p.TeamId is not null)
+            .GroupBy(p => p.TeamId!.Value)
             .OrderBy(g => g.Min(p => p.DisplayOrder))
             .Select(g => g.Key)
         ?? Enumerable.Empty<Guid>();
@@ -274,7 +274,7 @@ else
 
             if (IsTeamMode)
             {
-                teamLeaderboard = ScoreCalculator.GroupIntoTeams(computedLeaderboard, GameState.CurrentSession.Players).ToList();
+                teamLeaderboard = ScoreCalculator.GroupIntoTeams(computedLeaderboard, GameState.CurrentSession.Players, GameState.CurrentSession.Teams).ToList();
 
                 // S'assurer que chaque équipe a une entrée initialisée pour le tour en cours
                 foreach (var teamId in TeamEntryOrder)

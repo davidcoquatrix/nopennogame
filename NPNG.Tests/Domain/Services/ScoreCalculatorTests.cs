@@ -158,11 +158,12 @@ public class ScoreCalculatorTests
         // Arrange
         var teamA = Guid.NewGuid();
         var teamB = Guid.NewGuid();
+        var teams = ImmutableArray.Create(new Team(teamA), new Team(teamB));
         var players = ImmutableArray.Create(
-            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", Team: new TeamMembership(teamA)),
-            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", Team: new TeamMembership(teamA)),
-            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", Team: new TeamMembership(teamB)),
-            new SessionPlayer(_player4, "P4", "🦊", 3, "#fff", Team: new TeamMembership(teamB)));
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: teamA),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: teamA),
+            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", TeamId: teamB),
+            new SessionPlayer(_player4, "P4", "🦊", 3, "#fff", TeamId: teamB));
 
         var entries = new List<ScoreEntry>
         {
@@ -175,7 +176,7 @@ public class ScoreCalculatorTests
         var leaderboard = ScoreCalculator.CalculateLeaderboard(ScoreType.Cumulative, players.Select(p => p.PlayerId), entries);
 
         // Act
-        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players);
+        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players, teams);
 
         // Assert
         Assert.Equal(2, result.Length);
@@ -196,10 +197,11 @@ public class ScoreCalculatorTests
         // Arrange
         var soloTeam = Guid.NewGuid();
         var duoTeam = Guid.NewGuid();
+        var teams = ImmutableArray.Create(new Team(soloTeam), new Team(duoTeam));
         var players = ImmutableArray.Create(
-            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", Team: new TeamMembership(soloTeam)),
-            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", Team: new TeamMembership(duoTeam)),
-            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", Team: new TeamMembership(duoTeam)));
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: soloTeam),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: duoTeam),
+            new SessionPlayer(_player3, "P3", "🐰", 2, "#fff", TeamId: duoTeam));
 
         var entries = new List<ScoreEntry>
         {
@@ -211,7 +213,7 @@ public class ScoreCalculatorTests
         var leaderboard = ScoreCalculator.CalculateLeaderboard(ScoreType.Cumulative, players.Select(p => p.PlayerId), entries);
 
         // Act
-        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players);
+        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players, teams);
 
         // Assert
         Assert.Equal(2, result.Length);
@@ -231,9 +233,10 @@ public class ScoreCalculatorTests
         // Arrange
         var teamA = Guid.NewGuid();
         var teamB = Guid.NewGuid();
+        var teams = ImmutableArray.Create(new Team(teamA), new Team(teamB));
         var players = ImmutableArray.Create(
-            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", Team: new TeamMembership(teamA)),
-            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", Team: new TeamMembership(teamB)));
+            new SessionPlayer(_player1, "P1", "🐱", 0, "#fff", TeamId: teamA),
+            new SessionPlayer(_player2, "P2", "🐶", 1, "#fff", TeamId: teamB));
 
         var entries = new List<ScoreEntry>
         {
@@ -244,7 +247,7 @@ public class ScoreCalculatorTests
         var leaderboard = ScoreCalculator.CalculateLeaderboard(ScoreType.Cumulative, players.Select(p => p.PlayerId), entries);
 
         // Act
-        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players);
+        var result = ScoreCalculator.GroupIntoTeams(leaderboard, players, teams);
 
         // Assert
         Assert.All(result, t => Assert.Equal(1, t.Rank));

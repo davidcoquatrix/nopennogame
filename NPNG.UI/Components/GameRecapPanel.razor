@@ -113,7 +113,7 @@
     private ImmutableArray<PlayerScore> leaderboard;
     private ImmutableArray<TeamScore> teamLeaderboard;
 
-    private bool IsTeamMode => Session.Players.Any(p => p.Team is not null);
+    private bool IsTeamMode => Session.Players.Any(p => p.TeamId is not null);
 
     protected override void OnParametersSet()
     {
@@ -123,7 +123,7 @@
             Session.Scores);
 
         teamLeaderboard = IsTeamMode
-            ? ScoreCalculator.GroupIntoTeams(leaderboard, Session.Players)
+            ? ScoreCalculator.GroupIntoTeams(leaderboard, Session.Players, Session.Teams)
             : ImmutableArray<TeamScore>.Empty;
     }
 }

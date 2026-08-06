@@ -45,9 +45,9 @@ else
             <div class="player-row" @key="player.PlayerId">
                 @if (teamModeEnabled)
                 {
-                    @if (player.Team is not null)
+                    @if (player.TeamId is { } playerTeamId)
                     {
-                        <span class="player-team-tag" title="@TeamNameFormatter.GetDisplayName(player.Team.TeamId, GameState.CurrentSession!.Players)">@TeamEmojiFormatter.GetDisplayEmoji(player.Team.TeamId, GameState.CurrentSession!.Players)</span>
+                        <span class="player-team-tag" title="@TeamNameFormatter.GetDisplayName(playerTeamId, GameState.CurrentSession!.Teams, GameState.CurrentSession!.Players)">@TeamEmojiFormatter.GetDisplayEmoji(playerTeamId, GameState.CurrentSession!.Teams)</span>
                     }
                     else
                     {
@@ -221,18 +221,18 @@ else
 
     private List<TeamViewModel> Teams =>
         GameState.CurrentSession?.Players
-            .Where(p => p.Team is not null)
-            .GroupBy(p => p.Team!.TeamId)
+            .Where(p => p.TeamId is not null)
+            .GroupBy(p => p.TeamId!.Value)
             .Select(g => new TeamViewModel(
                 g.Key,
-                TeamNameFormatter.GetDisplayName(g.Key, GameState.CurrentSession.Players),
-                TeamEmojiFormatter.GetDisplayEmoji(g.Key, GameState.CurrentSession.Players),
+                TeamNameFormatter.GetDisplayName(g.Key, GameState.CurrentSession.Teams, GameState.CurrentSession.Players),
+                TeamEmojiFormatter.GetDisplayEmoji(g.Key, GameState.CurrentSession.Teams),
                 g.OrderBy(p => p.DisplayOrder).ToList()))
             .ToList()
         ?? new List<TeamViewModel>();
 
     private List<SessionPlayer> UnteamedPlayers =>
-        GameState.CurrentSession?.Players.Where(p => p.Team is null).OrderBy(p => p.DisplayOrder).ToList()
+        GameState.CurrentSession?.Players.Where(p => p.TeamId is null).OrderBy(p => p.DisplayOrder).ToList()
         ?? new List<SessionPlayer>();
 
     protected override async Task OnInitializedAsync()
@@ -261,7 +261,7 @@ else
 
         // Activé par défaut si la config du jeu le prévoit, ou si des équipes existent déjà (reprise après F5)
         teamModeEnabled = GameState.CurrentSession?.Template.Rules?.TeamsEnabled == true
-            || GameState.CurrentSession?.Players.Any(p => p.Team is not null) == true;
+            || GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
 
         await LoadFavoritesAsync();
     }

@@ -49,6 +49,7 @@ public class SessionTests
             DateTime.UtcNow,
             ImmutableArray<SessionPlayer>.Empty,
             scores,
+            ImmutableArray<Team>.Empty,
             currentRound);
     }
 }

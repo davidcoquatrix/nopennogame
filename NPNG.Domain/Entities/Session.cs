@@ -13,6 +13,7 @@ public record Session(
     DateTime StartedAt,
     ImmutableArray<SessionPlayer> Players,
     ImmutableArray<ScoreEntry> Scores,
+    ImmutableArray<Team> Teams,
     int CurrentRound = 1,
     DateTime? EndedAt = null,
     SessionStatus Status = SessionStatus.Setup,
@@ -32,6 +33,7 @@ public record Session(
             DateTime.UtcNow,
             ImmutableArray<SessionPlayer>.Empty,
             ImmutableArray<ScoreEntry>.Empty,
+            ImmutableArray<Team>.Empty,
             1,
             null,
             SessionStatus.Setup);
