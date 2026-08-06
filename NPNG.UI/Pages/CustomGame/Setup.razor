@@ -15,13 +15,7 @@
     <input class="field-input" type="text" @bind="gameName" placeholder="Ex: Belote maison" />
 
     <div class="field-lbl">Emoji</div>
-    <div class="emoji-list">
-        @foreach (var emoji in availableEmojis)
-        {
-            <span class="emoji-item" style="opacity:@(selectedEmoji == emoji ? "1" : "0.5")"
-                  @onclick="() => SelectEmoji(emoji)">@emoji</span>
-        }
-    </div>
+    <EmojiPicker Categories="EmojiPalette.GameCategories" @bind-SelectedEmoji="selectedEmoji" />
 
     <div class="field-lbl">Qui gagne ?</div>
     <div class="toggle-row">
@@ -102,7 +96,6 @@
 
     private string gameName = "Belote maison";
     private string selectedEmoji = "⚙️";
-    private readonly List<string> availableEmojis = new() { "⚙️", "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
     private string winCondition = "high";
     private string scoreLimit = "";
     private string roundLimit = "";
@@ -147,11 +140,6 @@
                 }
             }
         }
-    }
-
-    private void SelectEmoji(string emoji)
-    {
-        selectedEmoji = emoji;
     }
 
     private void SetWinCondition(string condition)

@@ -20,13 +20,7 @@
                     <input class="field-input" type="text" @bind="editName" @bind:event="oninput" />
 
                     <div class="field-lbl">Emoji</div>
-                    <div class="emoji-list">
-                        @foreach (var emoji in availableEmojis)
-                        {
-                            <span class="emoji-item" style="opacity:@(editEmoji == emoji ? "1" : "0.5")"
-                                  @onclick="() => editEmoji = emoji">@emoji</span>
-                        }
-                    </div>
+                    <EmojiPicker Categories="EmojiPalette.PlayerCategories" @bind-SelectedEmoji="editEmoji" />
 
                     <div class="settings-edit-actions">
                         <button class="btn-secondary" disabled="@string.IsNullOrWhiteSpace(editName)" @onclick="SaveEditFavorite">✓ Enregistrer</button>
@@ -52,13 +46,7 @@
     <input class="field-input" type="text" placeholder="Prénom…"
            @bind="newFavoriteName" @bind:event="oninput" />
 
-    <div class="emoji-list">
-        @foreach (var emoji in availableEmojis)
-        {
-            <span class="emoji-item" style="opacity:@(newFavoriteEmoji == emoji ? "1" : "0.5")"
-                  @onclick="() => newFavoriteEmoji = emoji">@emoji</span>
-        }
-    </div>
+    <EmojiPicker Categories="EmojiPalette.PlayerCategories" @bind-SelectedEmoji="newFavoriteEmoji" />
 
     <button class="btn-secondary settings-save-btn" disabled="@string.IsNullOrWhiteSpace(newFavoriteName)" @onclick="AddFavorite">
         ＋ Ajouter
@@ -170,8 +158,6 @@ else
     [Inject] public Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
     [Inject] public Application.Interfaces.IThemeService ThemeService { get; set; } = default!;
     [Inject] public Application.Interfaces.IAppDataResetService DataReset { get; set; } = default!;
-
-    private readonly List<string> availableEmojis = new() { "🎯", "🦊", "🐉", "🌈", "⚡", "🍀", "🎸", "🎮", "🌟", "🔥", "💜", "🦄", "🚀", "🍕" };
 
     private List<Player> favoritePlayers = new();
     private List<Application.Models.GameCatalogueItem> customGames = new();

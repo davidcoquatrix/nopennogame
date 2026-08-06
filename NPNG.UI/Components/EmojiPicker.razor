@@ -1,0 +1,57 @@
+@using NPNG.UI.Constants
+
+<div class="emoji-picker">
+    @if (Categories.Count > 1)
+    {
+        <div class="emoji-picker-tabs">
+            @foreach (var category in Categories)
+            {
+                <button type="button" class="emoji-picker-tab @(category == activeCategory ? "on" : "")"
+                        @onclick="() => SelectCategory(category)">
+                    @category.Label
+                </button>
+            }
+        </div>
+    }
+
+    <div class="emoji-list">
+        @foreach (var emoji in activeCategory.Emojis)
+        {
+            <span class="emoji-item @(SelectedEmoji == emoji ? "selected" : "")"
+                  @onclick="() => SelectEmoji(emoji)">@emoji</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EmojiCategory> Categories { get; set; } = Array.Empty<EmojiCategory>();
+
+    [Parameter]
+    public string SelectedEmoji { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> SelectedEmojiChanged { get; set; }
+
+    private EmojiCategory activeCategory = new("", Array.Empty<string>());
+
+    protected override void OnParametersSet()
+    {
+        // Fait apparaître l'onglet contenant l'emoji actif (ex: en édition d'un favori existant),
+        // sinon reste sur le premier onglet par défaut.
+        activeCategory = Categories.FirstOrDefault(c => c.Emojis.Contains(SelectedEmoji))
+            ?? Categories.FirstOrDefault()
+            ?? activeCategory;
+    }
+
+    private void SelectCategory(EmojiCategory category)
+    {
+        activeCategory = category;
+    }
+
+    private async Task SelectEmoji(string emoji)
+    {
+        SelectedEmoji = emoji;
+        await SelectedEmojiChanged.InvokeAsync(emoji);
+    }
+}
