@@ -80,6 +80,19 @@ else
             session.Players.Select(p => p.PlayerId),
             session.Scores);
 
+        var isTeamMode = session.Players.Any(p => p.TeamId is not null);
+        if (isTeamMode)
+        {
+            var teamLeaderboard = ScoreCalculator.GroupIntoTeams(leaderboard, session.Players, session.Teams);
+            var winningTeam = teamLeaderboard.FirstOrDefault(t => t.Rank == 1);
+            if (winningTeam is null)
+            {
+                return $"{date} • {playerCount}";
+            }
+
+            return $"{date} • {playerCount} • {winningTeam.DisplayEmoji} {winningTeam.DisplayName} ({winningTeam.TotalScore})";
+        }
+
         var winnerEntry = leaderboard.FirstOrDefault(l => l.Rank == 1);
         if (winnerEntry is null)
         {
