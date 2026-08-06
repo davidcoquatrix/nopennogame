@@ -546,22 +546,12 @@ public class GameStateService
             return;
         }
 
-        // Comme on reprend, on passe le tour qui a déclenché la fin
-        // On fait avancer le FirstPlayer manuellement pour préparer le prochain tour
-        var currentFirstIndex = CurrentSession.Players.ToList().FindIndex(p => p.IsFirstPlayer);
-        var updatedPlayers = CurrentSession.Players.ToList();
-
-        if (currentFirstIndex >= 0 && updatedPlayers.Count > 0)
-        {
-            updatedPlayers[currentFirstIndex] = updatedPlayers[currentFirstIndex] with { IsFirstPlayer = false };
-            var nextIndex = (currentFirstIndex + 1) % updatedPlayers.Count;
-            updatedPlayers[nextIndex] = updatedPlayers[nextIndex] with { IsFirstPlayer = true };
-        }
-
+        // Comme on reprend, on passe le tour qui a déclenché la fin, en respectant la mécanique
+        // de premier joueur configurée sur le jeu (pas seulement l'ordre séquentiel).
         CurrentSession = CurrentSession with
         {
             CurrentRound = CurrentSession.CurrentRound + 1,
-            Players = updatedPlayers.ToImmutableArray()
+            Players = AdvanceFirstPlayer(CurrentSession)
         };
 
         await SaveStateAsync();

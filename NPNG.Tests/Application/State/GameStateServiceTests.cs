@@ -185,6 +185,62 @@ public class GameStateServiceTests
         Assert.NotNull(_sut.CurrentSession.EndedAt);
     }
 
+    [Theory]
+    [InlineData(FirstPlayerMechanic.Winner)]
+    [InlineData(FirstPlayerMechanic.HighestInPreviousRound)]
+    public async Task AdvanceToNextRoundAsync_WithHighestScoreMechanic_MakesTopScorerTheNextFirstPlayer(FirstPlayerMechanic mechanic)
+    {
+        // Arrange
+        var rules = new GameRules(FirstPlayerMechanic: mechanic);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null, rules);
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");   // Premier par défaut
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");     // Voisin séquentiel d'Alice
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF"); // Meilleur score
+        await _sut.StartSessionAsync();
+
+        var players = _sut.CurrentSession!.Players;
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Alice").PlayerId, 1, 30);
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Bob").PlayerId, 1, 10);
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Charlie").PlayerId, 1, 50);
+
+        // Act
+        await _sut.AdvanceToNextRoundAsync();
+
+        // Assert - pas Bob (le voisin séquentiel), mais Charlie (le vrai meilleur score)
+        var updated = _sut.CurrentSession!.Players;
+        Assert.True(updated.Single(p => p.Name == "Charlie").IsFirstPlayer);
+        Assert.False(updated.Single(p => p.Name == "Bob").IsFirstPlayer);
+    }
+
+    [Theory]
+    [InlineData(FirstPlayerMechanic.Loser)]
+    [InlineData(FirstPlayerMechanic.LowestInPreviousRound)]
+    public async Task AdvanceToNextRoundAsync_WithLowestScoreMechanic_MakesBottomScorerTheNextFirstPlayer(FirstPlayerMechanic mechanic)
+    {
+        // Arrange
+        var rules = new GameRules(FirstPlayerMechanic: mechanic);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null, rules);
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");   // Premier par défaut
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");     // Voisin séquentiel d'Alice
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF"); // Moins bon score
+        await _sut.StartSessionAsync();
+
+        var players = _sut.CurrentSession!.Players;
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Alice").PlayerId, 1, 30);
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Bob").PlayerId, 1, 50);
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Charlie").PlayerId, 1, 10);
+
+        // Act
+        await _sut.AdvanceToNextRoundAsync();
+
+        // Assert - pas Bob (le voisin séquentiel), mais Charlie (le vrai moins bon score)
+        var updated = _sut.CurrentSession!.Players;
+        Assert.True(updated.Single(p => p.Name == "Charlie").IsFirstPlayer);
+        Assert.False(updated.Single(p => p.Name == "Bob").IsFirstPlayer);
+    }
+
     [Fact]
     public async Task SubmitStructuredScoreAndFinishAsync_ShouldRecordDetailAtFixedRoundAndFinishSession()
     {
@@ -231,6 +287,37 @@ public class GameStateServiceTests
         var entry = Assert.Single(_sut.CurrentSession.Scores);
         Assert.Equal(1, entry.Round);
         Assert.Equal(15, entry.Value);
+    }
+
+    [Fact]
+    public async Task ResumeSessionAsync_WithWinnerMechanic_RespectsConfiguredMechanicNotSequentialOrder()
+    {
+        // Arrange
+        var rules = new GameRules(MaxRounds: 1, FirstPlayerMechanic: FirstPlayerMechanic.Winner);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null, rules);
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");   // Premier par défaut
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");     // Voisin séquentiel d'Alice
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF"); // Vrai vainqueur
+        await _sut.StartSessionAsync();
+
+        var players = _sut.CurrentSession!.Players;
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Alice").PlayerId, 1, 30);
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Bob").PlayerId, 1, 10);
+        await _sut.RecordScoreAsync(players.Single(p => p.Name == "Charlie").PlayerId, 1, 50);
+
+        // MaxRounds atteint : la partie se termine sans jamais avancer le premier joueur
+        // (branche IsGameFinished de AdvanceToNextRoundAsync) — c'est ResumeSessionAsync
+        // qui doit faire ce calcul en reprenant la partie.
+        await _sut.AdvanceToNextRoundAsync();
+
+        // Act
+        await _sut.ResumeSessionAsync();
+
+        // Assert - Charlie (le vainqueur) devient premier joueur, pas Bob (l'ancien voisin séquentiel d'Alice)
+        var updated = _sut.CurrentSession!.Players;
+        Assert.True(updated.Single(p => p.Name == "Charlie").IsFirstPlayer);
+        Assert.False(updated.Single(p => p.Name == "Bob").IsFirstPlayer);
     }
 
     [Fact]
