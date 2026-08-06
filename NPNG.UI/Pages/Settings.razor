@@ -79,7 +79,7 @@ else
                 <span class="settings-row-emoji">@game.Emoji</span>
                 <span class="settings-row-name">@game.Name</span>
                 <button class="ico-btn" title="Modifier les règles" @onclick="() => TryEditCustomGame(game)">⚙️</button>
-                <button class="ico-btn" title="Supprimer" @onclick="() => DeleteCustomGame(game.Id)">✕</button>
+                <button class="ico-btn" title="Supprimer" @onclick="() => TryDeleteCustomGame(game)">✕</button>
             </div>
         }
     </div>
@@ -131,6 +131,22 @@ else
     </div>
 }
 
+@if (gameToDelete != null)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">🗑️ Supprimer le jeu</h3>
+            <p class="modal-desc">
+                Cette action est irréversible : <strong>@gameToDelete.Name</strong> sera définitivement retiré de tes jeux personnalisés.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cta modal-danger-btn" @onclick="ConfirmDeleteCustomGame">Oui, supprimer</button>
+                <button class="btn-secondary" @onclick="CancelDeleteCustomGame">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
 @if (showResetConfirm)
 {
     <div class="modal-overlay">
@@ -172,6 +188,8 @@ else
     private Application.Models.GameCatalogueItem? gameToEdit;
     private bool showOverwriteConfirm = false;
     private bool showResetConfirm = false;
+
+    private Application.Models.GameCatalogueItem? gameToDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -230,9 +248,22 @@ else
         await LoadFavoritesAsync();
     }
 
-    private async Task DeleteCustomGame(Guid id)
+    private void TryDeleteCustomGame(Application.Models.GameCatalogueItem game)
     {
-        await GameCatalogue.DeleteCustomGameAsync(id);
+        gameToDelete = game;
+    }
+
+    private void CancelDeleteCustomGame()
+    {
+        gameToDelete = null;
+    }
+
+    private async Task ConfirmDeleteCustomGame()
+    {
+        if (gameToDelete is null) return;
+
+        await GameCatalogue.DeleteCustomGameAsync(gameToDelete.Id);
+        gameToDelete = null;
         await LoadCustomGamesAsync();
     }
 
