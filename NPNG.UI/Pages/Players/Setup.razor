@@ -11,14 +11,6 @@
     <div class="header-count">@CurrentPlayerCount/@MaxPlayers</div>
 </div>
 
-@if (GameState.CurrentSession != null && (GameState.CurrentSession.CurrentRound > 1 || GameState.CurrentSession.Scores.Any()))
-{
-    <div class="warning-banner">
-        <strong>⚠️ Partie en cours</strong><br/>
-        Ajouter ou retirer des joueurs maintenant peut décaler les scores existants. Procède avec prudence !
-    </div>
-}
-
 @if (CanUseTeams)
 {
     <div class="team-toggle-row">
@@ -263,6 +255,14 @@ else
                 NavigationManager.NavigateTo("");
                 return;
             }
+        }
+
+        // Une fois la partie réellement démarrée, cet écran devient inaccessible (bouton retour,
+        // carte "reprendre" de l'accueil, URL directe) pour éviter de décaler des scores déjà saisis.
+        if (GameState.CurrentSession!.HasProgress)
+        {
+            NavigationManager.NavigateTo("session", replace: true);
+            return;
         }
 
         // Activé par défaut si la config du jeu le prévoit, ou si des équipes existent déjà (reprise après F5)

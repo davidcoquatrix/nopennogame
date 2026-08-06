@@ -55,6 +55,12 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
   - *As a Scorekeeper, I want to configure the first player selection rule (e.g., highest/lowest score of the previous round) so that the app automatically assigns the first player badge each round.*
   - *Tie-breaker rules: 1. Compare total global score. 2. If still tied, use the current table order.*
 
+### Epic: Score Entry (Enhanced)
+- [x] **Story 2.9: Lock Player List Once a Game Has Started**
+  - *Decision (Product Owner): no valid use case justifies editing the player list once scores exist — it's simpler and safer to block it outright than to build "-" placeholders for players who joined/left mid-game.*
+  - *The players screen (`Players/Setup.razor`) is now unreachable once `Session.HasProgress` is true (round > 1, or a round-1 score already recorded) — enforced by a redirect guard on page init, not just a UI warning, so it holds regardless of entry path: back button, the Home "resume active session" card, or a typed URL.*
+  - *`Session.HasProgress` (Domain) centralizes the predicate, replacing the duplicated/inverted check that used to live separately in `Index.razor` and the old warning banner in `Players/Setup.razor`.*
+
 ### Epic: Game Rules & Templates
 - [ ] **Story 2.1: View Rules**
   - *As a Scorekeeper or Player, I want to read a quick summary of the rules for the selected game directly in the app to resolve disputes quickly.*

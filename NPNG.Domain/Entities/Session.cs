@@ -18,6 +18,12 @@ public record Session(
     SessionStatus Status = SessionStatus.Setup,
     bool RulesOverridden = false)
 {
+    /// <summary>
+    /// Vrai dès qu'au moins un score a été saisi (tour 1 y compris) — sert à verrouiller
+    /// les écrans de setup (joueurs) une fois la partie réellement démarrée.
+    /// </summary>
+    public bool HasProgress => CurrentRound > 1 || Scores.Any();
+
     public static Session Create(GameTemplate template)
     {
         return new Session(

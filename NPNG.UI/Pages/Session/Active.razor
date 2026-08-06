@@ -14,7 +14,10 @@ else if (GameState.CurrentSession.Status == SessionStatus.Finished)
 {
     <div class="app-header">
         <div class="header-nav">
-            <BackButton />
+            @if (ShowBackButton)
+            {
+                <BackButton />
+            }
             <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
     </div>
@@ -35,7 +38,10 @@ else if (GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)
 {
     <div class="app-header">
         <div class="header-nav">
-            <BackButton />
+            @if (ShowBackButton)
+            {
+                <BackButton />
+            }
             <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
     </div>
@@ -50,7 +56,10 @@ else
 {
     <div class="app-header">
         <div class="header-nav">
-            <BackButton />
+            @if (ShowBackButton)
+            {
+                <BackButton />
+            }
             <span class="header-title">@GameState.CurrentSession.Template.Name</span>
         </div>
         <div class="header-actions">
@@ -201,6 +210,10 @@ else
     private List<TeamScore> teamLeaderboard = new();
 
     private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId.HasValue) == true;
+
+    // Une fois la partie démarrée, il n'y a plus d'écran valide vers lequel revenir
+    // (l'écran joueurs se verrouille dès qu'un score existe) — on masque donc le bouton retour.
+    private bool ShowBackButton => GameState.CurrentSession != null && !GameState.CurrentSession.HasProgress;
 
     private IEnumerable<Guid> TeamEntryOrder =>
         GameState.CurrentSession?.Players

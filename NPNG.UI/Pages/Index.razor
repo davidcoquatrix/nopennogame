@@ -190,7 +190,7 @@
     {
         if (GameState.CurrentSession != null)
         {
-            if (GameState.CurrentSession.CurrentRound == 1 && !GameState.CurrentSession.Scores.Any())
+            if (!GameState.CurrentSession.HasProgress)
             {
                 NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(GameState.CurrentSession.Template.Name)}");
             }
