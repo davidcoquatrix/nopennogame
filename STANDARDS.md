@@ -32,6 +32,7 @@ Ce document définit le niveau d'exigence et les conventions de code pour le pro
 *   **Smart vs Dumb Components (Blazor) :** 
     *   **Smart (Containers) :** S'abonnent à l'état, injectent les services, et gèrent la logique d'orchestration.
     *   **Dumb (Présentationnels) :** Ne reçoivent que des `[Parameter]` et émettent des événements via `[EventCallback]`. Ils sont purs et faciles à tester.
+*   **Data Clumps (records/DTOs) :** Si plusieurs champs d'un `record` varient toujours ensemble (modifiés ensemble, nuls ensemble) et représentent un concept identifiable à part entière (ex: l'appartenance à une équipe), extrayez-les dans leur propre `record` imbriqué plutôt que de les laisser à plat au même niveau que les autres champs. Le signal n'est pas un simple compte de paramètres, mais la question : "est-ce que ces champs ont une seule raison de changer, ensemble ?"
 
 ## 5. Tolérance Zéro (Code Smells)
 
