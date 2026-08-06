@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text.Json;
 using Microsoft.JSInterop;
 using NPNG.Application.Interfaces;
@@ -41,7 +42,8 @@ public class LocalStorageSessionRepository(IJSRuntime jsRuntime) : ISessionRepos
 
         try
         {
-            return JsonSerializer.Deserialize<Session>(json, _jsonOptions);
+            var session = JsonSerializer.Deserialize<Session>(json, _jsonOptions);
+            return session is null ? null : NormalizeLegacySession(session);
         }
         catch (JsonException)
         {
@@ -77,7 +79,7 @@ public class LocalStorageSessionRepository(IJSRuntime jsRuntime) : ISessionRepos
                 var session = JsonSerializer.Deserialize<Session>(json, _jsonOptions);
                 if (session is not null)
                 {
-                    sessions.Add(session);
+                    sessions.Add(NormalizeLegacySession(session));
                 }
             }
             catch (JsonException)
@@ -94,4 +96,13 @@ public class LocalStorageSessionRepository(IJSRuntime jsRuntime) : ISessionRepos
         var key = $"{StorageKeyPrefix}{id}";
         await jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
     }
+
+    /// <summary>
+    /// Répare les sessions sérialisées avant l'introduction de Session.Teams : un ImmutableArray&lt;T&gt;
+    /// absent du JSON historique se désérialise vers sa valeur par défaut "cassée" (IsDefault == true),
+    /// qui plante au premier accès (.Length, .Any(), foreach...) plutôt que de se comporter comme un
+    /// tableau vide. C'est le seul endroit du code où cet état est toléré.
+    /// </summary>
+    private static Session NormalizeLegacySession(Session session) =>
+        session.Teams.IsDefault ? session with { Teams = ImmutableArray<Team>.Empty } : session;
 }
