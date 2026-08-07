@@ -443,6 +443,67 @@ public class GameStateServiceTests
     }
 
     [Fact]
+    public async Task AddPlayersToTeamAsync_AssignsUnassignedPlayersToExistingTeam()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF");
+        var alice = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice");
+        var bob = _sut.CurrentSession.Players.Single(p => p.Name == "Bob");
+        var charlie = _sut.CurrentSession.Players.Single(p => p.Name == "Charlie");
+        await _sut.CreateTeamAsync([alice.PlayerId, bob.PlayerId]);
+        var teamId = _sut.CurrentSession.Players.Single(p => p.Name == "Alice").TeamId!.Value;
+
+        // Act
+        await _sut.AddPlayersToTeamAsync(teamId, [charlie.PlayerId]);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        Assert.Equal(teamId, players.Single(p => p.Name == "Charlie").TeamId);
+        Assert.Single(_sut.CurrentSession.Teams); // Pas de nouvelle équipe créée
+    }
+
+    [Fact]
+    public async Task AddPlayersToTeamAsync_IgnoresPlayersAlreadyAssignedToAnotherTeam()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        var alice = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice");
+        var bob = _sut.CurrentSession.Players.Single(p => p.Name == "Bob");
+        await _sut.CreateTeamAsync([alice.PlayerId]);
+        await _sut.CreateTeamAsync([bob.PlayerId]);
+        var aliceTeamId = _sut.CurrentSession.Players.Single(p => p.Name == "Alice").TeamId!.Value;
+        var bobTeamId = _sut.CurrentSession.Players.Single(p => p.Name == "Bob").TeamId!.Value;
+
+        // Act - Bob est déjà dans sa propre équipe, il doit être ignoré
+        await _sut.AddPlayersToTeamAsync(aliceTeamId, [bob.PlayerId]);
+
+        // Assert
+        Assert.Equal(bobTeamId, _sut.CurrentSession.Players.Single(p => p.Name == "Bob").TeamId);
+        Assert.Equal(2, _sut.CurrentSession.Teams.Length);
+    }
+
+    [Fact]
+    public async Task AddPlayersToTeamAsync_WithUnknownTeamId_ShouldBeNoOp()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        var alice = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice");
+
+        // Act
+        await _sut.AddPlayersToTeamAsync(Guid.NewGuid(), [alice.PlayerId]);
+
+        // Assert
+        Assert.Null(_sut.CurrentSession.Players.Single(p => p.Name == "Alice").TeamId);
+        Assert.Empty(_sut.CurrentSession.Teams);
+    }
+
+    [Fact]
     public async Task RenameTeamAsync_UpdatesCustomNameForAllCurrentMembers()
     {
         // Arrange

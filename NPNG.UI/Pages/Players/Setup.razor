@@ -119,6 +119,11 @@ else
                             <EmojiAvatarPicker Categories="EmojiPalette.GameCategories" Small="true"
                                                 SelectedEmoji="@team.DisplayEmoji" SelectedEmojiChanged="@(e => UpdateTeamEmoji(team.TeamId, e))" />
                             <span class="team-card-name">@team.DisplayName</span>
+                            @if (UnteamedPlayers.Any())
+                            {
+                                <button class="ico-btn" title="Ajouter la sélection à cette équipe"
+                                        disabled="@(!selectedForTeam.Any())" @onclick="() => AddSelectionToTeam(team.TeamId)">➕</button>
+                            }
                             <button class="ico-btn" title="Renommer" @onclick="() => StartEditTeamName(team.TeamId, team.DisplayName)">✎</button>
                             <button class="btn-danger" title="Supprimer l'équipe" @onclick="() => DeleteTeam(team.TeamId)">🗑</button>
                         </div>
@@ -411,6 +416,14 @@ else
         if (!selectedForTeam.Any()) return;
 
         await GameState.CreateTeamAsync(selectedForTeam);
+        selectedForTeam.Clear();
+    }
+
+    private async Task AddSelectionToTeam(Guid teamId)
+    {
+        if (!selectedForTeam.Any()) return;
+
+        await GameState.AddPlayersToTeamAsync(teamId, selectedForTeam);
         selectedForTeam.Clear();
     }
 

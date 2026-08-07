@@ -216,6 +216,24 @@ public class GameStateService
     }
 
     /// <summary>
+    /// Ajoute des joueurs non affectés à une équipe existante (alternative à CreateTeamAsync
+    /// quand l'équipe existe déjà). Les joueurs déjà dans une équipe sont ignorés.
+    /// </summary>
+    public async Task AddPlayersToTeamAsync(Guid teamId, IEnumerable<Guid> playerIds)
+    {
+        if (CurrentSession is null || CurrentSession.Status != SessionStatus.Setup) return;
+        if (CurrentSession.Teams.All(t => t.TeamId != teamId)) return;
+
+        var idsToAdd = playerIds.ToHashSet();
+        var updatedPlayers = CurrentSession.Players
+            .Select(p => p.TeamId is null && idsToAdd.Contains(p.PlayerId) ? p with { TeamId = teamId } : p)
+            .ToImmutableArray();
+
+        CurrentSession = CurrentSession with { Players = updatedPlayers };
+        await SaveStateAsync();
+    }
+
+    /// <summary>
     /// Retire un joueur de son équipe : il redevient non affecté. Si c'était le dernier membre,
     /// l'équipe elle-même est supprimée pour ne pas laisser d'équipe fantôme sans joueur.
     /// </summary>
