@@ -4,17 +4,23 @@
    CSS isolation doesn't cross component boundaries. They live in
    wwwroot/css/app.css instead (same reason the old .akr-cat-input did). */
 
+.str-cell-mult {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
 .str-cell-x {
-    font-size: .7rem;
+    font-size: .64rem;
     color: var(--sub);
 }
 
 .str-cell-subtotal {
-    display: inline-block;
-    width: 34px;
-    text-align: right;
+    margin-top: 2px;
+    text-align: center;
     font-family: var(--font-mono);
-    font-size: .82rem;
+    font-size: .7rem;
     font-weight: 700;
     color: var(--accent-fg);
 }

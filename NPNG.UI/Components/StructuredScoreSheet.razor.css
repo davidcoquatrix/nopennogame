@@ -165,7 +165,7 @@
 /* Fixed layout needs explicit column widths up front so content changes (e.g. toggling
    a category on/off) never trigger a column-width recalculation that shifts the page. */
 .str-table-label-col-def {
-    width: 100px;
+    width: 116px;
 }
 
 .str-table th,

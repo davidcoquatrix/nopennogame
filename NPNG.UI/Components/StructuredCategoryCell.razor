@@ -8,12 +8,14 @@
 }
 else if (Category.Shape == CategoryInputShape.MultiplierByCount)
 {
-    <NumericCellInput Value="Value.A" CssClass="str-cell-input"
-        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { A = v }))" />
-    <span class="str-cell-x">×</span>
-    <NumericCellInput Value="Value.B" CssClass="str-cell-input"
-        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { B = v }))" />
-    <span class="str-cell-subtotal">@(Value.A * Value.B)</span>
+    <div class="str-cell-mult">
+        <NumericCellInput Value="Value.A" CssClass="str-cell-input-sm"
+            OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { A = v }))" />
+        <span class="str-cell-x">×</span>
+        <NumericCellInput Value="Value.B" CssClass="str-cell-input-sm"
+            OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { B = v }))" />
+    </div>
+    <div class="str-cell-subtotal">@(Value.A * Value.B)</div>
 }
 else
 {

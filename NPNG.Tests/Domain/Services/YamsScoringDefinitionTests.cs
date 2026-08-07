@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using NPNG.Domain.Entities;
+using NPNG.Domain.Enums;
 using NPNG.Domain.Services;
 
 namespace NPNG.Tests.Domain.Services;
@@ -90,5 +91,11 @@ public class YamsScoringDefinitionTests
 
         // Act & Assert
         Assert.Null(_sut.GetSectionBonus(lowerSectionKey));
+    }
+
+    [Fact]
+    public void LayoutStyle_IsTable()
+    {
+        Assert.Equal(StructuredLayoutStyle.Table, _sut.LayoutStyle);
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using NPNG.Domain.Entities;
+using NPNG.Domain.Enums;
 using NPNG.Domain.Services;
 
 namespace NPNG.Tests.Domain.Services;
@@ -59,5 +60,13 @@ public class StructuredScoringDefinitionTests
     public void GetSectionBonus_DefaultImplementation_ReturnsNull()
     {
         Assert.Null(_sut.GetSectionBonus(null));
+    }
+
+    [Fact]
+    public void LayoutStyle_IsTable()
+    {
+        // Akropolis matches the official paper score sheet: players as columns, mult×count
+        // stacked with the subtotal below in each cell.
+        Assert.Equal(StructuredLayoutStyle.Table, _sut.LayoutStyle);
     }
 }

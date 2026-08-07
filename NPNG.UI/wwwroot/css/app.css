@@ -396,6 +396,26 @@ body::before {
     border-color: var(--accent);
 }
 
+/* Compact variant for a multiplier×count pair sharing one table cell (ex: Akropolis). */
+.str-cell-input-sm {
+    box-sizing: border-box;
+    width: 28px;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: 6px;
+    padding: 3px 0;
+    text-align: center;
+    color: var(--txt);
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    font-weight: 700;
+    outline: none;
+}
+
+.str-cell-input-sm:focus {
+    border-color: var(--accent);
+}
+
 .validate-btn {
   width: 100%;
   background: var(--accent);

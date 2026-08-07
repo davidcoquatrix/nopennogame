@@ -22,6 +22,8 @@ public sealed class AkropolisScoringDefinition : StructuredScoringDefinition
 
     public override StructuredGameKind Kind => StructuredGameKind.Akropolis;
 
+    public override StructuredLayoutStyle LayoutStyle => StructuredLayoutStyle.Table;
+
     public override IReadOnlyList<CategoryDefinition> Categories { get; } =
     [
         new(Keys.Carrieres, "Carrières", CategoryInputShape.MultiplierByCount, AccentColor: "#60A5FA"),
