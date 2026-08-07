@@ -95,6 +95,14 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 - **Story 2.3: Share Score Sheet**
   - *As a Scorekeeper, I want to generate an image or text summary of the final scoreboard to share it via WhatsApp/SMS with my friends.*
 
+### Epic: Multi-Session Support
+- **Story 2.10: Multiple Concurrent Sessions (one per browser tab)**
+  - *As a Scorekeeper, I want to run several games at once, one per browser tab, so that I'm not forced to abandon a game in progress just to start another.*
+  - *Not a technical rewrite: Blazor WASM already isolates state per tab (`GameStateService` is Scoped = one instance per tab), and `LocalStorageSessionRepository` already keys sessions by GUID (`npng_session_{Id}`), so storage already supports several sessions side by side.*
+  - *What actually blocks this today: `InitializeNewSessionAsync` abandons the previously active session before creating a new one, and `LoadLatestActiveSessionAsync` always loads "the most recent active session" instead of a specific one — so two tabs currently fight over the same session.*
+  - *Scope: (1) route the active game as `/session/{sessionId}` instead of the implicit `/session`; (2) load by explicit id from the route instead of "latest active"; (3) stop abandoning the previous session on `InitializeNewSessionAsync`, allow several `Active` sessions at once; (4) a "my games in progress" screen to list/pick which session to open in a given tab.*
+  - *Explicitly out of scope for now: syncing the same session opened in two tabs at once (BroadcastChannel/storage events). Revisit only if it turns out to be a real need, not preemptively.*
+
 ---
 
 ## 🧹 Tech Debt & Code Quality (from full-repo review)
