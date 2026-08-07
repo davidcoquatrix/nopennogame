@@ -264,27 +264,14 @@
     color: var(--accent-text);
 }
 
-.team-toggle-row {
-    margin-bottom: 16px;
-}
-
 .team-create-btn {
     margin-bottom: 12px;
 }
 
-.team-toggle-lbl {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surf);
-    border: 1px solid var(--bdr-md);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-weight: 600;
-    font-size: .9rem;
-    color: var(--txt);
-    cursor: pointer;
-    transition: border-color var(--t);
+.team-size-hint {
+    margin: -8px 0 12px;
+    font-size: .8rem;
+    color: var(--sub);
 }
 
 .field-input {

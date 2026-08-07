@@ -11,16 +11,6 @@
     <div class="header-count">@CurrentPlayerCount/@MaxPlayers</div>
 </div>
 
-@if (CanUseTeams)
-{
-    <div class="team-toggle-row">
-        <label class="team-toggle-lbl">
-            <input type="checkbox" class="chk" checked="@teamModeEnabled" @onchange="ToggleTeamMode" />
-            🤝 Jouer en équipes
-        </label>
-    </div>
-}
-
 <div class="section-label">Ordre et 1er joueur</div>
 
 @if (GameState.CurrentSession == null || GameState.CurrentSession.Players.Length == 0)
@@ -43,7 +33,7 @@ else
             var isLastInList = i == playersList.Count - 1;
 
             <div class="player-row" @key="player.PlayerId">
-                @if (teamModeEnabled)
+                @if (TeamModeEnabled)
                 {
                     @if (player.TeamId is { } playerTeamId)
                     {
@@ -90,11 +80,15 @@ else
     </div>
 }
 
-@if (CanUseTeams && teamModeEnabled)
+@if (TeamModeEnabled)
 {
     @if (UnteamedPlayers.Any())
     {
-        <button class="btn-cta team-create-btn" disabled="@(!selectedForTeam.Any())" @onclick="CreateTeam">➕ Créer une équipe avec la sélection</button>
+        <button class="btn-cta team-create-btn" disabled="@(!CanCreateTeamFromSelection)" @onclick="CreateTeam">➕ Créer une équipe avec la sélection</button>
+        @if (RequiredTeamSize is { } size)
+        {
+            <div class="team-size-hint">Équipes de @size joueur@(size > 1 ? "s" : "")</div>
+        }
     }
 
     @if (Teams.Any())
@@ -122,7 +116,7 @@ else
                             @if (UnteamedPlayers.Any())
                             {
                                 <button class="ico-btn" title="Ajouter la sélection à cette équipe"
-                                        disabled="@(!selectedForTeam.Any())" @onclick="() => AddSelectionToTeam(team.TeamId)">➕</button>
+                                        disabled="@(!CanAddSelectionToTeam(team))" @onclick="() => AddSelectionToTeam(team.TeamId)">➕</button>
                             }
                             <button class="ico-btn" title="Renommer" @onclick="() => StartEditTeamName(team.TeamId, team.DisplayName)">✎</button>
                             <button class="btn-danger" title="Supprimer l'équipe" @onclick="() => DeleteTeam(team.TeamId)">🗑</button>
@@ -209,18 +203,41 @@ else
     private string NextPlayerColor => availableColors[CurrentPlayerCount % availableColors.Count];
 
     // MinPlayers décrit toujours le nombre de joueurs physiques, peu importe le mode.
-    // En mode équipe, on exige en plus qu'au moins 2 équipes soient formées (une seule équipe n'a pas de sens).
+    // En mode équipe, on exige en plus qu'au moins 2 équipes soient formées (une seule équipe n'a pas de sens)
+    // et que la composition respecte la config du jeu (taille fixe et/ou équipes égales).
     private bool StartDisabled => CurrentPlayerCount < MinPlayers
-        || (teamModeEnabled && (UnteamedPlayers.Any() || Teams.Count < MinTeamsRequired));
+        || (TeamModeEnabled && (UnteamedPlayers.Any() || Teams.Count < MinTeamsRequired || !TeamSizesValid));
 
     private record TeamViewModel(Guid TeamId, string DisplayName, string DisplayEmoji, List<SessionPlayer> Members);
 
-    private bool teamModeEnabled;
     private readonly HashSet<Guid> selectedForTeam = new();
     private Guid? editingTeamId;
     private string editTeamName = "";
 
-    private bool CanUseTeams => GameState.CurrentSession?.Template.ScoreType != ScoreType.Structured;
+    // Le mode équipe est entièrement piloté par la config du jeu — plus de bascule manuelle
+    // pour ne pas avoir à gérer un état "équipes formées mais mode désactivé".
+    private TeamRules? TeamConfig => GameState.CurrentSession?.Template.ScoreType != ScoreType.Structured
+        ? GameState.CurrentSession?.Template.Rules?.Teams
+        : null;
+
+    private bool TeamModeEnabled => TeamConfig is not null;
+    private int? RequiredTeamSize => TeamConfig?.TeamSize;
+
+    private bool TeamSizesValid
+    {
+        get
+        {
+            if (TeamConfig is not { RequiresEqualSizes: true } config) return true;
+            if (config.TeamSize is { } size) return Teams.All(t => t.Members.Count == size);
+            return Teams.Select(t => t.Members.Count).Distinct().Count() <= 1;
+        }
+    }
+
+    private bool CanCreateTeamFromSelection =>
+        selectedForTeam.Any() && (RequiredTeamSize is not { } size || selectedForTeam.Count == size);
+
+    private bool CanAddSelectionToTeam(TeamViewModel team) =>
+        selectedForTeam.Any() && (RequiredTeamSize is not { } size || team.Members.Count + selectedForTeam.Count <= size);
 
     private List<TeamViewModel> Teams =>
         GameState.CurrentSession?.Players
@@ -261,10 +278,6 @@ else
             NavigationManager.NavigateTo("session", replace: true);
             return;
         }
-
-        // Activé par défaut si la config du jeu le prévoit, ou si des équipes existent déjà (reprise après F5)
-        teamModeEnabled = GameState.CurrentSession?.Template.Rules?.TeamsEnabled == true
-            || GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
 
         await LoadFavoritesAsync();
     }
@@ -388,21 +401,6 @@ else
         NavigationManager.NavigateTo("session");
     }
 
-    private async Task ToggleTeamMode(ChangeEventArgs e)
-    {
-        teamModeEnabled = e.Value is bool enabled && enabled;
-
-        if (!teamModeEnabled)
-        {
-            // On dissout les équipes existantes pour rester cohérent avec l'état du switch
-            var teamIds = Teams.Select(t => t.TeamId).ToList();
-            foreach (var teamId in teamIds)
-            {
-                await GameState.DeleteTeamAsync(teamId);
-            }
-        }
-    }
-
     private void ToggleSelectedForTeam(Guid playerId)
     {
         if (!selectedForTeam.Add(playerId))
@@ -413,7 +411,7 @@ else
 
     private async Task CreateTeam()
     {
-        if (!selectedForTeam.Any()) return;
+        if (!CanCreateTeamFromSelection) return;
 
         await GameState.CreateTeamAsync(selectedForTeam);
         selectedForTeam.Clear();
@@ -421,7 +419,8 @@ else
 
     private async Task AddSelectionToTeam(Guid teamId)
     {
-        if (!selectedForTeam.Any()) return;
+        var team = Teams.FirstOrDefault(t => t.TeamId == teamId);
+        if (team is null || !CanAddSelectionToTeam(team)) return;
 
         await GameState.AddPlayersToTeamAsync(teamId, selectedForTeam);
         selectedForTeam.Clear();

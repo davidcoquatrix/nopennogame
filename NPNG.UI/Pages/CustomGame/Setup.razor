@@ -67,6 +67,24 @@
         <div class="field-lbl">🤝 Jeu en équipe</div>
         <input type="checkbox" class="chk" @bind="teamsEnabled" />
     </div>
+
+    @if (teamsEnabled)
+    {
+        <div class="setting-row">
+            <div class="field-lbl">Équipes de taille égale obligatoire</div>
+            <input type="checkbox" class="chk" @bind="requireEqualTeams" />
+        </div>
+
+        @if (requireEqualTeams)
+        {
+            <div class="input-group-row">
+                <div class="input-group-col">
+                    <div class="field-lbl">Joueurs par équipe (opt.)</div>
+                    <input class="field-input" type="number" @bind="teamSize" placeholder="ex : 2" />
+                </div>
+            </div>
+        }
+    }
 </div>
 
 <div class="form-card">
@@ -104,6 +122,9 @@
     private bool enableFirstPlayer = true;
     private FirstPlayerMechanic firstPlayerMechanic = FirstPlayerMechanic.Sequential;
     private bool teamsEnabled = false;
+    private string teamSize = "";
+    private bool requireEqualTeams = true; // Cas général : une partie en équipes se joue à équipes égales
+
     private bool saveToCatalogue = false;
 
     [SupplyParameterFromQuery(Name = "baseGameId")]
@@ -129,8 +150,10 @@
                     minPlayers = baseGame.Rules.MinPlayers?.ToString() ?? "";
                     maxPlayers = baseGame.Rules.MaxPlayers?.ToString() ?? "";
                     firstPlayerMechanic = baseGame.Rules.FirstPlayerMechanic;
-                    teamsEnabled = baseGame.Rules.TeamsEnabled;
-                    
+                    teamsEnabled = baseGame.Rules.Teams is not null;
+                    teamSize = baseGame.Rules.Teams?.TeamSize?.ToString() ?? "";
+                    requireEqualTeams = baseGame.Rules.Teams?.RequiresEqualSizes ?? true;
+
                     if (firstPlayerMechanic == FirstPlayerMechanic.None)
                     {
                         enableFirstPlayer = false;
@@ -166,6 +189,8 @@
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
         int? parsedMinPlayers = int.TryParse(minPlayers, out var minP) ? minP : null;
         int? parsedMaxPlayers = int.TryParse(maxPlayers, out var maxP) ? maxP : null;
+        int? parsedTeamSize = teamsEnabled && requireEqualTeams && int.TryParse(teamSize, out var ts) ? ts : null;
+        var teamRules = teamsEnabled ? new TeamRules(parsedTeamSize, requireEqualTeams) : null;
 
         var finalMechanic = enableFirstPlayer ? firstPlayerMechanic : FirstPlayerMechanic.None;
         var rules = new GameRules(
@@ -173,8 +198,8 @@
             MaxRounds: parsedRoundLimit,
             FirstPlayerMechanic: finalMechanic,
             MaxPlayers: parsedMaxPlayers,
-            TeamsEnabled: teamsEnabled,
-            MinPlayers: parsedMinPlayers);
+            MinPlayers: parsedMinPlayers,
+            Teams: teamRules);
 
         var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
         
