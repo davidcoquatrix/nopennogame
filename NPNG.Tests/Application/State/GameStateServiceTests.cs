@@ -266,7 +266,7 @@ public class GameStateServiceTests
     {
         // Arrange
         var rules = new GameRules(MaxRounds: 3);
-        var template = new GameTemplate(Guid.NewGuid(), "Short Game", ScoreType.Cumulative, null, rules);
+        var template = new GameTemplate(Guid.NewGuid(), "Short Game", ScoreType.Cumulative, rules);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
         await _sut.StartSessionAsync();
@@ -288,7 +288,7 @@ public class GameStateServiceTests
     {
         // Arrange
         var rules = new GameRules(FirstPlayerMechanic: mechanic);
-        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null, rules);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, rules);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");   // Premier par défaut
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");     // Voisin séquentiel d'Alice
@@ -316,7 +316,7 @@ public class GameStateServiceTests
     {
         // Arrange
         var rules = new GameRules(FirstPlayerMechanic: mechanic);
-        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null, rules);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, rules);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");   // Premier par défaut
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");     // Voisin séquentiel d'Alice
@@ -390,7 +390,7 @@ public class GameStateServiceTests
     {
         // Arrange
         var rules = new GameRules(MaxRounds: 1, FirstPlayerMechanic: FirstPlayerMechanic.Winner);
-        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null, rules);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, rules);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");   // Premier par défaut
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");     // Voisin séquentiel d'Alice
@@ -639,7 +639,7 @@ public class GameStateServiceTests
     {
         // Arrange
         var rules = new GameRules(TargetScore: 50);
-        var template = new GameTemplate(Guid.NewGuid(), "Team Game", ScoreType.Cumulative, null, rules);
+        var template = new GameTemplate(Guid.NewGuid(), "Team Game", ScoreType.Cumulative, rules);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
         await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");

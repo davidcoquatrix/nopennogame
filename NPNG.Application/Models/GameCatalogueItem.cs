@@ -25,6 +25,6 @@ public record GameCatalogueItem(
 
     public GameTemplate ToGameTemplate()
     {
-        return new GameTemplate(Id, Name, ScoreType, Description, Rules);
+        return new GameTemplate(Id, Name, ScoreType, Rules);
     }
 }

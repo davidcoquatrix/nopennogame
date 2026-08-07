@@ -203,7 +203,7 @@
             Teams: teamRules,
             ScoreIncrement: incrementType);
 
-        var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, "Jeu personnalisé", rules);
+        var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, rules);
         
         if (saveToCatalogue)
         {
@@ -212,6 +212,6 @@
         
         await GameState.InitializeNewSessionAsync(template);
         
-        NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(gameName.Trim())}");
+        NavigationManager.NavigateTo("players");
     }
 }

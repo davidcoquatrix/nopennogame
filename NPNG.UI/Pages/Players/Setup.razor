@@ -6,7 +6,7 @@
 <div class="app-header">
     <div class="header-nav">
         <BackButton />
-        <span style="font-size:1.05rem;font-weight:700">@GameName — Joueurs</span>
+        <span style="font-size:1.05rem;font-weight:700">@GameDisplayName — Joueurs</span>
     </div>
     <div class="header-count">@CurrentPlayerCount/@MaxPlayers</div>
 </div>
@@ -183,8 +183,7 @@ else
     [Inject] public GameStateService GameState { get; set; } = default!;
     [Inject] public IPlayerProfileRepository ProfileRepository { get; set; } = default!;
 
-    [SupplyParameterFromQuery(Name = "game")]
-    public string? GameName { get; set; } = "Partie";
+    private string GameDisplayName => GameState.CurrentSession?.Template.Name ?? "Partie";
 
     private string newPlayerName = "";
     private string selectedEmoji = "🎯";

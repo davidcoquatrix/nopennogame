@@ -112,11 +112,17 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 
 ### Dead code
 - [x] **Unused `IJSRuntime` injections** in `Players/Setup.razor`, `CustomGame/Setup.razor`, and `Session/Active.razor` — likely left behind by the drag-and-drop removal (`5f0d873`). Deleted.
+- [x] **`GameTemplate.Description`** was assigned (via `GameCatalogueItem.ToGameTemplate()`) but never read once embedded in a `Session` — the only place a description is actually shown (`Index.razor`'s game selection tile) reads `GameCatalogueItem.Description` directly, before conversion. Removed from `GameTemplate`; kept on `GameCatalogueItem`, where it's real.
+- [x] **The `?game=Name` query param** on `/players` was purely decorative (fed only the header title) and, worse, went stale on F5: the actual session is reloaded from `GameState.LoadLatestActiveSessionAsync()` (most recent Active/Setup session in storage) independently of the URL, so the title could show a different game than the one actually loaded if the URL was stale (back button, reopened tab). Removed the query param entirely; the header now reads `GameState.CurrentSession.Template.Name` directly, which can't drift from the loaded session.
 
 ### Minor polish
 - [x] `LocalStorageGameCatalogueService.cs`: redundant comment restating the literal directly above it (`true); // Set to true for custom games`) — against the `STANDARDS.md` rule on comments. Removed.
 - [x] `Index.razor.TryContinueToSetup()`: `_ = ConfirmAndContinue();` discarded the task inside an already-`async Task` method — now `await`ed, so an exception from `GameState.InitializeNewSessionAsync` no longer gets silently swallowed.
 - [x] `LocalStorageGameCatalogueService.GetCustomGamesAsync`'s defensive `IsCustom = true` re-coercion is a migration shim for a historical bug — checked: `SaveCustomGameAsync` always writes `IsCustom = true` today, so the shim only matters for pre-fix data still sitting in a user's local storage. Zero-cost to keep, so left in place.
+- [x] `GameRules`' doc comment claimed "règles de fin de partie" (end-game rules) but only 2 of its 7 properties (`TargetScore`/`MaxRounds`) actually are — the rest are setup constraints, turn order, and a UI preference (`ScoreIncrement`). Reworded to describe its actual scope instead of renaming/restructuring (no active pain from the shape itself, just a stale comment).
+
+### Known bug found, not yet fixed
+- [ ] **Editing a saved custom game creates a duplicate instead of updating it.** `CustomGame/Setup.razor.CreateGame()` always calls `new GameTemplate(Guid.NewGuid(), ...)`, even when reached via the edit flow (`Settings.razor` → "✎" → `custom-game?baseGameId=...`). `LocalStorageGameCatalogueService.SaveCustomGameAsync`'s upsert matches by `Id`, so a fresh Id never matches the original entry — every edit (with "Sauvegarder ce modèle" checked) adds a new catalogue entry and leaves the old one orphaned. There's also no duplicate-name check on creation. Found while investigating a report of duplicate-named custom games; not yet fixed.
 
 ### Test coverage
 - [x] `MovePlayerUpAsync`/`MovePlayerDownAsync`/`SetFirstPlayerManuallyAsync`/`FinishSessionAsync`/`AbandonSessionAsync` had no dedicated unit test. Added (including no-op/idempotency cases for Finish/Abandon and boundary cases for Move).

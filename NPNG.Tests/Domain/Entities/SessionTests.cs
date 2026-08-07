@@ -38,7 +38,7 @@ public class SessionTests
 
     private static Session MakeSession(int currentRound, bool hasScore)
     {
-        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative, null);
+        var template = new GameTemplate(Guid.NewGuid(), "Test Game", ScoreType.Cumulative);
         var scores = hasScore
             ? ImmutableArray.Create(new ScoreEntry(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1, 10))
             : ImmutableArray<ScoreEntry>.Empty;

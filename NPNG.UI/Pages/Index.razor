@@ -192,7 +192,7 @@
         {
             if (!GameState.CurrentSession.HasProgress)
             {
-                NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(GameState.CurrentSession.Template.Name)}");
+                NavigationManager.NavigateTo("players");
             }
             else
             {
@@ -231,7 +231,7 @@
             {
                 var template = selectedGame.ToGameTemplate();
                 await GameState.InitializeNewSessionAsync(template);
-                NavigationManager.NavigateTo($"players?game={Uri.EscapeDataString(selectedGame.Name)}");
+                NavigationManager.NavigateTo("players");
             }
         }
     }

@@ -16,7 +16,8 @@ public record TeamRules(int? TeamSize = null, bool RequireEqualTeams = false)
 }
 
 /// <summary>
-/// Définition des règles de fin de partie.
+/// Configuration d'une partie : conditions de fin (TargetScore/MaxRounds), contraintes de
+/// setup (Min/MaxPlayers, Teams), mécanique de premier joueur et préférence de saisie du score.
 /// </summary>
 public record GameRules(
     int? TargetScore = null,
@@ -34,5 +35,4 @@ public record GameTemplate(
     Guid Id,
     string Name,
     ScoreType ScoreType,
-    string? Description = null,
     GameRules? Rules = null);
