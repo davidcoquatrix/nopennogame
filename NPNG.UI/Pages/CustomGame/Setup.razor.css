@@ -35,6 +35,19 @@
     border-color: var(--accent);
 }
 
+.field-input.error {
+    border-color: var(--danger);
+    background: var(--bg-danger-subtle);
+}
+
+.error-msg {
+    color: var(--danger);
+    font-size: 0.75rem;
+    margin-top: -6px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
 .toggle-row {
     display: flex;
     gap: 7px;

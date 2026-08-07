@@ -12,7 +12,11 @@
 
 <div class="form-card">
     <div class="field-lbl">Nom du jeu</div>
-    <input class="field-input" type="text" @bind="gameName" placeholder="Ex: Belote maison" />
+    <input class="field-input @(showDuplicateNameError ? "error" : "")" type="text" @bind="gameName" @bind:event="oninput" @bind:after="() => showDuplicateNameError = false" placeholder="Ex: Belote maison" />
+    @if (showDuplicateNameError)
+    {
+        <div class="error-msg">Un jeu porte déjà ce nom.</div>
+    }
 
     <div class="field-lbl">Emoji</div>
     <EmojiPicker Categories="EmojiPalette.GameCategories" @bind-SelectedEmoji="selectedEmoji" />
@@ -126,6 +130,7 @@
     private bool requireEqualTeams = true; // Cas général : une partie en équipes se joue à équipes égales
 
     private bool saveToCatalogue = false;
+    private bool showDuplicateNameError = false;
 
     [SupplyParameterFromQuery(Name = "baseGameId")]
     public Guid? BaseGameId { get; set; }
@@ -183,9 +188,20 @@
     private async Task CreateGame()
     {
         if (string.IsNullOrWhiteSpace(gameName)) return;
-        
+
+        var trimmedName = gameName.Trim();
+        var existingGames = await GameCatalogueService.GetAvailableGamesAsync();
+        var isDuplicateName = existingGames.Any(g =>
+            g.Id != BaseGameId && g.Name.Equals(trimmedName, StringComparison.OrdinalIgnoreCase));
+
+        if (isDuplicateName)
+        {
+            showDuplicateNameError = true;
+            return;
+        }
+
         var scoreType = winCondition == "high" ? ScoreType.Cumulative : ScoreType.CumulativeLower;
-        
+
         int? parsedScoreLimit = int.TryParse(scoreLimit, out var s) ? s : null;
         int? parsedRoundLimit = int.TryParse(roundLimit, out var r) ? r : null;
         int? parsedMinPlayers = int.TryParse(minPlayers, out var minP) ? minP : null;
@@ -203,7 +219,8 @@
             Teams: teamRules,
             ScoreIncrement: incrementType);
 
-        var template = new GameTemplate(Guid.NewGuid(), gameName.Trim(), scoreType, rules);
+        var templateId = BaseGameId ?? Guid.NewGuid();
+        var template = new GameTemplate(templateId, trimmedName, scoreType, rules);
         
         if (saveToCatalogue)
         {
