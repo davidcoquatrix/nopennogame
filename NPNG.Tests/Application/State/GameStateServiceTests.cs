@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using Moq;
 using NPNG.Application.Interfaces;
 using NPNG.Application.State;
@@ -340,9 +339,9 @@ public class GameStateServiceTests
     }
 
     private static StructuredScoreDetail CreateAkropolisDetail(int carrieresMult, int carrieresCount, int pierresRestantes) =>
-        new(ImmutableDictionary<string, CategoryValue>.Empty
-            .Add(AkropolisScoringDefinition.Keys.Carrieres, new CategoryValue(carrieresMult, carrieresCount))
-            .Add(AkropolisScoringDefinition.Keys.PierresRestantes, new CategoryValue(pierresRestantes)));
+        StructuredScoreDetail.Empty
+            .WithValue(AkropolisScoringDefinition.Keys.Carrieres, new CategoryValue(carrieresMult, carrieresCount))
+            .WithValue(AkropolisScoringDefinition.Keys.PierresRestantes, new CategoryValue(pierresRestantes));
 
     [Fact]
     public async Task SubmitStructuredScoreAndFinishAsync_ShouldRecordDetailAtFixedRoundAndFinishSession()

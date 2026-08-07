@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using NPNG.Domain.Entities;
 using NPNG.Domain.Enums;
 using NPNG.Domain.Services;
@@ -10,7 +9,7 @@ public class StructuredScoringDefinitionTests
     private readonly AkropolisScoringDefinition _sut = new();
 
     private static StructuredScoreDetail DetailWith(params (string Key, CategoryValue Value)[] values) =>
-        new(values.Aggregate(ImmutableDictionary<string, CategoryValue>.Empty, (acc, kv) => acc.SetItem(kv.Key, kv.Value)));
+        values.Aggregate(StructuredScoreDetail.Empty, (detail, kv) => detail.WithValue(kv.Key, kv.Value));
 
     [Fact]
     public void CalculateTotal_SumsAllCategorySubtotalsPlusFreeValue()

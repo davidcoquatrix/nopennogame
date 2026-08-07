@@ -211,8 +211,7 @@
 
     private void UpdateValue(Guid playerId, string categoryKey, CategoryValue value)
     {
-        var detail = GetDetail(playerId);
-        details[playerId] = detail with { Categories = detail.Categories.SetItem(categoryKey, value) };
+        details[playerId] = GetDetail(playerId).WithValue(categoryKey, value);
     }
 
     private async Task Submit()

@@ -121,9 +121,9 @@ public class ScoreCalculatorTests
     {
         // Arrange
         var definition = new AkropolisScoringDefinition();
-        var detail = new StructuredScoreDetail(ImmutableDictionary<string, CategoryValue>.Empty
-            .Add(AkropolisScoringDefinition.Keys.Carrieres, new CategoryValue(2, 3)) // Subtotal 6
-            .Add(AkropolisScoringDefinition.Keys.PierresRestantes, new CategoryValue(4))); // Total 10
+        var detail = StructuredScoreDetail.Empty
+            .WithValue(AkropolisScoringDefinition.Keys.Carrieres, new CategoryValue(2, 3)) // Subtotal 6
+            .WithValue(AkropolisScoringDefinition.Keys.PierresRestantes, new CategoryValue(4)); // Total 10
 
         var entries = new List<ScoreEntry>
         {
