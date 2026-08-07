@@ -1,0 +1,42 @@
+/* ─── SCOPED CSS FOR STRUCTURED CATEGORY CELL (table cell content) ───
+   Note: .str-cell-input / .str-cell-input-sm are NOT here — they style the
+   <input> rendered inside the child NumericCellInput component, and Blazor's
+   CSS isolation doesn't cross component boundaries. They live in
+   wwwroot/css/app.css instead (same reason the old .akr-cat-input did). */
+
+.str-cell-x {
+    font-size: .7rem;
+    color: var(--sub);
+}
+
+.str-cell-subtotal {
+    display: inline-block;
+    width: 34px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent-fg);
+}
+
+.str-cell-toggle {
+    box-sizing: border-box;
+    width: 44px;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: 7px;
+    padding: 4px 0;
+    text-align: center;
+    color: var(--sub);
+    font-family: var(--font-mono);
+    font-size: .74rem;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+}
+
+.str-cell-toggle.active {
+    background: var(--bg-accent-subtle);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}

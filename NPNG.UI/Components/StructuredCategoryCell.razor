@@ -1,0 +1,35 @@
+@using NPNG.Domain.Entities
+@using NPNG.Domain.Enums
+
+@if (Category.Shape == CategoryInputShape.FreeValue)
+{
+    <NumericCellInput Value="Value.A" CssClass="str-cell-input"
+        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { A = v }))" />
+}
+else if (Category.Shape == CategoryInputShape.MultiplierByCount)
+{
+    <NumericCellInput Value="Value.A" CssClass="str-cell-input"
+        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { A = v }))" />
+    <span class="str-cell-x">×</span>
+    <NumericCellInput Value="Value.B" CssClass="str-cell-input"
+        OnValueChanged="@((int v) => OnChanged.InvokeAsync(Value with { B = v }))" />
+    <span class="str-cell-subtotal">@(Value.A * Value.B)</span>
+}
+else
+{
+    <button type="button" class="str-cell-toggle @(Value.A != 0 ? "active" : "")"
+        @onclick="@(() => OnChanged.InvokeAsync(Value with { A = Value.A != 0 ? 0 : 1 }))">
+        @(Value.A != 0 ? $"{Category.FixedPoints}" : "—")
+    </button>
+}
+
+@code {
+    [Parameter]
+    public CategoryDefinition Category { get; set; } = null!;
+
+    [Parameter]
+    public CategoryValue Value { get; set; }
+
+    [Parameter]
+    public EventCallback<CategoryValue> OnChanged { get; set; }
+}

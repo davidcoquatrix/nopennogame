@@ -9,4 +9,4 @@ public record ScoreEntry(
     Guid PlayerId,
     int Round,
     int Value,
-    AkropolisScoreDetail? AkropolisDetail = null);
+    StructuredScoreDetail? StructuredDetail = null);

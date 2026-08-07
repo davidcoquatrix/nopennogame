@@ -46,7 +46,8 @@ else if (GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)
     </div>
 
     <div class="section-label">Feuille de score</div>
-    <AkropolisScoreSheet
+    <StructuredScoreSheet
+        Definition="StructuredScoringCatalogue.Get(GameState.CurrentSession.Template.StructuredKind!.Value)"
         Players="GameState.CurrentSession.Players"
         ExistingScores="GameState.CurrentSession.Scores"
         OnSubmit="HandleStructuredSubmit" />
@@ -383,7 +384,7 @@ else
         await GameState.FinishSessionAsync();
     }
 
-    private async Task HandleStructuredSubmit(IReadOnlyDictionary<Guid, AkropolisScoreDetail> details)
+    private async Task HandleStructuredSubmit(IReadOnlyDictionary<Guid, StructuredScoreDetail> details)
     {
         await GameState.SubmitStructuredScoreAndFinishAsync(details);
     }

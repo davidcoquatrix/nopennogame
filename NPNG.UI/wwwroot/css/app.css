@@ -374,12 +374,16 @@ body::before {
     background: var(--bg-accent-subtle);
 }
 
-.akr-cat-input {
+/* Styles the <input> that NumericCellInput renders internally — must stay global
+   (not scoped to the calling component's .razor.css) since Blazor's CSS isolation
+   doesn't cross component boundaries. Used by structured score sheets (Akropolis, Yams). */
+.str-cell-input {
+    box-sizing: border-box;
     width: 42px;
     background: var(--raised);
     border: 1px solid var(--bdr-md);
     border-radius: 7px;
-    padding: 5px 0;
+    padding: 4px 0;
     text-align: center;
     color: var(--txt);
     font-family: var(--font-mono);
@@ -388,7 +392,7 @@ body::before {
     outline: none;
 }
 
-.akr-cat-input:focus {
+.str-cell-input:focus {
     border-color: var(--accent);
 }
 

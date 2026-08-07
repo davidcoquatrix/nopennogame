@@ -1,8 +1,10 @@
+using System.Collections.Immutable;
 using Moq;
 using NPNG.Application.Interfaces;
 using NPNG.Application.State;
 using NPNG.Domain.Entities;
 using NPNG.Domain.Enums;
+using NPNG.Domain.Services;
 
 namespace NPNG.Tests.Application.State;
 
@@ -337,46 +339,51 @@ public class GameStateServiceTests
         Assert.False(updated.Single(p => p.Name == "Bob").IsFirstPlayer);
     }
 
+    private static StructuredScoreDetail CreateAkropolisDetail(int carrieresMult, int carrieresCount, int pierresRestantes) =>
+        new(ImmutableDictionary<string, CategoryValue>.Empty
+            .Add(AkropolisScoringDefinition.Keys.Carrieres, new CategoryValue(carrieresMult, carrieresCount))
+            .Add(AkropolisScoringDefinition.Keys.PierresRestantes, new CategoryValue(pierresRestantes)));
+
     [Fact]
     public async Task SubmitStructuredScoreAndFinishAsync_ShouldRecordDetailAtFixedRoundAndFinishSession()
     {
         // Arrange
-        var template = new GameTemplate(Guid.NewGuid(), "Akropolis", ScoreType.Structured);
+        var template = new GameTemplate(Guid.NewGuid(), "Akropolis", ScoreType.Structured, StructuredKind: StructuredGameKind.Akropolis);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
         await _sut.StartSessionAsync();
         var aliceId = _sut.CurrentSession!.Players[0].PlayerId;
 
-        var detail = new AkropolisScoreDetail(new(2, 3), new(0, 0), new(0, 0), new(0, 0), new(0, 0), 4); // Total 10
+        var detail = CreateAkropolisDetail(2, 3, 4); // Total 10
 
         // Act
-        await _sut.SubmitStructuredScoreAndFinishAsync(new Dictionary<Guid, AkropolisScoreDetail> { [aliceId] = detail });
+        await _sut.SubmitStructuredScoreAndFinishAsync(new Dictionary<Guid, StructuredScoreDetail> { [aliceId] = detail });
 
         // Assert
         Assert.Equal(SessionStatus.Finished, _sut.CurrentSession!.Status);
         var entry = Assert.Single(_sut.CurrentSession.Scores);
         Assert.Equal(1, entry.Round);
         Assert.Equal(10, entry.Value);
-        Assert.Equal(detail, entry.AkropolisDetail);
+        Assert.Equal(detail, entry.StructuredDetail);
     }
 
     [Fact]
     public async Task ResumeSessionAsync_WhenStructured_KeepsCurrentRoundFixed()
     {
         // Arrange
-        var template = new GameTemplate(Guid.NewGuid(), "Akropolis", ScoreType.Structured);
+        var template = new GameTemplate(Guid.NewGuid(), "Akropolis", ScoreType.Structured, StructuredKind: StructuredGameKind.Akropolis);
         await _sut.InitializeNewSessionAsync(template);
         await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
         await _sut.StartSessionAsync();
         var aliceId = _sut.CurrentSession!.Players[0].PlayerId;
 
-        var detail = new AkropolisScoreDetail(new(2, 3), new(0, 0), new(0, 0), new(0, 0), new(0, 0), 4); // Total 10
-        await _sut.SubmitStructuredScoreAndFinishAsync(new Dictionary<Guid, AkropolisScoreDetail> { [aliceId] = detail });
+        var detail = CreateAkropolisDetail(2, 3, 4); // Total 10
+        await _sut.SubmitStructuredScoreAndFinishAsync(new Dictionary<Guid, StructuredScoreDetail> { [aliceId] = detail });
 
         // Act - re-open for editing, then re-submit a correction
         await _sut.ResumeSessionAsync();
-        var correctedDetail = detail with { PierresRestantes = 9 }; // Total 15
-        await _sut.SubmitStructuredScoreAndFinishAsync(new Dictionary<Guid, AkropolisScoreDetail> { [aliceId] = correctedDetail });
+        var correctedDetail = CreateAkropolisDetail(2, 3, 9); // Total 15
+        await _sut.SubmitStructuredScoreAndFinishAsync(new Dictionary<Guid, StructuredScoreDetail> { [aliceId] = correctedDetail });
 
         // Assert - still a single round-1 entry, updated in place (no double-counting)
         Assert.Equal(1, _sut.CurrentSession!.CurrentRound);

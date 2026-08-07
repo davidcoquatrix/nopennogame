@@ -90,8 +90,8 @@
     color: var(--accent-fg);
 }
 
-/* ─── AKROPOLIS READ-ONLY RECAP ──────────────────────────────── */
-.akr-recap-card {
+/* ─── STRUCTURED GAME READ-ONLY RECAP (ex: Akropolis, Yams) ──── */
+.str-recap-card {
     background: var(--surf);
     border: 1px solid var(--bdr-md);
     border-radius: 12px;
@@ -99,21 +99,21 @@
     margin-bottom: 8px;
 }
 
-.akr-recap-header {
+.str-recap-header {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
 }
 
-.akr-recap-total {
+.str-recap-total {
     margin-left: auto;
     font-family: var(--font-mono);
     font-weight: 700;
     color: var(--accent-fg);
 }
 
-.akr-recap-row {
+.str-recap-row {
     display: flex;
     justify-content: space-between;
     font-size: .8rem;
@@ -121,7 +121,7 @@
     padding: 3px 0;
 }
 
-.akr-recap-row span:last-child {
+.str-recap-row span:last-child {
     font-family: var(--font-mono);
     color: var(--txt);
 }

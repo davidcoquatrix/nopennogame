@@ -8,15 +8,16 @@ namespace NPNG.Application.Models;
 /// ainsi que les règles du domaine (GameTemplate).
 /// </summary>
 public record GameCatalogueItem(
-    Guid Id, 
-    string Emoji, 
-    string Name, 
-    string Description, 
-    string Badge, 
-    string Color, 
-    ScoreType ScoreType, 
+    Guid Id,
+    string Emoji,
+    string Name,
+    string Description,
+    string Badge,
+    string Color,
+    ScoreType ScoreType,
     GameRules? Rules = null,
-    bool IsCustom = false)
+    bool IsCustom = false,
+    StructuredGameKind? StructuredKind = null)
 {
     /// <summary>
     /// Identifiant fixe de la tuile "Nouveau jeu" du catalogue, utilisée pour rediriger vers l'écran de création.
@@ -25,6 +26,6 @@ public record GameCatalogueItem(
 
     public GameTemplate ToGameTemplate()
     {
-        return new GameTemplate(Id, Name, ScoreType, Rules);
+        return new GameTemplate(Id, Name, ScoreType, Rules, StructuredKind);
     }
 }

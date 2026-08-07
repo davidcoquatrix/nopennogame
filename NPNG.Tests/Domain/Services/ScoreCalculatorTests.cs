@@ -120,17 +120,14 @@ public class ScoreCalculatorTests
     public void CalculateLeaderboard_WhenStructured_HighestScoreWinsLikeCumulative()
     {
         // Arrange
-        var detail = new AkropolisScoreDetail(
-            Carrieres: new(2, 3), // Subtotal 6
-            Habitations: new(0, 0),
-            Marches: new(0, 0),
-            Casernes: new(0, 0),
-            Jardins: new(0, 0),
-            PierresRestantes: 4); // Total 10
+        var definition = new AkropolisScoringDefinition();
+        var detail = new StructuredScoreDetail(ImmutableDictionary<string, CategoryValue>.Empty
+            .Add(AkropolisScoringDefinition.Keys.Carrieres, new CategoryValue(2, 3)) // Subtotal 6
+            .Add(AkropolisScoringDefinition.Keys.PierresRestantes, new CategoryValue(4))); // Total 10
 
         var entries = new List<ScoreEntry>
         {
-            new(Guid.NewGuid(), _sessionId, _player1, 1, detail.Total, detail), // 10
+            new(Guid.NewGuid(), _sessionId, _player1, 1, definition.CalculateTotal(detail), detail), // 10
             new(Guid.NewGuid(), _sessionId, _player2, 1, 25),                    // 25 (Winner)
             new(Guid.NewGuid(), _sessionId, _player3, 1, 15)                     // 15
         };

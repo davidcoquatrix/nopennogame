@@ -15,7 +15,8 @@
 @if (GameState.CurrentSession != null && GameState.CurrentSession.Template.ScoreType == ScoreType.Structured)
 {
     <div class="section-label">Feuille de score</div>
-    <AkropolisScoreSheet
+    <StructuredScoreSheet
+        Definition="StructuredScoringCatalogue.Get(GameState.CurrentSession.Template.StructuredKind!.Value)"
         Players="GameState.CurrentSession.Players"
         ExistingScores="GameState.CurrentSession.Scores"
         OnSubmit="HandleStructuredEdit" />
@@ -352,7 +353,7 @@ else
         await GoBack();
     }
 
-    private async Task HandleStructuredEdit(IReadOnlyDictionary<Guid, AkropolisScoreDetail> details)
+    private async Task HandleStructuredEdit(IReadOnlyDictionary<Guid, StructuredScoreDetail> details)
     {
         // La session est Finished ici : ResumeSessionAsync la repasse Active sans toucher CurrentRound
         // pour les jeux Structured, ce qui permet à SubmitStructuredScoreAndFinishAsync d'utiliser le round fixe.

@@ -19,25 +19,25 @@
 }
 else if (session.Template.ScoreType == ScoreType.Structured)
 {
+    var definition = StructuredScoringCatalogue.Get(session.Template.StructuredKind!.Value);
+
     <div class="section-label">Détail des scores</div>
     @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
     {
         var detail = session.Scores
-            .FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == GameStateService.AkropolisScoringRound)
-            ?.AkropolisDetail ?? AkropolisScoreDetail.Empty;
+            .FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == GameStateService.StructuredScoringRound)
+            ?.StructuredDetail ?? StructuredScoreDetail.Empty;
 
-        <div class="akr-recap-card">
-            <div class="akr-recap-header">
+        <div class="str-recap-card">
+            <div class="str-recap-header">
                 <span class="entry-avatar">@player.Emoji</span>
                 <span class="entry-name">@player.Name</span>
-                <span class="akr-recap-total">@detail.Total pts</span>
+                <span class="str-recap-total">@definition.CalculateTotal(detail) pts</span>
             </div>
-            <div class="akr-recap-row"><span>Carrières</span><span>@detail.Carrieres.Multiplicateur × @detail.Carrieres.Quartiers = @detail.Carrieres.Subtotal</span></div>
-            <div class="akr-recap-row"><span>Habitations</span><span>@detail.Habitations.Multiplicateur × @detail.Habitations.Quartiers = @detail.Habitations.Subtotal</span></div>
-            <div class="akr-recap-row"><span>Marchés</span><span>@detail.Marches.Multiplicateur × @detail.Marches.Quartiers = @detail.Marches.Subtotal</span></div>
-            <div class="akr-recap-row"><span>Casernes</span><span>@detail.Casernes.Multiplicateur × @detail.Casernes.Quartiers = @detail.Casernes.Subtotal</span></div>
-            <div class="akr-recap-row"><span>Jardins</span><span>@detail.Jardins.Multiplicateur × @detail.Jardins.Quartiers = @detail.Jardins.Subtotal</span></div>
-            <div class="akr-recap-row"><span>Pierres restantes</span><span>@detail.PierresRestantes</span></div>
+            @foreach (var category in definition.Categories)
+            {
+                <div class="str-recap-row"><span>@category.Label</span><span>@FormatCategoryValue(category, detail.GetValue(category.Key))</span></div>
+            }
         </div>
     }
 }
@@ -153,4 +153,12 @@ else
     {
         return leaderboard.FirstOrDefault(l => l.PlayerId == playerId)?.TotalScore ?? 0;
     }
+
+    private static string FormatCategoryValue(CategoryDefinition category, CategoryValue value) => category.Shape switch
+    {
+        CategoryInputShape.FreeValue => value.A.ToString(),
+        CategoryInputShape.MultiplierByCount => $"{value.A} × {value.B} = {value.A * value.B}",
+        CategoryInputShape.Achieved => value.A != 0 ? $"✓ {category.FixedPoints} pts" : "—",
+        _ => ""
+    };
 }

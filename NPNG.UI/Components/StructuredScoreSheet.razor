@@ -1,0 +1,225 @@
+@using System.Collections.Immutable
+@using NPNG.Domain.Services
+
+<div class="entry-panel">
+    @{
+        var orderedPlayers = Players.OrderBy(p => p.DisplayOrder).ToList();
+        var sections = Definition.Categories.GroupBy(c => c.SectionKey).ToList();
+    }
+
+    @if (Definition.LayoutStyle == StructuredLayoutStyle.Table)
+    {
+        var columnCount = orderedPlayers.Count + 1;
+
+        <div class="str-table-wrap">
+            <table class="str-table">
+                <colgroup>
+                    <col class="str-table-label-col-def" />
+                    @foreach (var _ in orderedPlayers)
+                    {
+                        <col />
+                    }
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="str-table-label-col"></th>
+                        @foreach (var player in orderedPlayers)
+                        {
+                            <th>@player.Emoji<br />@player.Name</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var section in sections)
+                    {
+                        var bonus = Definition.GetSectionBonus(section.Key);
+
+                        if (section.Key is not null)
+                        {
+                            <tr class="str-table-section-row">
+                                <td colspan="@columnCount">
+                                    <span class="str-section-title">@section.Key</span>
+                                    @if (bonus is not null)
+                                    {
+                                        <span class="str-section-bonus">Bonus +@bonus.Points pts dès @bonus.Threshold</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+
+                        @foreach (var category in section)
+                        {
+                            <tr>
+                                <td class="str-table-label-col" style="border-left-color: @(category.AccentColor ?? "var(--accent)")">
+                                    @if (category.Icon is not null)
+                                    {
+                                        <span class="str-label-icon">@category.Icon</span>
+                                    }
+                                    @category.Label
+                                </td>
+                                @foreach (var player in orderedPlayers)
+                                {
+                                    <td>
+                                        <StructuredCategoryCell Category="category"
+                                            Value="GetValue(player.PlayerId, category.Key)"
+                                            OnChanged="@((CategoryValue v) => UpdateValue(player.PlayerId, category.Key, v))" />
+                                    </td>
+                                }
+                            </tr>
+                        }
+
+                        @if (bonus is not null)
+                        {
+                            <tr class="str-table-progress-row">
+                                <td class="str-table-label-col">Progression</td>
+                                @foreach (var player in orderedPlayers)
+                                {
+                                    var sectionTotal = Definition.SectionTotal(section.Key, GetDetail(player.PlayerId));
+                                    var reached = sectionTotal >= bonus.Threshold;
+                                    <td class="@(reached ? "reached" : "")">@sectionTotal / @bonus.Threshold @(reached ? "✓" : "")</td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="str-table-total-row">
+                        <td class="str-table-label-col">Total</td>
+                        @foreach (var player in orderedPlayers)
+                        {
+                            <td>@Definition.CalculateTotal(GetDetail(player.PlayerId)) pts</td>
+                        }
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+    else
+    {
+        @foreach (var section in sections)
+        {
+            var bonus = Definition.GetSectionBonus(section.Key);
+
+            <div class="str-section-group">
+                @if (section.Key is not null)
+                {
+                    <div class="str-section-header">
+                        <span class="str-section-title">@section.Key</span>
+                        @if (bonus is not null)
+                        {
+                            <span class="str-section-bonus">Bonus +@bonus.Points pts dès @bonus.Threshold</span>
+                        }
+                    </div>
+                }
+
+                @foreach (var category in section)
+                {
+                    <div class="str-category-section" style="border-left-color: @(category.AccentColor ?? "var(--accent)")">
+                        <p class="str-category-title" style="color: @(category.AccentColor ?? "var(--accent-fg)")">
+                            @if (category.Icon is not null)
+                            {
+                                <span class="str-label-icon">@category.Icon</span>
+                            }
+                            @category.Label
+                        </p>
+
+                        @if (category.Shape == CategoryInputShape.MultiplierByCount)
+                        {
+                            <div class="str-cat-header">
+                                <span class="str-cat-header-label-spacer"></span>
+                                <span class="str-cat-header-col">Mult.</span>
+                                <span class="str-cat-header-sep"></span>
+                                <span class="str-cat-header-col">Tuiles</span>
+                                <span class="str-cat-header-total-spacer"></span>
+                            </div>
+                        }
+
+                        @foreach (var player in orderedPlayers)
+                        {
+                            <div class="str-cat-row">
+                                <span class="str-cat-label">@player.Emoji @player.Name</span>
+                                <StructuredCategoryCell Category="category"
+                                    Value="GetValue(player.PlayerId, category.Key)"
+                                    OnChanged="@((CategoryValue v) => UpdateValue(player.PlayerId, category.Key, v))" />
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (bonus is not null)
+                {
+                    <div class="str-category-section str-section-progress">
+                        @foreach (var player in orderedPlayers)
+                        {
+                            var sectionTotal = Definition.SectionTotal(section.Key, GetDetail(player.PlayerId));
+                            var reached = sectionTotal >= bonus.Threshold;
+                            <div class="str-progress-row @(reached ? "reached" : "")">
+                                <span class="str-progress-label">@player.Emoji @player.Name</span>
+                                <span class="str-progress-value">@sectionTotal / @bonus.Threshold @(reached ? "✓" : "")</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="str-category-section">
+            @foreach (var player in orderedPlayers)
+            {
+                <div class="str-total-row">
+                    <span class="entry-avatar">@player.Emoji</span>
+                    <span class="entry-name">@player.Name</span>
+                    <span class="str-player-total">@Definition.CalculateTotal(GetDetail(player.PlayerId)) pts</span>
+                </div>
+            }
+        </div>
+    }
+
+    <button class="validate-btn" @onclick="Submit">✓ &nbsp;Terminer la partie</button>
+</div>
+
+@code {
+    [Parameter]
+    public StructuredScoringDefinition Definition { get; set; } = null!;
+
+    [Parameter]
+    public ImmutableArray<SessionPlayer> Players { get; set; } = ImmutableArray<SessionPlayer>.Empty;
+
+    [Parameter]
+    public ImmutableArray<ScoreEntry> ExistingScores { get; set; } = ImmutableArray<ScoreEntry>.Empty;
+
+    [Parameter]
+    public EventCallback<IReadOnlyDictionary<Guid, StructuredScoreDetail>> OnSubmit { get; set; }
+
+    private readonly Dictionary<Guid, StructuredScoreDetail> details = new();
+
+    protected override void OnParametersSet()
+    {
+        foreach (var player in Players)
+        {
+            if (!details.ContainsKey(player.PlayerId))
+            {
+                var existing = ExistingScores.FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == GameStateService.StructuredScoringRound);
+                details[player.PlayerId] = existing?.StructuredDetail ?? StructuredScoreDetail.Empty;
+            }
+        }
+    }
+
+    private StructuredScoreDetail GetDetail(Guid playerId) => details.GetValueOrDefault(playerId, StructuredScoreDetail.Empty);
+
+    private CategoryValue GetValue(Guid playerId, string categoryKey) => GetDetail(playerId).GetValue(categoryKey);
+
+    private void UpdateValue(Guid playerId, string categoryKey, CategoryValue value)
+    {
+        var detail = GetDetail(playerId);
+        details[playerId] = detail with { Categories = detail.Categories.SetItem(categoryKey, value) };
+    }
+
+    private async Task Submit()
+    {
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(details);
+        }
+    }
+}

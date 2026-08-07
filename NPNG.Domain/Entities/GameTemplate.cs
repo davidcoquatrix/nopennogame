@@ -31,8 +31,13 @@ public record GameRules(
 /// <summary>
 /// Représente le modèle de base d'un jeu (ses règles, son type de score).
 /// </summary>
+/// <param name="StructuredKind">
+/// Identifie le jeu structuré (ex: Akropolis, Yams) quand <see cref="ScoreType"/> vaut
+/// <see cref="ScoreType.Structured"/> ; sans signification sinon.
+/// </param>
 public record GameTemplate(
     Guid Id,
     string Name,
     ScoreType ScoreType,
-    GameRules? Rules = null);
+    GameRules? Rules = null,
+    StructuredGameKind? StructuredKind = null);

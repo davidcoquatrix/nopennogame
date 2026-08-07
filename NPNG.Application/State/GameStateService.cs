@@ -323,13 +323,13 @@ public class GameStateService
     /// Ajoute ou met à jour un score pour un joueur lors d'une manche (Gère la saisie rapide et le Time Travel).
     /// </summary>
     public Task RecordScoreAsync(Guid playerId, int round, int value) =>
-        RecordScoreAsync(playerId, round, value, akropolisDetail: null);
+        RecordScoreAsync(playerId, round, value, structuredDetail: null);
 
     /// <summary>
     /// Ajoute ou met à jour un score pour un joueur lors d'une manche, avec le détail structuré
-    /// optionnel (ex: Akropolis) associé (Gère la saisie rapide et le Time Travel).
+    /// optionnel (ex: Akropolis, Yams) associé (Gère la saisie rapide et le Time Travel).
     /// </summary>
-    public async Task RecordScoreAsync(Guid playerId, int round, int value, AkropolisScoreDetail? akropolisDetail)
+    public async Task RecordScoreAsync(Guid playerId, int round, int value, StructuredScoreDetail? structuredDetail)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active)
         {
@@ -342,13 +342,13 @@ public class GameStateService
         if (existingScore is null)
         {
             // Nouveau score
-            var newEntry = new ScoreEntry(Guid.NewGuid(), CurrentSession.Id, playerId, round, value, akropolisDetail);
+            var newEntry = new ScoreEntry(Guid.NewGuid(), CurrentSession.Id, playerId, round, value, structuredDetail);
             newScores = CurrentSession.Scores.Add(newEntry);
         }
         else
         {
             // Modification (Time Travel)
-            var updatedEntry = existingScore with { Value = value, AkropolisDetail = akropolisDetail };
+            var updatedEntry = existingScore with { Value = value, StructuredDetail = structuredDetail };
             newScores = CurrentSession.Scores.Replace(existingScore, updatedEntry);
         }
 
@@ -377,21 +377,23 @@ public class GameStateService
     }
 
     /// <summary>
-    /// Round fixe unique utilisé pour les jeux Structured (ex: Akropolis), qui n'ont pas de notion de tour.
+    /// Round fixe unique utilisé pour les jeux Structured (ex: Akropolis, Yams), qui n'ont pas de notion de tour.
     /// </summary>
-    public const int AkropolisScoringRound = 1;
+    public const int StructuredScoringRound = 1;
 
     /// <summary>
-    /// Enregistre le détail structuré de fin de partie (ex: Akropolis) pour chaque joueur,
+    /// Enregistre le détail structuré de fin de partie (ex: Akropolis, Yams) pour chaque joueur,
     /// au round fixe unique, puis termine la partie immédiatement (pas de notion de tour).
     /// </summary>
-    public async Task SubmitStructuredScoreAndFinishAsync(IReadOnlyDictionary<Guid, AkropolisScoreDetail> detailsByPlayer)
+    public async Task SubmitStructuredScoreAndFinishAsync(IReadOnlyDictionary<Guid, StructuredScoreDetail> detailsByPlayer)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active) return;
 
+        var definition = StructuredScoringCatalogue.Get(CurrentSession.Template.StructuredKind!.Value);
+
         foreach (var (playerId, detail) in detailsByPlayer)
         {
-            await RecordScoreAsync(playerId, AkropolisScoringRound, detail.Total, detail);
+            await RecordScoreAsync(playerId, StructuredScoringRound, definition.CalculateTotal(detail), detail);
         }
 
         await FinishSessionAsync();

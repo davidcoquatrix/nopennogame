@@ -1,0 +1,244 @@
+/* ─── SHARED (both layouts) ─── */
+
+.str-section-title {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--txt);
+}
+
+.str-section-bonus {
+    margin-left: 8px;
+    font-size: .62rem;
+    color: var(--sub);
+    font-family: var(--font-ui);
+}
+
+.str-label-icon {
+    margin-right: 4px;
+}
+
+/* ─── CARDS LAYOUT (ex: Akropolis) — one card per category, one row per player ─── */
+
+.str-section-group {
+    margin-bottom: 4px;
+}
+
+.str-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 4px 2px 8px;
+}
+
+.str-category-section {
+    background: var(--input);
+    border: 1px solid var(--bdr-md);
+    border-left: 3px solid var(--accent);
+    border-radius: 14px;
+    padding: 10px 10px 10px 9px;
+    margin-bottom: 9px;
+}
+
+.str-category-title {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent-fg);
+    margin: 0 0 8px 2px;
+}
+
+/* En-têtes de colonnes "Mult." / "Tuiles", alignés avec les inputs de StructuredCategoryCell */
+.str-cat-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.str-cat-header-label-spacer {
+    flex: 1;
+}
+
+.str-cat-header-col {
+    width: 42px;
+    text-align: center;
+    font-size: .56rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--sub);
+}
+
+.str-cat-header-sep {
+    width: 14px;
+}
+
+.str-cat-header-total-spacer {
+    width: 34px;
+}
+
+.str-cat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.str-cat-row:last-child {
+    margin-bottom: 0;
+}
+
+.str-cat-label {
+    flex: 1;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--txt);
+}
+
+.str-total-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 6px;
+}
+
+.str-total-row:last-child {
+    margin-bottom: 0;
+}
+
+.str-player-total {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--txt);
+}
+
+.str-section-progress {
+    border-left-color: var(--sub);
+}
+
+.str-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: .74rem;
+    color: var(--sub);
+}
+
+.str-progress-row:last-child {
+    margin-bottom: 0;
+}
+
+.str-progress-value {
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.str-progress-row.reached {
+    color: var(--success);
+}
+
+/* ─── TABLE LAYOUT (ex: Yams) — categories × players grid, official-scoresheet style ─── */
+
+.str-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--input);
+    border: 1px solid var(--bdr-md);
+    border-radius: 14px;
+    margin-bottom: 12px;
+}
+
+.str-table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+/* Fixed layout needs explicit column widths up front so content changes (e.g. toggling
+   a category on/off) never trigger a column-width recalculation that shifts the page. */
+.str-table-label-col-def {
+    width: 100px;
+}
+
+.str-table th,
+.str-table td {
+    padding: 5px 6px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    min-width: 56px;
+}
+
+.str-table thead th {
+    font-family: var(--font-ui);
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--sub);
+    white-space: nowrap;
+    padding-top: 7px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--bdr-md);
+}
+
+.str-table-label-col {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--input);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-ui);
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--txt);
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+}
+
+.str-table tbody tr:not(.str-table-section-row):not(.str-table-progress-row) td {
+    border-bottom: 1px solid var(--bdr);
+}
+
+.str-table-section-row td {
+    background: var(--raised);
+    text-align: left;
+    padding: 5px 8px;
+    font-family: var(--font-ui);
+    position: static;
+}
+
+.str-table-progress-row td {
+    font-size: .64rem;
+    color: var(--sub);
+    border-bottom: 1px solid var(--bdr);
+}
+
+.str-table-progress-row .str-table-label-col {
+    font-size: .66rem;
+    font-weight: 500;
+    color: var(--sub);
+}
+
+.str-table-progress-row td.reached {
+    color: var(--success);
+    font-weight: 700;
+}
+
+.str-table-total-row td {
+    font-weight: 700;
+    color: var(--txt);
+    border-top: 2px solid var(--bdr-md);
+    padding-top: 6px;
+    padding-bottom: 7px;
+}
