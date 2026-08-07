@@ -76,12 +76,12 @@ else
 <p class="section-label">Thème</p>
 <div class="form-card">
     <div class="toggle-row">
-        <button class="toggle-opt @(theme == Application.Models.ThemePreference.System ? "on" : "")"
-                @onclick='() => SetTheme(Application.Models.ThemePreference.System)'>🌓 Système</button>
-        <button class="toggle-opt @(theme == Application.Models.ThemePreference.Light ? "on" : "")"
-                @onclick='() => SetTheme(Application.Models.ThemePreference.Light)'>☀️ Clair</button>
-        <button class="toggle-opt @(theme == Application.Models.ThemePreference.Dark ? "on" : "")"
-                @onclick='() => SetTheme(Application.Models.ThemePreference.Dark)'>🌙 Sombre</button>
+        <button class="toggle-opt @(theme == ThemePreference.System ? "on" : "")"
+                @onclick='() => SetTheme(ThemePreference.System)'>🌓 Système</button>
+        <button class="toggle-opt @(theme == ThemePreference.Light ? "on" : "")"
+                @onclick='() => SetTheme(ThemePreference.Light)'>☀️ Clair</button>
+        <button class="toggle-opt @(theme == ThemePreference.Dark ? "on" : "")"
+                @onclick='() => SetTheme(ThemePreference.Dark)'>🌙 Sombre</button>
     </div>
 </div>
 
@@ -154,13 +154,13 @@ else
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
     [Inject] public GameStateService GameState { get; set; } = default!;
-    [Inject] public Application.Interfaces.IPlayerProfileRepository ProfileRepository { get; set; } = default!;
-    [Inject] public Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
-    [Inject] public Application.Interfaces.IThemeService ThemeService { get; set; } = default!;
-    [Inject] public Application.Interfaces.IAppDataResetService DataReset { get; set; } = default!;
+    [Inject] public IPlayerProfileRepository ProfileRepository { get; set; } = default!;
+    [Inject] public IGameCatalogueService GameCatalogue { get; set; } = default!;
+    [Inject] public IThemeService ThemeService { get; set; } = default!;
+    [Inject] public IAppDataResetService DataReset { get; set; } = default!;
 
     private List<Player> favoritePlayers = new();
-    private List<Application.Models.GameCatalogueItem> customGames = new();
+    private List<GameCatalogueItem> customGames = new();
 
     private Guid? editingFavoriteId;
     private string editName = "";
@@ -169,13 +169,13 @@ else
     private string newFavoriteName = "";
     private string newFavoriteEmoji = "🎯";
 
-    private Application.Models.ThemePreference theme = Application.Models.ThemePreference.System;
+    private ThemePreference theme = ThemePreference.System;
 
-    private Application.Models.GameCatalogueItem? gameToEdit;
+    private GameCatalogueItem? gameToEdit;
     private bool showOverwriteConfirm = false;
     private bool showResetConfirm = false;
 
-    private Application.Models.GameCatalogueItem? gameToDelete;
+    private GameCatalogueItem? gameToDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -194,7 +194,7 @@ else
     {
         var games = await GameCatalogue.GetAvailableGamesAsync();
         customGames = games
-            .Where(g => g.IsCustom && g.Id != Application.Models.GameCatalogueItem.CustomGameTemplateId)
+            .Where(g => g.IsCustom && g.Id != GameCatalogueItem.CustomGameTemplateId)
             .ToList();
     }
 
@@ -234,7 +234,7 @@ else
         await LoadFavoritesAsync();
     }
 
-    private void TryDeleteCustomGame(Application.Models.GameCatalogueItem game)
+    private void TryDeleteCustomGame(GameCatalogueItem game)
     {
         gameToDelete = game;
     }
@@ -253,7 +253,7 @@ else
         await LoadCustomGamesAsync();
     }
 
-    private void TryEditCustomGame(Application.Models.GameCatalogueItem game)
+    private void TryEditCustomGame(GameCatalogueItem game)
     {
         gameToEdit = game;
         if (GameState.CurrentSession != null && GameState.CurrentSession.Status == SessionStatus.Active)
@@ -281,12 +281,12 @@ else
         gameToEdit = null;
     }
 
-    private void NavigateToEditGame(Application.Models.GameCatalogueItem game)
+    private void NavigateToEditGame(GameCatalogueItem game)
     {
         NavigationManager.NavigateTo($"custom-game?baseGameId={game.Id}");
     }
 
-    private async Task SetTheme(Application.Models.ThemePreference preference)
+    private async Task SetTheme(ThemePreference preference)
     {
         theme = preference;
         await ThemeService.SetPreferenceAsync(preference);

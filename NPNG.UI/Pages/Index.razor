@@ -33,7 +33,7 @@
 <p class="section-label">Jeux disponibles</p>
 
 <div class="catalogue" role="listbox" aria-label="Sélection du jeu">
-    @foreach (var game in games.Where(g => g.Id != Application.Models.GameCatalogueItem.CustomGameTemplateId))
+    @foreach (var game in games.Where(g => g.Id != GameCatalogueItem.CustomGameTemplateId))
     {
         var isSelected = selectedGame?.Id == game.Id;
         
@@ -53,7 +53,7 @@
     }
 
     @{
-        var createCustomGame = games.FirstOrDefault(g => g.Id == Application.Models.GameCatalogueItem.CustomGameTemplateId);
+        var createCustomGame = games.FirstOrDefault(g => g.Id == GameCatalogueItem.CustomGameTemplateId);
         if (createCustomGame != null)
         {
             var isSelected = selectedGame?.Id == createCustomGame.Id;
@@ -126,10 +126,10 @@
 @code {
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
     [Inject] public GameStateService GameState { get; set; } = default!;
-    [Inject] public Application.Interfaces.IGameCatalogueService GameCatalogue { get; set; } = default!;
+    [Inject] public IGameCatalogueService GameCatalogue { get; set; } = default!;
 
-    private IEnumerable<Application.Models.GameCatalogueItem> games = Array.Empty<Application.Models.GameCatalogueItem>();
-    private Application.Models.GameCatalogueItem? selectedGame;
+    private IEnumerable<GameCatalogueItem> games = Array.Empty<GameCatalogueItem>();
+    private GameCatalogueItem? selectedGame;
     private bool showOverwriteConfirm = false;
     private bool showAbandonConfirm = false;
 
@@ -159,12 +159,12 @@
         GameState.OnStateChanged -= StateHasChanged;
     }
 
-    private void SelectGame(Application.Models.GameCatalogueItem game)
+    private void SelectGame(GameCatalogueItem game)
     {
         selectedGame = game;
     }
 
-    private async Task SelectAndContinue(Application.Models.GameCatalogueItem game)
+    private async Task SelectAndContinue(GameCatalogueItem game)
     {
         selectedGame = game;
         await TryContinueToSetup();
@@ -209,7 +209,7 @@
         }
         else
         {
-            _ = ConfirmAndContinue();
+            await ConfirmAndContinue();
         }
     }
 
@@ -223,7 +223,7 @@
         showOverwriteConfirm = false;
         if (selectedGame != null)
         {
-            if (selectedGame.IsCustom && selectedGame.Id == Application.Models.GameCatalogueItem.CustomGameTemplateId)
+            if (selectedGame.IsCustom && selectedGame.Id == GameCatalogueItem.CustomGameTemplateId)
             {
                 NavigationManager.NavigateTo($"custom-game");
             }

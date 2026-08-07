@@ -99,23 +99,24 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 *Full-repo review conducted after the Team normalization refactor. The `ResumeSessionAsync` bug below (and its missing test coverage) has already been fixed; everything else is deliberately left for later — not urgent, but worth tracking rather than forgetting.*
 
 ### Architecture / consistency
-- [ ] **Missing `ILocalStorageService` abstraction.** `ARCHITECTURE.md` (section 1.2) names it as the intended JS-interop wrapper for LocalStorage, but it was never built. Instead, `LocalStorageSessionRepository`, `LocalStoragePlayerProfileRepository`, and `LocalStorageGameCatalogueService` each hand-roll identical `JsonSerializerOptions` plus the same get/set/try-catch-deserialize boilerplate (and `LocalStoragePlayerProfileRepository`/`LocalStorageGameCatalogueService` additionally duplicate the same "load all, mutate list, serialize all, save" shape across every Add/Update/Remove method). Extracting the shared abstraction would remove all of this at once.
-- [ ] **`_Imports.razor` doesn't import `NPNG.Application.Models`/`NPNG.Application.Interfaces`** the way it does `NPNG.Domain.*`, forcing `Index.razor`, `Settings.razor`, `CustomGame/Setup.razor` to fully-qualify `Application.Models.GameCatalogueItem`, `Application.Interfaces.IGameCatalogueService`, etc. repeatedly.
-- [ ] **`GameStateService` is 600+ lines / ~25 public methods** spanning session lifecycle, player setup, team management, scoring, and round progression. Each method stays small, but it's worth watching against `STANDARDS.md`'s SRP guidance if it keeps growing — a candidate split would be team management as its own concern.
+- [x] **Missing `ILocalStorageService` abstraction.** `ARCHITECTURE.md` (section 1.2) names it as the intended JS-interop wrapper for LocalStorage, but it was never built. Instead, `LocalStorageSessionRepository`, `LocalStoragePlayerProfileRepository`, and `LocalStorageGameCatalogueService` each hand-rolled identical `JsonSerializerOptions` plus the same get/set/try-catch-deserialize boilerplate.
+  - *Implemented as `NPNG.Application.Interfaces.ILocalStorageService` (`GetItemAsync<T>`/`SetItemAsync<T>`/`RemoveItemAsync`/`GetAllItemsAsync<T>`) with a single JS-interop implementation, `NPNG.Infrastructure.Services.LocalStorageService`, registered in `Program.cs`. The three repos now depend on it instead of `IJSRuntime` directly and lost all their JSON boilerplate. `LocalStorageThemeService`/`LocalStorageAppDataResetService` were left untouched — they don't fit the JSON get/set shape (custom JS helper / raw key enumeration).*
+- [x] **`_Imports.razor` doesn't import `NPNG.Application.Models`/`NPNG.Application.Interfaces`** the way it does `NPNG.Domain.*`, forcing `Index.razor`, `Settings.razor`, `CustomGame/Setup.razor` to fully-qualify `Application.Models.GameCatalogueItem`, `Application.Interfaces.IGameCatalogueService`, etc. repeatedly.
+- [ ] **`GameStateService` is 600+ lines / ~25 public methods** spanning session lifecycle, player setup, team management, scoring, and round progression. Each method stays small, but it's worth watching against `STANDARDS.md`'s SRP guidance if it keeps growing — a candidate split would be team management as its own concern. *(Left as-is — advisory only, no active pain yet.)*
 
 ### Duplication
-- [ ] **`AkropolisScoreSheet.razor`**: 5 near-identical ~15-line blocks (Carrières/Habitations/Marchés/Casernes/Jardins), differing only by label and which `AkropolisCategoryScore` property they bind. Should be a loop over a small config list instead.
+- [x] **`AkropolisScoreSheet.razor`**: 5 near-identical ~15-line blocks (Carrières/Habitations/Marchés/Casernes/Jardins), differing only by label and which `AkropolisCategoryScore` property they bind. Replaced with a loop over a `CategoryConfig` list (title, CSS class, selector, updater).
 
 ### Dead code
-- [ ] **Unused `IJSRuntime` injections** in `Players/Setup.razor`, `CustomGame/Setup.razor`, and `Session/Active.razor` — likely left behind by the drag-and-drop removal (`5f0d873`). Safe to delete.
+- [x] **Unused `IJSRuntime` injections** in `Players/Setup.razor`, `CustomGame/Setup.razor`, and `Session/Active.razor` — likely left behind by the drag-and-drop removal (`5f0d873`). Deleted.
 
 ### Minor polish
-- [ ] `LocalStorageGameCatalogueService.cs`: redundant comment restating the literal directly above it (`true); // Set to true for custom games`) — against the `STANDARDS.md` rule on comments.
-- [ ] `Index.razor.TryContinueToSetup()`: `_ = ConfirmAndContinue();` discards the task inside an already-`async Task` method — should just `await` it, otherwise an exception from `GameState.InitializeNewSessionAsync` is silently swallowed.
-- [ ] `LocalStorageGameCatalogueService.GetCustomGamesAsync`'s defensive `IsCustom = true` re-coercion is a migration shim for a historical bug ("pour les parties sauvegardées avant la correction du bug") — worth checking whether it's still needed.
+- [x] `LocalStorageGameCatalogueService.cs`: redundant comment restating the literal directly above it (`true); // Set to true for custom games`) — against the `STANDARDS.md` rule on comments. Removed.
+- [x] `Index.razor.TryContinueToSetup()`: `_ = ConfirmAndContinue();` discarded the task inside an already-`async Task` method — now `await`ed, so an exception from `GameState.InitializeNewSessionAsync` no longer gets silently swallowed.
+- [x] `LocalStorageGameCatalogueService.GetCustomGamesAsync`'s defensive `IsCustom = true` re-coercion is a migration shim for a historical bug — checked: `SaveCustomGameAsync` always writes `IsCustom = true` today, so the shim only matters for pre-fix data still sitting in a user's local storage. Zero-cost to keep, so left in place.
 
 ### Test coverage
-- [ ] `MovePlayerUpAsync`/`MovePlayerDownAsync`/`SetFirstPlayerManuallyAsync`/`FinishSessionAsync`/`AbandonSessionAsync` have no dedicated unit test (low risk, but noted for completeness).
+- [x] `MovePlayerUpAsync`/`MovePlayerDownAsync`/`SetFirstPlayerManuallyAsync`/`FinishSessionAsync`/`AbandonSessionAsync` had no dedicated unit test. Added (including no-op/idempotency cases for Finish/Abandon and boundary cases for Move).
 
 ---
 

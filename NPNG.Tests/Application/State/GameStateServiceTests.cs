@@ -101,6 +101,102 @@ public class GameStateServiceTests
     }
 
     [Fact]
+    public async Task SetFirstPlayerManuallyAsync_ShouldSetOnlyGivenPlayerAsFirst()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000"); // Premier par défaut
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF");
+        var charlieId = _sut.CurrentSession!.Players.Single(p => p.Name == "Charlie").PlayerId;
+
+        // Act
+        await _sut.SetFirstPlayerManuallyAsync(charlieId);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        Assert.True(players.Single(p => p.Name == "Charlie").IsFirstPlayer);
+        Assert.False(players.Single(p => p.Name == "Alice").IsFirstPlayer);
+        Assert.False(players.Single(p => p.Name == "Bob").IsFirstPlayer);
+    }
+
+    [Fact]
+    public async Task MovePlayerUpAsync_ShouldSwapWithPreviousPlayer()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000"); // 0
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");   // 1
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF"); // 2
+        var bobId = _sut.CurrentSession!.Players.Single(p => p.Name == "Bob").PlayerId;
+
+        // Act
+        await _sut.MovePlayerUpAsync(bobId);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        Assert.Equal(0, players.Single(p => p.Name == "Bob").DisplayOrder);
+        Assert.Equal(1, players.Single(p => p.Name == "Alice").DisplayOrder);
+        Assert.Equal(2, players.Single(p => p.Name == "Charlie").DisplayOrder);
+    }
+
+    [Fact]
+    public async Task MovePlayerUpAsync_WhenAlreadyFirst_ShouldNotChangeOrder()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000"); // 0
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");   // 1
+        var aliceId = _sut.CurrentSession!.Players.Single(p => p.Name == "Alice").PlayerId;
+
+        // Act
+        await _sut.MovePlayerUpAsync(aliceId);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        Assert.Equal(0, players.Single(p => p.Name == "Alice").DisplayOrder);
+        Assert.Equal(1, players.Single(p => p.Name == "Bob").DisplayOrder);
+    }
+
+    [Fact]
+    public async Task MovePlayerDownAsync_ShouldSwapWithNextPlayer()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000"); // 0
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");   // 1
+        await _sut.AddPlayerToSetupAsync("Charlie", "🐰", "#0000FF"); // 2
+        var bobId = _sut.CurrentSession!.Players.Single(p => p.Name == "Bob").PlayerId;
+
+        // Act
+        await _sut.MovePlayerDownAsync(bobId);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        Assert.Equal(0, players.Single(p => p.Name == "Alice").DisplayOrder);
+        Assert.Equal(1, players.Single(p => p.Name == "Charlie").DisplayOrder);
+        Assert.Equal(2, players.Single(p => p.Name == "Bob").DisplayOrder);
+    }
+
+    [Fact]
+    public async Task MovePlayerDownAsync_WhenAlreadyLast_ShouldNotChangeOrder()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000"); // 0
+        await _sut.AddPlayerToSetupAsync("Bob", "🐶", "#00FF00");   // 1
+        var bobId = _sut.CurrentSession!.Players.Single(p => p.Name == "Bob").PlayerId;
+
+        // Act
+        await _sut.MovePlayerDownAsync(bobId);
+
+        // Assert
+        var players = _sut.CurrentSession.Players;
+        Assert.Equal(0, players.Single(p => p.Name == "Alice").DisplayOrder);
+        Assert.Equal(1, players.Single(p => p.Name == "Bob").DisplayOrder);
+    }
+
+    [Fact]
     public async Task StartSessionAsync_ShouldChangeStatusToActive()
     {
         // Arrange
@@ -497,5 +593,73 @@ public class GameStateServiceTests
 
         // Assert
         Assert.Equal(SessionStatus.Finished, _sut.CurrentSession!.Status);
+    }
+
+    [Fact]
+    public async Task FinishSessionAsync_ShouldSetStatusFinishedAndRecordEndedAt()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+
+        // Act
+        await _sut.FinishSessionAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Finished, _sut.CurrentSession!.Status);
+        Assert.NotNull(_sut.CurrentSession.EndedAt);
+    }
+
+    [Fact]
+    public async Task FinishSessionAsync_WhenAlreadyFinished_ShouldBeNoOp()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+        await _sut.FinishSessionAsync();
+        var firstEndedAt = _sut.CurrentSession!.EndedAt;
+
+        // Act
+        await _sut.FinishSessionAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Finished, _sut.CurrentSession!.Status);
+        Assert.Equal(firstEndedAt, _sut.CurrentSession.EndedAt);
+    }
+
+    [Fact]
+    public async Task AbandonSessionAsync_ShouldSetStatusAbandonedAndRecordEndedAt()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+
+        // Act
+        await _sut.AbandonSessionAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Abandoned, _sut.CurrentSession!.Status);
+        Assert.NotNull(_sut.CurrentSession.EndedAt);
+    }
+
+    [Fact]
+    public async Task AbandonSessionAsync_WhenAlreadyAbandoned_ShouldBeNoOp()
+    {
+        // Arrange
+        await _sut.InitializeNewSessionAsync(CreateDummyTemplate());
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+        await _sut.AbandonSessionAsync();
+        var firstEndedAt = _sut.CurrentSession!.EndedAt;
+
+        // Act
+        await _sut.AbandonSessionAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Abandoned, _sut.CurrentSession!.Status);
+        Assert.Equal(firstEndedAt, _sut.CurrentSession.EndedAt);
     }
 }

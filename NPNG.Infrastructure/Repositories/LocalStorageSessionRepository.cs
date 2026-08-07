@@ -1,6 +1,4 @@
 using System.Collections.Immutable;
-using System.Text.Json;
-using Microsoft.JSInterop;
 using NPNG.Application.Interfaces;
 using NPNG.Domain.Entities;
 
@@ -10,92 +8,27 @@ namespace NPNG.Infrastructure.Repositories;
 /// Implémentation du repository de session utilisant le LocalStorage du navigateur via JSInterop.
 /// Respecte l'architecture : l'Infrastructure dépend de l'Application et du Domaine.
 /// </summary>
-public class LocalStorageSessionRepository(IJSRuntime jsRuntime) : ISessionRepository
+public class LocalStorageSessionRepository(ILocalStorageService localStorage) : ISessionRepository
 {
     private const string StorageKeyPrefix = "npng_session_";
-    
-    // Options de sérialisation pour gérer les constructeurs des records et l'immuabilité
-    private readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
 
-    public async Task SaveSessionAsync(Session session)
-    {
-        var key = $"{StorageKeyPrefix}{session.Id}";
-        var json = JsonSerializer.Serialize(session, _jsonOptions);
-        
-        // Appel natif à l'API javascript window.localStorage
-        await jsRuntime.InvokeVoidAsync("localStorage.setItem", key, json);
-    }
+    public Task SaveSessionAsync(Session session) =>
+        localStorage.SetItemAsync($"{StorageKeyPrefix}{session.Id}", session);
 
     public async Task<Session?> GetSessionAsync(Guid id)
     {
-        var key = $"{StorageKeyPrefix}{id}";
-        var json = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", key);
-
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
-
-        try
-        {
-            var session = JsonSerializer.Deserialize<Session>(json, _jsonOptions);
-            return session is null ? null : NormalizeLegacySession(session);
-        }
-        catch (JsonException)
-        {
-            // En cas de corruption des données dans le localStorage
-            return null;
-        }
+        var session = await localStorage.GetItemAsync<Session>($"{StorageKeyPrefix}{id}");
+        return session is null ? null : NormalizeLegacySession(session);
     }
 
     public async Task<IEnumerable<Session>> GetAllSessionsAsync()
     {
-        // Pour récupérer toutes les sessions, on utilise un petit bout de JS inline 
-        // pour filtrer les clés du localStorage qui commencent par notre préfixe.
-        var script = $$"""
-            (() => {
-                const sessions = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('{{StorageKeyPrefix}}')) {
-                        sessions.push(localStorage.getItem(key));
-                    }
-                }
-                return sessions;
-            })()
-            """;
-
-        var jsonArray = await jsRuntime.InvokeAsync<string[]>("eval", script);
-        
-        var sessions = new List<Session>();
-        foreach (var json in jsonArray)
-        {
-            try
-            {
-                var session = JsonSerializer.Deserialize<Session>(json, _jsonOptions);
-                if (session is not null)
-                {
-                    sessions.Add(NormalizeLegacySession(session));
-                }
-            }
-            catch (JsonException)
-            {
-                // Ignorer les entrées corrompues
-            }
-        }
-
-        return sessions.OrderByDescending(s => s.StartedAt);
+        var sessions = await localStorage.GetAllItemsAsync<Session>(StorageKeyPrefix);
+        return sessions.Select(NormalizeLegacySession).OrderByDescending(s => s.StartedAt);
     }
 
-    public async Task DeleteSessionAsync(Guid id)
-    {
-        var key = $"{StorageKeyPrefix}{id}";
-        await jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
-    }
+    public Task DeleteSessionAsync(Guid id) =>
+        localStorage.RemoveItemAsync($"{StorageKeyPrefix}{id}");
 
     /// <summary>
     /// Répare les sessions sérialisées avant l'introduction de Session.Teams : un ImmutableArray&lt;T&gt;

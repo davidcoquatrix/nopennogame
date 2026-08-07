@@ -13,6 +13,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // Injection des dépendances pour NPNG
+builder.Services.AddScoped<ILocalStorageService, NPNG.Infrastructure.Services.LocalStorageService>();
 builder.Services.AddScoped<ISessionRepository, LocalStorageSessionRepository>();
 builder.Services.AddScoped<IPlayerProfileRepository, LocalStoragePlayerProfileRepository>();
 builder.Services.AddScoped<IGameCatalogueService, NPNG.Infrastructure.Services.LocalStorageGameCatalogueService>();

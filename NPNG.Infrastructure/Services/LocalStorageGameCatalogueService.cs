@@ -1,5 +1,3 @@
-using System.Text.Json;
-using Microsoft.JSInterop;
 using NPNG.Application.Interfaces;
 using NPNG.Application.Models;
 using NPNG.Domain.Entities;
@@ -11,15 +9,9 @@ namespace NPNG.Infrastructure.Services;
 /// Implémentation du catalogue de jeux utilisant le LocalStorage pour les jeux personnalisés.
 /// Retourne les jeux de base + les jeux personnalisés sauvegardés par l'utilisateur.
 /// </summary>
-public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatalogueService
+public class LocalStorageGameCatalogueService(ILocalStorageService localStorage) : IGameCatalogueService
 {
     private const string CustomGamesKey = "npng_custom_games";
-
-    private readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
 
     private readonly List<GameCatalogueItem> _baseGames = new()
     {
@@ -50,12 +42,12 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
             template.Id,
             emoji,
             template.Name,
-            description, 
-            winRule, 
-            color, 
-            template.ScoreType, 
-            template.Rules, 
-            true); // Set to true for custom games
+            description,
+            winRule,
+            color,
+            template.ScoreType,
+            template.Rules,
+            true);
 
         // Update if exists, else add
         var existingIndex = customGames.FindIndex(g => g.Id == template.Id);
@@ -68,8 +60,7 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
             customGames.Add(item);
         }
 
-        var json = JsonSerializer.Serialize(customGames, _jsonOptions);
-        await jsRuntime.InvokeVoidAsync("localStorage.setItem", CustomGamesKey, json);
+        await localStorage.SetItemAsync(CustomGamesKey, customGames);
     }
 
     public async Task DeleteCustomGameAsync(Guid id)
@@ -80,29 +71,15 @@ public class LocalStorageGameCatalogueService(IJSRuntime jsRuntime) : IGameCatal
         if (itemToRemove != null)
         {
             customGames.Remove(itemToRemove);
-            var json = JsonSerializer.Serialize(customGames, _jsonOptions);
-            await jsRuntime.InvokeVoidAsync("localStorage.setItem", CustomGamesKey, json);
+            await localStorage.SetItemAsync(CustomGamesKey, customGames);
         }
     }
 
     private async Task<IEnumerable<GameCatalogueItem>> GetCustomGamesAsync()
     {
-        var json = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", CustomGamesKey);
+        var items = await localStorage.GetItemAsync<List<GameCatalogueItem>>(CustomGamesKey);
 
-        if (string.IsNullOrEmpty(json))
-        {
-            return Enumerable.Empty<GameCatalogueItem>();
-        }
-
-        try
-        {
-            var items = JsonSerializer.Deserialize<List<GameCatalogueItem>>(json, _jsonOptions) ?? new List<GameCatalogueItem>();
-            // Forcer IsCustom = true pour les parties sauvegardées avant la correction du bug
-            return items.Select(i => i with { IsCustom = true });
-        }
-        catch (JsonException)
-        {
-            return Enumerable.Empty<GameCatalogueItem>();
-        }
+        // Forcer IsCustom = true pour les parties sauvegardées avant la correction du bug
+        return (items ?? new List<GameCatalogueItem>()).Select(i => i with { IsCustom = true });
     }
 }
