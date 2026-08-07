@@ -67,6 +67,7 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 - [x] **Story 2.2: Advanced Custom Rules**
   - *As a Scorekeeper, I want to set score limits (e.g., "Game ends at 500 points") or round limits when creating a custom game.*
   - *Implemented in `CustomGame/Setup.razor` (score/round limit fields) and enforced in `GameStateService.AdvanceToNextRoundAsync`.*
+  - *The "Incrément par défaut des boutons" toggle (±1/±10, ±5/±50, Libre) on the same screen used to be pure decoration — it set a local `incrementType` string that nothing read. Wired up: `GameRules.ScoreIncrement` (`ScoreIncrementMode`, Domain enum) now flows through `ScoreInput.razor`'s new `Mode` parameter, which computes the actual ±step and, for "Libre", hides the quick buttons entirely so only keyboard entry remains. All 4 `ScoreInput` call sites (`Session/Active.razor`, `Session/History/Index.razor`, individual + team each) read it from `Template.Rules.ScoreIncrement`.*
 - [x] **Story 2.6: Save and Manage Custom Games**
   - *As a Scorekeeper, I want to be able to save a custom game configuration (name, scoring type, rules) so that I can reuse it later without having to recreate it.*
   - *As a Scorekeeper, I want to be able to delete a custom game that I previously saved, so that I can keep my game catalog clean.*

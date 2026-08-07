@@ -24,7 +24,8 @@ public record GameRules(
     FirstPlayerMechanic FirstPlayerMechanic = FirstPlayerMechanic.Sequential,
     int? MaxPlayers = null,
     int? MinPlayers = null,
-    TeamRules? Teams = null);
+    TeamRules? Teams = null,
+    ScoreIncrementMode ScoreIncrement = ScoreIncrementMode.OneAndTen);
 
 /// <summary>
 /// Représente le modèle de base d'un jeu (ses règles, son type de score).

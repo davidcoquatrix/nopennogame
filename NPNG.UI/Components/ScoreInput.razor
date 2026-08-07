@@ -1,9 +1,15 @@
 <div class="score-controls">
-    <button class="score-button lrg" @onclick="() => Adjust(-10)">−10</button>
-    <button class="score-button lrg" @onclick="() => Adjust(-1)">−1</button>
+    @if (Mode != ScoreIncrementMode.Free)
+    {
+        <button class="score-button lrg" @onclick="() => Adjust(-LargeStep)">−@LargeStep</button>
+        <button class="score-button lrg" @onclick="() => Adjust(-SmallStep)">−@SmallStep</button>
+    }
     <NumericCellInput Value="Value" CssClass="@($"score-value {InputClass}")" OnValueChanged="OnValueChanged" />
-    <button class="score-button slrg" @onclick="() => Adjust(1)">+1</button>
-    <button class="score-button slrg" @onclick="() => Adjust(10)">+10</button>
+    @if (Mode != ScoreIncrementMode.Free)
+    {
+        <button class="score-button slrg" @onclick="() => Adjust(SmallStep)">+@SmallStep</button>
+        <button class="score-button slrg" @onclick="() => Adjust(LargeStep)">+@LargeStep</button>
+    }
 </div>
 
 @code {
@@ -18,6 +24,12 @@
 
     [Parameter]
     public string InputClass { get; set; } = "";
+
+    [Parameter]
+    public ScoreIncrementMode Mode { get; set; } = ScoreIncrementMode.OneAndTen;
+
+    private int SmallStep => Mode == ScoreIncrementMode.FiveAndFifty ? 5 : 1;
+    private int LargeStep => Mode == ScoreIncrementMode.FiveAndFifty ? 50 : 10;
 
     private async Task Adjust(int amount)
     {

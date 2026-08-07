@@ -167,6 +167,7 @@ else
                     </div>
                     <ScoreInput
                         Value="@(currentTeamInputs.ContainsKey(teamId) ? currentTeamInputs[teamId] : 0)"
+                        Mode="@ScoreIncrement"
                         OnScoreAdjusted="@((int amount) => AdjustTeamScore(teamId, amount))"
                         OnValueChanged="@((int val) => OnTeamScoreInputChange(teamId, new ChangeEventArgs { Value = val }))" />
                 </div>
@@ -191,6 +192,7 @@ else
                     </div>
                     <ScoreInput
                         Value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
+                        Mode="@ScoreIncrement"
                         OnScoreAdjusted="@((int amount) => AdjustScore(player.PlayerId, amount))"
                         OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
                 </div>
@@ -210,6 +212,8 @@ else
     private List<TeamScore> teamLeaderboard = new();
 
     private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
+
+    private ScoreIncrementMode ScoreIncrement => GameState.CurrentSession?.Template.Rules?.ScoreIncrement ?? ScoreIncrementMode.OneAndTen;
 
     // Au tour 1 sans score saisi, tout le monde est à égalité à 0 — "meilleur" n'aurait aucun sens.
     private bool HasProgress => GameState.CurrentSession?.HasProgress == true;

@@ -155,6 +155,7 @@ else
                     <ScoreInput
                         InputClass="score-value-warn"
                         Value="@(tempScores.GetValueOrDefault(representativePlayerId, 0))"
+                        Mode="@ScoreIncrement"
                         OnScoreAdjusted="@((int amount) => AdjustTeamEditScore(teamId, amount))"
                         OnValueChanged="@((int val) => OnTeamScoreInputChange(teamId, new ChangeEventArgs { Value = val }))" />
                 </div>
@@ -170,6 +171,7 @@ else
                     <ScoreInput
                         InputClass="score-value-warn"
                         Value="@(tempScores.GetValueOrDefault(player.PlayerId, 0))"
+                        Mode="@ScoreIncrement"
                         OnScoreAdjusted="@((int amount) => AdjustEditScore(player.PlayerId, amount))"
                         OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
                 </div>
@@ -190,6 +192,8 @@ else
     private List<TeamScore> teamLeaderboard = new();
 
     private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
+
+    private ScoreIncrementMode ScoreIncrement => GameState.CurrentSession?.Template.Rules?.ScoreIncrement ?? ScoreIncrementMode.OneAndTen;
 
     private IEnumerable<Guid> TeamOrder =>
         GameState.CurrentSession?.Players
