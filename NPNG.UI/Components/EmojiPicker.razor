@@ -7,8 +7,9 @@
             @foreach (var category in Categories)
             {
                 <button type="button" class="emoji-picker-tab @(category == activeCategory ? "on" : "")"
+                        title="@category.Label" aria-label="@category.Label"
                         @onclick="() => SelectCategory(category)">
-                    @category.Label
+                    @category.Icon
                 </button>
             }
         </div>
@@ -24,16 +25,15 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired]
-    public IReadOnlyList<EmojiCategory> Categories { get; set; } = Array.Empty<EmojiCategory>();
-
     [Parameter]
     public string SelectedEmoji { get; set; } = "";
 
     [Parameter]
     public EventCallback<string> SelectedEmojiChanged { get; set; }
 
-    private EmojiCategory activeCategory = new("", Array.Empty<string>());
+    private static readonly IReadOnlyList<EmojiCategory> Categories = EmojiPalette.All;
+
+    private EmojiCategory activeCategory = new("", "", Array.Empty<string>());
 
     protected override void OnParametersSet()
     {

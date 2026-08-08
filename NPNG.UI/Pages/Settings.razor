@@ -17,10 +17,10 @@
             {
                 <div class="form-card" @key="fav.Id">
                     <div class="field-lbl">Nom</div>
-                    <input class="field-input" type="text" @bind="editName" @bind:event="oninput" />
-
-                    <div class="field-lbl">Emoji</div>
-                    <EmojiPicker Categories="EmojiPalette.PlayerCategories" @bind-SelectedEmoji="editEmoji" />
+                    <div class="name-emoji-row">
+                        <EmojiAvatarPicker @bind-SelectedEmoji="editEmoji" />
+                        <input class="field-input" type="text" @bind="editName" @bind:event="oninput" />
+                    </div>
 
                     <div class="settings-edit-actions">
                         <button class="btn-secondary" disabled="@string.IsNullOrWhiteSpace(editName)" @onclick="SaveEditFavorite">✓ Enregistrer</button>
@@ -43,10 +43,11 @@
 
 <div class="form-card">
     <div class="field-lbl">Ajouter un favori</div>
-    <input class="field-input" type="text" placeholder="Prénom…"
-           @bind="newFavoriteName" @bind:event="oninput" />
-
-    <EmojiPicker Categories="EmojiPalette.PlayerCategories" @bind-SelectedEmoji="newFavoriteEmoji" />
+    <div class="name-emoji-row">
+        <EmojiAvatarPicker @bind-SelectedEmoji="newFavoriteEmoji" />
+        <input class="field-input" type="text" placeholder="Prénom…"
+               @bind="newFavoriteName" @bind:event="oninput" />
+    </div>
 
     <button class="btn-secondary settings-save-btn" disabled="@string.IsNullOrWhiteSpace(newFavoriteName)" @onclick="AddFavorite">
         ＋ Ajouter

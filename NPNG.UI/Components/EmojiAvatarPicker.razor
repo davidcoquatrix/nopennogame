@@ -1,5 +1,3 @@
-@using NPNG.UI.Constants
-
 <div class="emoji-avatar-picker">
     <button type="button" class="emoji-avatar-trigger @(Small ? "sm" : "")"
             style="@(BorderColor is not null ? $"border-color:{BorderColor}" : null)"
@@ -13,15 +11,12 @@
     {
         <div class="emoji-avatar-backdrop" @onclick="ClosePicker"></div>
         <div class="emoji-avatar-popover" @onkeydown="HandlePopoverKeyDown">
-            <EmojiPicker Categories="Categories" SelectedEmoji="@SelectedEmoji" SelectedEmojiChanged="HandleSelected" />
+            <EmojiPicker SelectedEmoji="@SelectedEmoji" SelectedEmojiChanged="HandleSelected" />
         </div>
     }
 </div>
 
 @code {
-    [Parameter, EditorRequired]
-    public IReadOnlyList<EmojiCategory> Categories { get; set; } = Array.Empty<EmojiCategory>();
-
     [Parameter]
     public string SelectedEmoji { get; set; } = "";
 

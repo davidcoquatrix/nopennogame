@@ -60,6 +60,18 @@
     border-color: var(--accent);
 }
 
+.name-emoji-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.name-emoji-row .field-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
 .toggle-row {
     display: flex;
     gap: 7px;

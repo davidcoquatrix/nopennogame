@@ -40,6 +40,18 @@
     background: var(--bg-danger-subtle);
 }
 
+.name-emoji-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.name-emoji-row .field-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
 .error-msg {
     color: var(--danger);
     font-size: 0.75rem;

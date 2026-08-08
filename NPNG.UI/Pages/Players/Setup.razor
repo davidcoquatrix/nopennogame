@@ -48,7 +48,7 @@ else
                     <button class="ico-btn move-btn" disabled="@isFirstInList" @onclick="() => MovePlayerUp(player.PlayerId)">▲</button>
                     <button class="ico-btn move-btn" disabled="@isLastInList" @onclick="() => MovePlayerDown(player.PlayerId)">▼</button>
                 </div>
-                <EmojiAvatarPicker Categories="EmojiPalette.PlayerCategories" BorderColor="@player.Color"
+                <EmojiAvatarPicker BorderColor="@player.Color"
                                     SelectedEmoji="@player.Emoji" SelectedEmojiChanged="@(e => UpdatePlayerEmoji(player.PlayerId, e))" />
 
                 <div class="player-info">
@@ -110,7 +110,7 @@ else
                     else
                     {
                         <div class="team-card-header">
-                            <EmojiAvatarPicker Categories="EmojiPalette.GameCategories" Small="true"
+                            <EmojiAvatarPicker Small="true"
                                                 SelectedEmoji="@team.DisplayEmoji" SelectedEmojiChanged="@(e => UpdateTeamEmoji(team.TeamId, e))" />
                             <span class="team-card-name">@team.DisplayName</span>
                             @if (UnteamedPlayers.Any())
@@ -141,7 +141,7 @@ else
 {
     <div class="section-label">Ajouter un joueur</div>
     <div class="add-player-row">
-        <EmojiAvatarPicker Categories="EmojiPalette.PlayerCategories" BorderColor="@NextPlayerColor" @bind-SelectedEmoji="selectedEmoji" />
+        <EmojiAvatarPicker BorderColor="@NextPlayerColor" @bind-SelectedEmoji="selectedEmoji" />
         <input class="add-input @(showDuplicateError ? "error" : "")" type="text" placeholder="Prénom…" @bind="newPlayerName" @bind:event="oninput"
                @onkeyup="HandleKeyUp"/>
         <button class="add-btn" @onclick="AddPlayer"
@@ -351,7 +351,7 @@ else
         newPlayerName = "";
         showDuplicateError = false;
 
-        var allEmojis = EmojiPalette.PlayerCategories.SelectMany(c => c.Emojis).ToList();
+        var allEmojis = EmojiPalette.All.SelectMany(c => c.Emojis).ToList();
         selectedEmoji = allEmojis[Random.Shared.Next(allEmojis.Count)];
     }
 
