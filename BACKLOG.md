@@ -139,6 +139,28 @@ This document is maintained by the **Agile Scribe AI**. It translates raw ideas 
 
 ---
 
+## 🐛 Phase 10: Retours de revue (PR #1)
+
+*Revue de code de la PR "Phase 10" (`feat/phase-10`). À migrer vers des issues GitHub plus tard ; pour l'instant tracké ici comme le reste de la dette technique.*
+
+### Bugs confirmés (atteignables avec le catalogue Phase 10 actuel)
+- [ ] **`GameRecapPanel.razor` — gagnant Phase 10 arbitraire en cas d'égalité.** `GetPhaseWinnerName()` fait `leaderboard.FirstOrDefault(l => l.Rank == 1)`, qui ne retourne qu'un seul nom même quand `ScoreCalculator.CalculateLeaderboard` assigne `Rank == 1` à plusieurs joueurs ex-aequo. Le tableau des scores en dessous montre bien les deux gagnants, mais pas la bannière de victoire.
+- [ ] **`PhaseProgressGrid.razor` — highlight "en tête" incohérent avec le leaderboard.** Le départage du surlignage pendant la partie se fait uniquement sur le nombre de phases complétées (`completedCounts == max`), au lieu du classement réel de `ScoreCalculator` (phases puis score ascendant). Deux joueurs à égalité de phases mais avec des scores différents sont tous les deux marqués "leading", alors que l'écran de récap n'en désignera qu'un seul comme rang 1.
+- [ ] **`Active.razor.ValidateRound` dépasse la limite de taille de méthode.** 54 lignes avec 3 branches parallèles (équipe/phase/individuel) depuis l'ajout de la branche `IsPhaseProgression`, contre la règle de 15-20 lignes de `STANDARDS.md`. À extraire en sous-méthodes privées.
+
+### Bugs latents (inatteignables aujourd'hui — le catalogue Phase 10 ne combine pas ces réglages, mais rien ne l'empêche)
+- [ ] **`GameStateService.RecordTeamScoreAsync` ignore `PhaseScoreDetail`.** Si un futur `GameRules` combinait `PhaseProgression` + `Teams`, `ValidateRound` appellerait `RecordTeamScoreAsync` (qui ne transmet jamais `PhaseDetail`) au lieu du chemin phase — `PhaseProgressCalculator.HasWon` resterait toujours `false` et la partie ne pourrait plus jamais se terminer via `WinningPhase`, silencieusement.
+- [ ] **`GameStateService.IsGameFinished` — ordre `TargetScore`/`WinningPhase` piégeux.** Le bloc `TargetScore` retourne dès qu'il est configuré (pas seulement atteint), avant même de tester `WinningPhase`. Un `GameRules` définissant un jour les deux court-circuiterait la détection de fin de partie par phase.
+- [ ] **`GameStateService.RecordScoreAsync` — surcharges ambiguës avec `null` littéral.** Un appel à 4 arguments dont le 4e est `null` correspond à la fois à la surcharge `PhaseScoreDetail` et à la surcharge `StructuredScoreDetail?` (CS0121), ce qui obligerait un futur appelant à un cast explicite disgracieux.
+- [ ] **`Session/History/Index.razor` (Time Travel) — `PhaseNumber` réinitialisé à 1 par défaut.** `entry?.PhaseDetail?.PhaseNumber ?? 1` (lignes ~267, 321, 385) écrit silencieusement `PhaseNumber = 1` si aucune `ScoreEntry` n'existe pour ce tour, au lieu de dériver la phase réelle du joueur comme le fait `PhaseProgressGrid`.
+
+### Duplication / simplification
+- [ ] **`ScoreCalculator` — classement Phase 10 en early-return dupliqué.** Le switch générique existant (`Cumulative`/`CumulativeLower`/`Structured` via un seul `AssignRanks<TKey>` générique) est court-circuité par un bloc `PhaseProgression` séparé qui refait le même tri+rang avec sa propre clé composite, au lieu d'étendre le switch.
+- [ ] **Style de toggle "phase complétée" dupliqué 3 fois.** `.phase-toggle` (`PhaseScoreInput.razor.css`) réimplémente `.str-cell-toggle` (`StructuredCategoryCell.razor.css`), et `PhaseProgressGrid.razor.css` en définit une 3e variante (`.ppg-current`/`.ppg-current.staged`).
+- [ ] **`Active.razor` — `OnScoreChanged`/`HandleGridScoreChanged` identiques.** Les deux méthodes font exactement `currentInputs[change.PlayerId] = change.Value;`, séparées seulement pour matcher les noms de callback différents de `CumulativeScoreBoard` et `PhaseProgressGrid`. Un seul délégué partagé suffirait.
+
+---
+
 ## ☁️ Phase 4 / V2+: Cloud, Real-Time & Magic
 *Goal: Introduce a backend, authentication, and advanced interactions.*
 
