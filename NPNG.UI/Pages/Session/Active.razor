@@ -87,140 +87,24 @@ else
     }
     else
     {
-        <!-- LIVE LEADERBOARD -->
-        <div class="section-label">Classement</div>
-        <div class="leaderboard">
-            @if (IsTeamMode)
-            {
-                @foreach (var tScore in teamLeaderboard)
-                {
-                    var isLeader = HasProgress && tScore.Rank == 1;
-                    var members = GameState.CurrentSession.Players
-                        .Where(p => tScore.MemberPlayerIds.Contains(p.PlayerId))
-                        .OrderBy(p => p.DisplayOrder);
-
-                    <div class="leaderboard-row @(isLeader ? "lead" : "")">
-                        <span class="rank">@tScore.Rank</span>
-                        <div class="av-m">@tScore.DisplayEmoji</div>
-                        <div class="leaderboard-info">
-                            <div class="leaderboard-name">@tScore.DisplayName</div>
-                            <div class="pips">
-                                @foreach (var member in members)
-                                {
-                                    <span class="pip">@member.Emoji @member.Name</span>
-                                }
-                            </div>
-                        </div>
-
-                        @if (isLeader)
-                        {
-                            <span class="db best">meilleur</span>
-                        }
-                        else if (HasProgress)
-                        {
-                            var bestScore = teamLeaderboard.First().TotalScore;
-                            var diff = tScore.TotalScore - bestScore;
-                            <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
-                        }
-
-                        <div class="tot">@tScore.TotalScore</div>
-                    </div>
-                }
-            }
-            else
-            {
-                @foreach (var pScore in leaderboard)
-                {
-                    var player = GameState.CurrentSession.Players.First(p => p.PlayerId == pScore.PlayerId);
-                    var isLeader = HasProgress && pScore.Rank == 1;
-
-                    <div class="leaderboard-row @(isLeader ? "lead" : "")">
-                        <span class="rank">@pScore.Rank</span>
-                        <div class="av-m">@player.Emoji</div>
-                        <div class="leaderboard-info">
-                            <div class="leaderboard-name">@player.Name</div>
-                            <div class="pips">
-                                @{
-                                    var playerScores = GameState.CurrentSession.Scores.Where(s => s.PlayerId == player.PlayerId).OrderBy(s => s.Round);
-                                    foreach (var score in playerScores)
-                                    {
-                                        <span class="pip">@(score.Value > 0 ? "+" : "")@score.Value</span>
-                                    }
-                                }
-                            </div>
-                        </div>
-
-                        @if (isLeader)
-                        {
-                            <span class="db best">meilleur</span>
-                        }
-                        else if (HasProgress)
-                        {
-                            var bestScore = leaderboard.First().TotalScore;
-                            var diff = pScore.TotalScore - bestScore;
-                            <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
-                        }
-
-                        <div class="tot">@pScore.TotalScore</div>
-                    </div>
-                }
-            }
-        </div>
-
-        <!-- ENTRY PANEL -->
-        <div class="section-label">Saisie — Tour @GameState.CurrentSession.CurrentRound</div>
-        <div class="entry-panel">
-            @if (IsTeamMode)
-            {
-                @foreach (var teamId in TeamEntryOrder)
-                {
-                    var teamName = TeamNameFormatter.GetDisplayName(teamId, GameState.CurrentSession.Teams, GameState.CurrentSession.Players);
-                    var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, GameState.CurrentSession.Teams);
-                    var members = GameState.CurrentSession.Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
-
-                    <div class="entry-row">
-                        <div class="entry-avatar">@teamEmoji</div>
-                        <div class="entry-info">
-                            <span class="entry-name entry-name-override">@teamName</span>
-                            <span class="entry-team-members">@string.Join(" · ", members.Select(m => $"{m.Emoji} {m.Name}"))</span>
-                        </div>
-                        <ScoreInput
-                            Value="@(currentTeamInputs.ContainsKey(teamId) ? currentTeamInputs[teamId] : 0)"
-                            Mode="@ScoreIncrement"
-                            OnScoreAdjusted="@((int amount) => AdjustTeamScore(teamId, amount))"
-                            OnValueChanged="@((int val) => OnTeamScoreInputChange(teamId, new ChangeEventArgs { Value = val }))" />
-                    </div>
-                }
-            }
-            else
-            {
-                @foreach (var player in GameState.CurrentSession.Players.OrderBy(p => p.DisplayOrder))
-                {
-                    var hasMechanic = GameState.CurrentSession.Template?.Rules != null
-                                          && GameState.CurrentSession.Template.Rules.FirstPlayerMechanic != FirstPlayerMechanic.None;
-                    var showFirstPlayerBadge = player.IsFirstPlayer && hasMechanic;
-
-                    <div class="entry-row">
-                        <div class="entry-avatar">@player.Emoji</div>
-                        <div class="entry-info">
-                            <span class="entry-name entry-name-override">@player.Name</span>
-                            @if (showFirstPlayerBadge)
-                            {
-                                <span class="first-player-badge">1ER JOUEUR</span>
-                            }
-                        </div>
-                        <ScoreInput
-                            Value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
-                            Mode="@ScoreIncrement"
-                            OnScoreAdjusted="@((int amount) => AdjustScore(player.PlayerId, amount))"
-                            OnValueChanged="@((int val) => OnScoreInputChange(player.PlayerId, new ChangeEventArgs { Value = val }))" />
-                    </div>
-                }
-            }
-
-            <button class="validate-btn" @onclick="ValidateRound">✓ &nbsp;Valider le
-                tour @GameState.CurrentSession.CurrentRound</button>
-        </div>
+        <CumulativeScoreBoard
+            Players="GameState.CurrentSession.Players"
+            Teams="GameState.CurrentSession.Teams"
+            Scores="GameState.CurrentSession.Scores"
+            IsTeamMode="IsTeamMode"
+            Leaderboard="leaderboard"
+            TeamLeaderboard="teamLeaderboard"
+            HasProgress="HasProgress"
+            CurrentRound="GameState.CurrentSession.CurrentRound"
+            CurrentInputs="currentInputs"
+            CurrentTeamInputs="currentTeamInputs"
+            ScoreIncrement="ScoreIncrement"
+            FirstPlayerMechanic="GameState.CurrentSession.Template.Rules?.FirstPlayerMechanic ?? FirstPlayerMechanic.None"
+            OnScoreChanged="OnScoreChanged"
+            OnScoreAdjusted="AdjustScore"
+            OnTeamScoreChanged="OnTeamScoreChanged"
+            OnTeamScoreAdjusted="AdjustTeamScore"
+            OnValidateRound="ValidateRound" />
     }
 }
 
@@ -249,6 +133,8 @@ else
     // (l'écran joueurs se verrouille dès qu'un score existe) — on masque donc le bouton retour.
     private bool ShowBackButton => GameState.CurrentSession != null && !GameState.CurrentSession.HasProgress;
 
+    // Utilisé uniquement pour initialiser currentTeamInputs (UpdateState) ; CumulativeScoreBoard
+    // recalcule le même ordre en interne pour son propre rendu, à partir des mêmes Players.
     private IEnumerable<Guid> TeamEntryOrder =>
         GameState.CurrentSession?.Players
             .Where(p => p.TeamId is not null)
@@ -336,20 +222,17 @@ else
         NavigationManager.NavigateTo("session/history");
     }
 
-    private void AdjustScore(Guid playerId, int amount)
+    private void AdjustScore((Guid PlayerId, int Amount) change)
     {
-        if (currentInputs.ContainsKey(playerId))
+        if (currentInputs.ContainsKey(change.PlayerId))
         {
-            currentInputs[playerId] += amount;
+            currentInputs[change.PlayerId] += change.Amount;
         }
     }
 
-    private void OnScoreInputChange(Guid playerId, ChangeEventArgs e)
+    private void OnScoreChanged((Guid PlayerId, int Value) change)
     {
-        if (int.TryParse(e.Value?.ToString(), out var result))
-        {
-            currentInputs[playerId] = result;
-        }
+        currentInputs[change.PlayerId] = change.Value;
     }
 
     private void TogglePhaseCompleted(Guid playerId)
@@ -362,20 +245,17 @@ else
         currentInputs[change.PlayerId] = change.Value;
     }
 
-    private void AdjustTeamScore(Guid teamId, int amount)
+    private void AdjustTeamScore((Guid TeamId, int Amount) change)
     {
-        if (currentTeamInputs.ContainsKey(teamId))
+        if (currentTeamInputs.ContainsKey(change.TeamId))
         {
-            currentTeamInputs[teamId] += amount;
+            currentTeamInputs[change.TeamId] += change.Amount;
         }
     }
 
-    private void OnTeamScoreInputChange(Guid teamId, ChangeEventArgs e)
+    private void OnTeamScoreChanged((Guid TeamId, int Value) change)
     {
-        if (int.TryParse(e.Value?.ToString(), out var result))
-        {
-            currentTeamInputs[teamId] = result;
-        }
+        currentTeamInputs[change.TeamId] = change.Value;
     }
 
     private async Task ValidateRound()

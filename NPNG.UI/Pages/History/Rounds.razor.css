@@ -65,6 +65,11 @@
     border-bottom: none;
 }
 
+.round-table tfoot td {
+    border-top: 2px solid var(--bdr-md);
+    padding-top: 7px;
+}
+
 .team-row-name {
     font-family: var(--font-ui);
     font-size: .8rem;

@@ -10,9 +10,11 @@ dans `BACKLOG.md`.
 
 ## Les 4 `ScoreType` et leur implémentation
 
-- **`Cumulative` / `CumulativeLower`** : pas de fichiers dédiés. Juste `GameRules` (TargetScore/MaxRounds)
-  + le switch dans `NPNG.Domain/Services/ScoreCalculator.cs`. Saisie via
-  `NPNG.UI/Components/ScoreInput.razor`, manche par manche, dans `Session/Active.razor`.
+- **`Cumulative` / `CumulativeLower`** : pas de fichiers Domain dédiés. Juste `GameRules`
+  (TargetScore/MaxRounds) + le switch dans `NPNG.Domain/Services/ScoreCalculator.cs`. UI :
+  `NPNG.UI/Components/CumulativeScoreBoard.razor` (classement + saisie manche par manche + mode équipe,
+  via `NPNG.UI/Components/ScoreInput.razor`) — même pattern "dumb component" que les deux ci-dessous,
+  `Session/Active.razor` garde l'état (`currentInputs`/`currentTeamInputs`) et `ValidateRound`.
 
 - **`Structured`** (Akropolis, Yams — feuille de score unique en fin de partie, pas de notion de manche) :
   - Entities : `CategoryDefinition.cs`, `CategoryValue.cs`, `SectionBonus.cs`, `StructuredScoreDetail.cs`

@@ -1,0 +1,197 @@
+@using System.Collections.Immutable
+@using NPNG.Domain.Entities
+@using NPNG.Domain.Enums
+@using NPNG.Domain.Models
+@using NPNG.Domain.Services
+
+<!-- LIVE LEADERBOARD -->
+<div class="section-label">Classement</div>
+<div class="leaderboard">
+    @if (IsTeamMode)
+    {
+        @foreach (var tScore in TeamLeaderboard)
+        {
+            var isLeader = HasProgress && tScore.Rank == 1;
+            var members = Players
+                .Where(p => tScore.MemberPlayerIds.Contains(p.PlayerId))
+                .OrderBy(p => p.DisplayOrder);
+
+            <div class="leaderboard-row @(isLeader ? "lead" : "")">
+                <span class="rank">@tScore.Rank</span>
+                <div class="av-m">@tScore.DisplayEmoji</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">@tScore.DisplayName</div>
+                    <div class="pips">
+                        @foreach (var member in members)
+                        {
+                            <span class="pip">@member.Emoji @member.Name</span>
+                        }
+                    </div>
+                </div>
+
+                @if (isLeader)
+                {
+                    <span class="db best">meilleur</span>
+                }
+                else if (HasProgress)
+                {
+                    var bestScore = TeamLeaderboard.First().TotalScore;
+                    var diff = tScore.TotalScore - bestScore;
+                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                }
+
+                <div class="tot">@tScore.TotalScore</div>
+            </div>
+        }
+    }
+    else
+    {
+        @foreach (var pScore in Leaderboard)
+        {
+            var player = Players.First(p => p.PlayerId == pScore.PlayerId);
+            var isLeader = HasProgress && pScore.Rank == 1;
+
+            <div class="leaderboard-row @(isLeader ? "lead" : "")">
+                <span class="rank">@pScore.Rank</span>
+                <div class="av-m">@player.Emoji</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">@player.Name</div>
+                    <div class="pips">
+                        @{
+                            var playerScores = Scores.Where(s => s.PlayerId == player.PlayerId).OrderBy(s => s.Round);
+                            foreach (var score in playerScores)
+                            {
+                                <span class="pip">@(score.Value > 0 ? "+" : "")@score.Value</span>
+                            }
+                        }
+                    </div>
+                </div>
+
+                @if (isLeader)
+                {
+                    <span class="db best">meilleur</span>
+                }
+                else if (HasProgress)
+                {
+                    var bestScore = Leaderboard.First().TotalScore;
+                    var diff = pScore.TotalScore - bestScore;
+                    <span class="db pos">@(diff > 0 ? "+" : "")@diff</span>
+                }
+
+                <div class="tot">@pScore.TotalScore</div>
+            </div>
+        }
+    }
+</div>
+
+<!-- ENTRY PANEL -->
+<div class="section-label">Saisie — Tour @CurrentRound</div>
+<div class="entry-panel">
+    @if (IsTeamMode)
+    {
+        @foreach (var teamId in TeamEntryOrder)
+        {
+            var teamName = TeamNameFormatter.GetDisplayName(teamId, Teams, Players);
+            var teamEmoji = TeamEmojiFormatter.GetDisplayEmoji(teamId, Teams);
+            var members = Players.Where(p => p.TeamId == teamId).OrderBy(p => p.DisplayOrder);
+
+            <div class="entry-row">
+                <div class="entry-avatar">@teamEmoji</div>
+                <div class="entry-info">
+                    <span class="entry-name entry-name-override">@teamName</span>
+                    <span class="entry-team-members">@string.Join(" · ", members.Select(m => $"{m.Emoji} {m.Name}"))</span>
+                </div>
+                <ScoreInput
+                    Value="@CurrentTeamInputs.GetValueOrDefault(teamId)"
+                    Mode="@ScoreIncrement"
+                    OnScoreAdjusted="@((int amount) => OnTeamScoreAdjusted.InvokeAsync((teamId, amount)))"
+                    OnValueChanged="@((int val) => OnTeamScoreChanged.InvokeAsync((teamId, val)))" />
+            </div>
+        }
+    }
+    else
+    {
+        @foreach (var player in Players.OrderBy(p => p.DisplayOrder))
+        {
+            var showFirstPlayerBadge = player.IsFirstPlayer && FirstPlayerMechanic != FirstPlayerMechanic.None;
+
+            <div class="entry-row">
+                <div class="entry-avatar">@player.Emoji</div>
+                <div class="entry-info">
+                    <span class="entry-name entry-name-override">@player.Name</span>
+                    @if (showFirstPlayerBadge)
+                    {
+                        <span class="first-player-badge">1ER JOUEUR</span>
+                    }
+                </div>
+                <ScoreInput
+                    Value="@CurrentInputs.GetValueOrDefault(player.PlayerId)"
+                    Mode="@ScoreIncrement"
+                    OnScoreAdjusted="@((int amount) => OnScoreAdjusted.InvokeAsync((player.PlayerId, amount)))"
+                    OnValueChanged="@((int val) => OnScoreChanged.InvokeAsync((player.PlayerId, val)))" />
+            </div>
+        }
+    }
+
+    <button class="validate-btn" @onclick="() => OnValidateRound.InvokeAsync()">✓ &nbsp;Valider le
+        tour @CurrentRound</button>
+</div>
+
+@code {
+    [Parameter]
+    public ImmutableArray<SessionPlayer> Players { get; set; } = ImmutableArray<SessionPlayer>.Empty;
+
+    [Parameter]
+    public ImmutableArray<Team> Teams { get; set; } = ImmutableArray<Team>.Empty;
+
+    [Parameter]
+    public ImmutableArray<ScoreEntry> Scores { get; set; } = ImmutableArray<ScoreEntry>.Empty;
+
+    [Parameter]
+    public bool IsTeamMode { get; set; }
+
+    [Parameter]
+    public List<PlayerScore> Leaderboard { get; set; } = new();
+
+    [Parameter]
+    public List<TeamScore> TeamLeaderboard { get; set; } = new();
+
+    [Parameter]
+    public bool HasProgress { get; set; }
+
+    [Parameter]
+    public int CurrentRound { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<Guid, int> CurrentInputs { get; set; } = new Dictionary<Guid, int>();
+
+    [Parameter]
+    public IReadOnlyDictionary<Guid, int> CurrentTeamInputs { get; set; } = new Dictionary<Guid, int>();
+
+    [Parameter]
+    public ScoreIncrementMode ScoreIncrement { get; set; }
+
+    [Parameter]
+    public FirstPlayerMechanic FirstPlayerMechanic { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid PlayerId, int Value)> OnScoreChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid PlayerId, int Amount)> OnScoreAdjusted { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid TeamId, int Value)> OnTeamScoreChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid TeamId, int Amount)> OnTeamScoreAdjusted { get; set; }
+
+    [Parameter]
+    public EventCallback OnValidateRound { get; set; }
+
+    private IEnumerable<Guid> TeamEntryOrder =>
+        Players.Where(p => p.TeamId is not null)
+            .GroupBy(p => p.TeamId!.Value)
+            .OrderBy(g => g.Min(p => p.DisplayOrder))
+            .Select(g => g.Key);
+}
