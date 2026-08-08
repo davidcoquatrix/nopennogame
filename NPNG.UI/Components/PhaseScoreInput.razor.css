@@ -1,0 +1,39 @@
+.phase-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.phase-badge {
+    font-size: .6rem;
+    color: var(--accent-fg);
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+
+.phase-desc {
+    font-size: .68rem;
+    color: var(--sub);
+}
+
+.phase-toggle {
+    box-sizing: border-box;
+    background: var(--raised);
+    border: 1px solid var(--bdr-md);
+    border-radius: 7px;
+    padding: 2px 7px;
+    color: var(--sub);
+    font-family: var(--font-ui);
+    font-size: .62rem;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+}
+
+.phase-toggle.active {
+    background: var(--bg-success-light);
+    border-color: var(--success);
+    color: var(--success);
+}

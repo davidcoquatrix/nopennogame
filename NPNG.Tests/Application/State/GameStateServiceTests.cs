@@ -282,6 +282,67 @@ public class GameStateServiceTests
         Assert.NotNull(_sut.CurrentSession.EndedAt);
     }
 
+    [Fact]
+    public async Task AdvanceToNextRoundAsync_ShouldFinishSession_WhenWinningPhaseCompleted()
+    {
+        // Arrange
+        var rules = new GameRules(WinningPhase: 2);
+        var template = new GameTemplate(Guid.NewGuid(), "Phase 10", ScoreType.PhaseProgression, rules);
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+        var aliceId = _sut.CurrentSession!.Players[0].PlayerId;
+
+        // Act - Alice valide la phase 1 puis la phase 2 (la phase gagnante)
+        await _sut.RecordScoreAsync(aliceId, 1, 5, new PhaseScoreDetail(1, Completed: true));
+        await _sut.AdvanceToNextRoundAsync();
+        await _sut.RecordScoreAsync(aliceId, 2, 5, new PhaseScoreDetail(2, Completed: true));
+        await _sut.AdvanceToNextRoundAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Finished, _sut.CurrentSession!.Status);
+        Assert.NotNull(_sut.CurrentSession.EndedAt);
+    }
+
+    [Fact]
+    public async Task AdvanceToNextRoundAsync_ShouldNotFinishSession_WhenWinningPhaseNotYetCompleted()
+    {
+        // Arrange
+        var rules = new GameRules(WinningPhase: 10);
+        var template = new GameTemplate(Guid.NewGuid(), "Phase 10", ScoreType.PhaseProgression, rules);
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+        var aliceId = _sut.CurrentSession!.Players[0].PlayerId;
+
+        // Act
+        await _sut.RecordScoreAsync(aliceId, 1, 5, new PhaseScoreDetail(1, Completed: true));
+        await _sut.AdvanceToNextRoundAsync();
+
+        // Assert
+        Assert.Equal(SessionStatus.Active, _sut.CurrentSession!.Status);
+        Assert.Equal(2, _sut.CurrentSession.CurrentRound);
+    }
+
+    [Fact]
+    public async Task RecordScoreAsync_WithPhaseDetail_PersistsPhaseDetailOnEntry()
+    {
+        // Arrange
+        var template = new GameTemplate(Guid.NewGuid(), "Phase 10", ScoreType.PhaseProgression, new GameRules(WinningPhase: 10));
+        await _sut.InitializeNewSessionAsync(template);
+        await _sut.AddPlayerToSetupAsync("Alice", "🐱", "#FF0000");
+        await _sut.StartSessionAsync();
+        var aliceId = _sut.CurrentSession!.Players[0].PlayerId;
+
+        // Act
+        await _sut.RecordScoreAsync(aliceId, 1, 8, new PhaseScoreDetail(1, Completed: false));
+
+        // Assert
+        var entry = Assert.Single(_sut.CurrentSession!.Scores);
+        Assert.Equal(8, entry.Value);
+        Assert.Equal(new PhaseScoreDetail(1, Completed: false), entry.PhaseDetail);
+    }
+
     [Theory]
     [InlineData(FirstPlayerMechanic.Winner)]
     [InlineData(FirstPlayerMechanic.HighestInPreviousRound)]

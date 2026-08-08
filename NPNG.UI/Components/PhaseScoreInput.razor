@@ -1,0 +1,22 @@
+<div class="phase-status">
+    <span class="phase-badge">Phase @CurrentPhase</span>
+    <span class="phase-desc">@PhaseDescription</span>
+    <button type="button" class="phase-toggle @(Completed ? "active" : "")"
+        @onclick="@(() => OnCompletedChanged.InvokeAsync(!Completed))">
+        @(Completed ? "✓ Validée" : "Non validée")
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public int CurrentPhase { get; set; }
+
+    [Parameter]
+    public string PhaseDescription { get; set; } = "";
+
+    [Parameter]
+    public bool Completed { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnCompletedChanged { get; set; }
+}

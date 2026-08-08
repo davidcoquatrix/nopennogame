@@ -16,6 +16,13 @@ public enum ScoreType
     CumulativeLower,
     
     /// <summary>
+    /// Score de manche cumulatif (plus bas gagne) doublé d'une progression de phase par joueur
+    /// (ex: Phase 10) : la partie se termine quand un joueur valide la dernière phase, qui prime
+    /// sur le score — celui-ci ne sert qu'à départager les joueurs à égalité de phase.
+    /// </summary>
+    PhaseProgression,
+
+    /// <summary>
     /// Score par catégorie avec règles personnalisées (ex: Akropolis).
     /// </summary>
     Structured

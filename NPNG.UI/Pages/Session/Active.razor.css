@@ -149,6 +149,12 @@
     cursor: pointer;
 }
 
+.pip.phase {
+    background: var(--bg-accent-subtle);
+    color: var(--accent-fg);
+    font-weight: 700;
+}
+
 .db {
     font-size: .57rem;
     font-family: var(--font-mono);

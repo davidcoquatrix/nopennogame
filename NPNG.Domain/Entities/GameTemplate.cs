@@ -16,9 +16,13 @@ public record TeamRules(int? TeamSize = null, bool RequireEqualTeams = false)
 }
 
 /// <summary>
-/// Configuration d'une partie : conditions de fin (TargetScore/MaxRounds), contraintes de
+/// Configuration d'une partie : conditions de fin (TargetScore/MaxRounds/WinningPhase), contraintes de
 /// setup (Min/MaxPlayers, Teams), mécanique de premier joueur et préférence de saisie du score.
 /// </summary>
+/// <param name="WinningPhase">
+/// Pour <see cref="ScoreType.PhaseProgression"/> (ex: Phase 10) : la partie se termine dès qu'un joueur
+/// valide cette phase. Sans signification pour les autres <see cref="ScoreType"/>.
+/// </param>
 public record GameRules(
     int? TargetScore = null,
     int? MaxRounds = null,
@@ -26,7 +30,8 @@ public record GameRules(
     int? MaxPlayers = null,
     int? MinPlayers = null,
     TeamRules? Teams = null,
-    ScoreIncrementMode ScoreIncrement = ScoreIncrementMode.OneAndTen);
+    ScoreIncrementMode ScoreIncrement = ScoreIncrementMode.OneAndTen,
+    int? WinningPhase = null);
 
 /// <summary>
 /// Représente le modèle de base d'un jeu (ses règles, son type de score).

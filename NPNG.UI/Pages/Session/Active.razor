@@ -1,4 +1,5 @@
 @page "/session"
+@using NPNG.Domain.Entities
 @using NPNG.Domain.Services
 @using NPNG.Domain.Models
 @inject NavigationManager NavigationManager
@@ -121,6 +122,12 @@ else
                     <div class="av-m">@player.Emoji</div>
                     <div class="leaderboard-info">
                         <div class="leaderboard-name">@player.Name</div>
+                        @if (IsPhaseProgression)
+                        {
+                            <div class="pips">
+                                <span class="pip phase">Phase @GetCurrentPhase(player.PlayerId)</span>
+                            </div>
+                        }
                         <div class="pips">
                             @{
                                 var playerScores = GameState.CurrentSession.Scores.Where(s => s.PlayerId == player.PlayerId).OrderBy(s => s.Round);
@@ -190,6 +197,15 @@ else
                         {
                             <span class="first-player-badge">1ER JOUEUR</span>
                         }
+                        @if (IsPhaseProgression)
+                        {
+                            var currentPhase = GetCurrentPhase(player.PlayerId);
+                            <PhaseScoreInput
+                                CurrentPhase="currentPhase"
+                                PhaseDescription="@Phase10Phases.Descriptions[currentPhase - 1]"
+                                Completed="@currentPhaseCompleted.GetValueOrDefault(player.PlayerId)"
+                                OnCompletedChanged="@((bool c) => currentPhaseCompleted[player.PlayerId] = c)" />
+                        }
                     </div>
                     <ScoreInput
                         Value="@(currentInputs.ContainsKey(player.PlayerId) ? currentInputs[player.PlayerId] : 0)"
@@ -212,7 +228,14 @@ else
     private Dictionary<Guid, int> currentTeamInputs = new();
     private List<TeamScore> teamLeaderboard = new();
 
+    private Dictionary<Guid, bool> currentPhaseCompleted = new();
+
     private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
+
+    private bool IsPhaseProgression => GameState.CurrentSession?.Template.ScoreType == ScoreType.PhaseProgression;
+
+    private int GetCurrentPhase(Guid playerId) =>
+        PhaseProgressCalculator.GetCurrentPhase(playerId, GameState.CurrentSession!.Scores, Phase10Phases.TotalPhases);
 
     private ScoreIncrementMode ScoreIncrement => GameState.CurrentSession?.Template.Rules?.ScoreIncrement ?? ScoreIncrementMode.OneAndTen;
 
@@ -276,6 +299,11 @@ else
                 if (!currentInputs.ContainsKey(p.PlayerId))
                 {
                     currentInputs[p.PlayerId] = 0;
+                }
+
+                if (!currentPhaseCompleted.ContainsKey(p.PlayerId))
+                {
+                    currentPhaseCompleted[p.PlayerId] = false;
                 }
             }
 
@@ -353,6 +381,24 @@ else
             foreach (var key in currentTeamInputs.Keys.ToList())
             {
                 currentTeamInputs[key] = 0;
+            }
+        }
+        else if (IsPhaseProgression)
+        {
+            // La phase tentée ce tour-ci est capturée avant tout enregistrement, pour ne pas
+            // dériver "la phase courante" d'un historique déjà partiellement mis à jour.
+            var attemptedPhases = currentInputs.Keys.ToDictionary(playerId => playerId, GetCurrentPhase);
+
+            foreach (var input in currentInputs)
+            {
+                var phaseDetail = new PhaseScoreDetail(attemptedPhases[input.Key], currentPhaseCompleted.GetValueOrDefault(input.Key));
+                await GameState.RecordScoreAsync(input.Key, currentRound, input.Value, phaseDetail);
+            }
+
+            foreach (var key in currentInputs.Keys.ToList())
+            {
+                currentInputs[key] = 0;
+                currentPhaseCompleted[key] = false;
             }
         }
         else
