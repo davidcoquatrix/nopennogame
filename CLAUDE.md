@@ -15,6 +15,7 @@ Avant de générer du code, de proposer une architecture ou de valider une tâch
 3. `STANDARDS.md` : Les règles de qualité de code (SRP, taille des méthodes, pas de magic strings, stratégie de test).
 4. `PERSONAS.md` : Le rôle attendu de l'agent IA et les besoins vitaux des utilisateurs finaux (rapidité et fiabilité pour le "Scorekeeper").
 5. `BACKLOG.md` : La liste priorisée des fonctionnalités et les bugs connus. Ne pas proposer de fonctionnalités hors périmètre sans l'accord du Product Owner.
+6. `CODEMAP.md` : Index de "où chercher quoi" dans le code (implémentation de chaque `ScoreType`, cycle de vie de `GameStateService`, écrans de saisie de score, conventions de test). À consulter avant d'explorer le repo pour une tâche touchant le Domain/l'Application/le scoring — évite de redécouvrir par exploration ce qui est déjà cartographié. À tenir à jour quand une nouvelle mécanique transverse apparaît.
 
 ## Règles de Comportement
 - **Pas d'over-engineering :** projet "solo dev". Garder l'architecture plate et simple (voir `ARCHITECTURE.md`).

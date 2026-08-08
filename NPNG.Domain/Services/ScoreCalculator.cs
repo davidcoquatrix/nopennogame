@@ -29,7 +29,25 @@ public static class ScoreCalculator
             }
         }
 
-        // 2. Trier les joueurs en fonction de la règle du jeu (Score le plus haut ou le plus bas gagne)
+        // 2. Trier les joueurs en fonction de la règle du jeu (Score le plus haut ou le plus bas gagne),
+        // ou, pour PhaseProgression, par phase atteinte d'abord (le score ne départage qu'à égalité).
+        if (scoreType == ScoreType.PhaseProgression)
+        {
+            var phaseCounts = totalScores.Keys.ToDictionary(
+                playerId => playerId,
+                playerId => PhaseProgressCalculator.GetCompletedPhaseCount(playerId, entries));
+
+            var sortedByPhase = totalScores
+                .OrderByDescending(kvp => phaseCounts[kvp.Key])
+                .ThenBy(kvp => kvp.Value)
+                .ToList();
+
+            return AssignRanks(
+                sortedByPhase,
+                kvp => (phaseCounts[kvp.Key], kvp.Value),
+                (kvp, rank) => new PlayerScore(kvp.Key, kvp.Value, rank));
+        }
+
         var sortedScores = scoreType switch
         {
             ScoreType.Cumulative or ScoreType.Structured => totalScores.OrderByDescending(kvp => kvp.Value).ToList(),
@@ -78,29 +96,32 @@ public static class ScoreCalculator
 
     /// <summary>
     /// Assigne un rang à chaque élément d'une liste déjà triée du meilleur au moins bon,
-    /// en attribuant le même rang aux ex-aequo et en sautant les rangs suivants.
+    /// en attribuant le même rang aux ex-aequo et en sautant les rangs suivants. La clé d'égalité
+    /// (<typeparamref name="TKey"/>) peut être un score simple (<c>int</c>) ou une clé composite
+    /// (ex: <c>(int Phase, int Score)</c> pour PhaseProgression, où l'égalité doit porter sur les deux).
     /// </summary>
-    private static ImmutableArray<TResult> AssignRanks<TItem, TResult>(
+    private static ImmutableArray<TResult> AssignRanks<TItem, TKey, TResult>(
         List<TItem> orderedBestToWorst,
-        Func<TItem, int> scoreSelector,
+        Func<TItem, TKey> rankKeySelector,
         Func<TItem, int, TResult> resultSelector)
+        where TKey : struct, IEquatable<TKey>
     {
         var results = new List<TResult>();
         int currentRank = 1;
         int displayedRank = 1;
-        int? previousScore = null;
+        TKey? previousKey = null;
 
         foreach (var item in orderedBestToWorst)
         {
-            var score = scoreSelector(item);
-            if (previousScore.HasValue && previousScore != score)
+            var key = rankKeySelector(item);
+            if (previousKey.HasValue && !previousKey.Value.Equals(key))
             {
                 displayedRank = currentRank;
             }
 
             results.Add(resultSelector(item, displayedRank));
 
-            previousScore = score;
+            previousKey = key;
             currentRank++;
         }
 

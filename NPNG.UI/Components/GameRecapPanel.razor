@@ -22,6 +22,10 @@
             {
                 <span>La limite de @Session.Template.Rules.MaxRounds tours a été atteinte.</span>
             }
+            else if (!Session.RulesOverridden && Session.Template.Rules?.WinningPhase.HasValue == true)
+            {
+                <span>@GetPhaseWinnerName() a validé la Phase @Session.Template.Rules.WinningPhase !</span>
+            }
             else
             {
                 <span>La partie a été terminée manuellement.</span>
@@ -84,6 +88,12 @@
                 <div class="av-m">@player.Emoji</div>
                 <div class="leaderboard-info">
                     <div class="leaderboard-name">@player.Name</div>
+                    @if (IsPhaseProgression)
+                    {
+                        <div class="pips">
+                            <span class="pip phase">Phase @GetCurrentPhase(player.PlayerId)</span>
+                        </div>
+                    }
                 </div>
 
                 @if (Session.Status == SessionStatus.Finished)
@@ -114,6 +124,17 @@
     private ImmutableArray<TeamScore> teamLeaderboard;
 
     private bool IsTeamMode => Session.Players.Any(p => p.TeamId is not null);
+
+    private bool IsPhaseProgression => Session.Template.ScoreType == ScoreType.PhaseProgression;
+
+    private int GetCurrentPhase(Guid playerId) =>
+        PhaseProgressCalculator.GetCurrentPhase(playerId, Session.Scores, Phase10Phases.TotalPhases);
+
+    private string GetPhaseWinnerName()
+    {
+        var winnerId = leaderboard.FirstOrDefault(l => l.Rank == 1)?.PlayerId;
+        return Session.Players.FirstOrDefault(p => p.PlayerId == winnerId)?.Name ?? "";
+    }
 
     protected override void OnParametersSet()
     {

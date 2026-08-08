@@ -1,4 +1,5 @@
 @page "/session/history"
+@using NPNG.Domain.Entities
 @using NPNG.Domain.Models
 @using NPNG.Domain.Services
 @using System.Linq
@@ -168,7 +169,22 @@ else
             {
                 <div class="entry-row">
                     <div class="entry-avatar">@player.Emoji</div>
-                    <span class="entry-name">@player.Name</span>
+                    @if (IsPhaseProgression)
+                    {
+                        var phaseNumber = tempPhaseNumbers.GetValueOrDefault(player.PlayerId, 1);
+                        <div class="entry-info">
+                            <span class="entry-name entry-name-override">@player.Name</span>
+                            <PhaseScoreInput
+                                CurrentPhase="phaseNumber"
+                                PhaseDescription="@Phase10Phases.Descriptions[phaseNumber - 1]"
+                                Completed="@tempPhaseCompleted.GetValueOrDefault(player.PlayerId)"
+                                OnCompletedChanged="@((bool c) => OnPhaseCompletedChanged(player.PlayerId, c))" />
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="entry-name">@player.Name</span>
+                    }
                     <ScoreInput
                         InputClass="score-value-warn"
                         Value="@(tempScores.GetValueOrDefault(player.PlayerId, 0))"
@@ -189,10 +205,14 @@ else
     private int maxCompletedRound = 0;
     private int editingRound = 1;
     private Dictionary<Guid, int> tempScores = new();
+    private Dictionary<Guid, int> tempPhaseNumbers = new();
+    private Dictionary<Guid, bool> tempPhaseCompleted = new();
     private List<PlayerScore> leaderboard = new();
     private List<TeamScore> teamLeaderboard = new();
 
     private bool IsTeamMode => GameState.CurrentSession?.Players.Any(p => p.TeamId is not null) == true;
+
+    private bool IsPhaseProgression => GameState.CurrentSession?.Template.ScoreType == ScoreType.PhaseProgression;
 
     private ScoreIncrementMode ScoreIncrement => GameState.CurrentSession?.Template.Rules?.ScoreIncrement ?? ScoreIncrementMode.OneAndTen;
 
@@ -236,14 +256,24 @@ else
     private void LoadRoundToEdit(int round)
     {
         tempScores.Clear();
+        tempPhaseNumbers.Clear();
+        tempPhaseCompleted.Clear();
         if (GameState.CurrentSession != null)
         {
             foreach (var player in GameState.CurrentSession.Players)
             {
                 var entry = GameState.CurrentSession.Scores.FirstOrDefault(s => s.PlayerId == player.PlayerId && s.Round == round);
                 tempScores[player.PlayerId] = entry?.Value ?? 0;
+                tempPhaseNumbers[player.PlayerId] = entry?.PhaseDetail?.PhaseNumber ?? 1;
+                tempPhaseCompleted[player.PlayerId] = entry?.PhaseDetail?.Completed ?? false;
             }
         }
+    }
+
+    private void OnPhaseCompletedChanged(Guid playerId, bool completed)
+    {
+        tempPhaseCompleted[playerId] = completed;
+        CalculateCurrentLeaderboard();
     }
 
     private void AdjustEditScore(Guid playerId, int amount)
@@ -287,7 +317,10 @@ else
 
         foreach (var kvp in tempScores)
         {
-            projectedScores.Add(new ScoreEntry(Guid.NewGuid(), GameState.CurrentSession.Id, kvp.Key, editingRound, kvp.Value));
+            var phaseDetail = IsPhaseProgression
+                ? new PhaseScoreDetail(tempPhaseNumbers.GetValueOrDefault(kvp.Key, 1), tempPhaseCompleted.GetValueOrDefault(kvp.Key))
+                : null;
+            projectedScores.Add(new ScoreEntry(Guid.NewGuid(), GameState.CurrentSession.Id, kvp.Key, editingRound, kvp.Value, PhaseDetail: phaseDetail));
         }
 
         var computed = ScoreCalculator.CalculateLeaderboard(
@@ -347,7 +380,15 @@ else
         {
             foreach (var kvp in tempScores)
             {
-                await GameState.RecordScoreAsync(kvp.Key, editingRound, kvp.Value);
+                if (IsPhaseProgression)
+                {
+                    var phaseDetail = new PhaseScoreDetail(tempPhaseNumbers.GetValueOrDefault(kvp.Key, 1), tempPhaseCompleted.GetValueOrDefault(kvp.Key));
+                    await GameState.RecordScoreAsync(kvp.Key, editingRound, kvp.Value, phaseDetail);
+                }
+                else
+                {
+                    await GameState.RecordScoreAsync(kvp.Key, editingRound, kvp.Value);
+                }
             }
         }
         await GoBack();

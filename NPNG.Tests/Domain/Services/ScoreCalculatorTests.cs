@@ -150,6 +150,58 @@ public class ScoreCalculatorTests
     }
 
     [Fact]
+    public void CalculateLeaderboard_WhenPhaseProgression_RanksByPhaseCountThenScoreAscending()
+    {
+        // Arrange
+        var entries = new List<ScoreEntry>
+        {
+            // Player 1 : 2 phases validées, total 10 (2e, devancé par Player 3 sur le score)
+            new(Guid.NewGuid(), _sessionId, _player1, 1, 5, PhaseDetail: new PhaseScoreDetail(1, true)),
+            new(Guid.NewGuid(), _sessionId, _player1, 2, 5, PhaseDetail: new PhaseScoreDetail(2, true)),
+
+            // Player 2 : 1 seule phase validée malgré le score le plus bas (3e quand même)
+            new(Guid.NewGuid(), _sessionId, _player2, 1, 3, PhaseDetail: new PhaseScoreDetail(1, true)),
+
+            // Player 3 : 2 phases validées, total 7 (1er : même phase que Player 1, score plus bas)
+            new(Guid.NewGuid(), _sessionId, _player3, 1, 5, PhaseDetail: new PhaseScoreDetail(1, true)),
+            new(Guid.NewGuid(), _sessionId, _player3, 2, 2, PhaseDetail: new PhaseScoreDetail(2, true)),
+        };
+
+        // Act
+        var result = ScoreCalculator.CalculateLeaderboard(ScoreType.PhaseProgression, PlayerIds, entries);
+
+        // Assert
+        Assert.Equal(_player3, result[0].PlayerId);
+        Assert.Equal(1, result[0].Rank);
+
+        Assert.Equal(_player1, result[1].PlayerId);
+        Assert.Equal(2, result[1].Rank);
+
+        Assert.Equal(_player2, result[2].PlayerId);
+        Assert.Equal(3, result[2].Rank);
+    }
+
+    [Fact]
+    public void CalculateLeaderboard_WhenPhaseProgressionTiedOnPhaseAndScore_AssignsSameRank()
+    {
+        // Arrange
+        var entries = new List<ScoreEntry>
+        {
+            new(Guid.NewGuid(), _sessionId, _player1, 1, 5, PhaseDetail: new PhaseScoreDetail(1, true)),
+            new(Guid.NewGuid(), _sessionId, _player2, 1, 5, PhaseDetail: new PhaseScoreDetail(1, true)),
+            new(Guid.NewGuid(), _sessionId, _player3, 1, 5, PhaseDetail: new PhaseScoreDetail(1, false)), // pas validée : 0 phase
+        };
+
+        // Act
+        var result = ScoreCalculator.CalculateLeaderboard(ScoreType.PhaseProgression, PlayerIds, entries);
+
+        // Assert
+        Assert.Equal(1, result.Single(r => r.PlayerId == _player1).Rank);
+        Assert.Equal(1, result.Single(r => r.PlayerId == _player2).Rank);
+        Assert.Equal(3, result.Single(r => r.PlayerId == _player3).Rank); // 3e, pas 2e : le rang 2 est sauté
+    }
+
+    [Fact]
     public void GroupIntoTeams_TwoTeamsOfTwo_AssignsSequentialTeamRanks()
     {
         // Arrange

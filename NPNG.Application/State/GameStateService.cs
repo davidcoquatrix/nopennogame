@@ -326,10 +326,22 @@ public class GameStateService
         RecordScoreAsync(playerId, round, value, structuredDetail: null);
 
     /// <summary>
+    /// Ajoute ou met à jour un score pour un joueur lors d'une manche, avec le détail de progression
+    /// de phase (ex: Phase 10) associé (Gère la saisie rapide et le Time Travel).
+    /// </summary>
+    public Task RecordScoreAsync(Guid playerId, int round, int value, PhaseScoreDetail phaseDetail) =>
+        RecordScoreAsync(playerId, round, value, structuredDetail: null, phaseDetail);
+
+    /// <summary>
     /// Ajoute ou met à jour un score pour un joueur lors d'une manche, avec le détail structuré
     /// optionnel (ex: Akropolis, Yams) associé (Gère la saisie rapide et le Time Travel).
     /// </summary>
-    public async Task RecordScoreAsync(Guid playerId, int round, int value, StructuredScoreDetail? structuredDetail)
+    public async Task RecordScoreAsync(
+        Guid playerId,
+        int round,
+        int value,
+        StructuredScoreDetail? structuredDetail,
+        PhaseScoreDetail? phaseDetail = null)
     {
         if (CurrentSession is null || CurrentSession.Status != SessionStatus.Active)
         {
@@ -342,13 +354,13 @@ public class GameStateService
         if (existingScore is null)
         {
             // Nouveau score
-            var newEntry = new ScoreEntry(Guid.NewGuid(), CurrentSession.Id, playerId, round, value, structuredDetail);
+            var newEntry = new ScoreEntry(Guid.NewGuid(), CurrentSession.Id, playerId, round, value, structuredDetail, phaseDetail);
             newScores = CurrentSession.Scores.Add(newEntry);
         }
         else
         {
             // Modification (Time Travel)
-            var updatedEntry = existingScore with { Value = value, StructuredDetail = structuredDetail };
+            var updatedEntry = existingScore with { Value = value, StructuredDetail = structuredDetail, PhaseDetail = phaseDetail };
             newScores = CurrentSession.Scores.Replace(existingScore, updatedEntry);
         }
 
@@ -429,7 +441,8 @@ public class GameStateService
     }
 
     /// <summary>
-    /// Détermine si la partie doit se terminer d'après les règles du jeu (tours max ou score cible atteint).
+    /// Détermine si la partie doit se terminer d'après les règles du jeu
+    /// (tours max, score cible, ou phase gagnante atteinte).
     /// </summary>
     private static bool IsGameFinished(Session session)
     {
@@ -449,6 +462,12 @@ public class GameStateService
                 session.Scores);
 
             return leaderboard.Any(l => l.TotalScore >= session.Template.Rules.TargetScore.Value);
+        }
+
+        if (session.Template.Rules?.WinningPhase.HasValue == true)
+        {
+            return session.Players.Any(p =>
+                PhaseProgressCalculator.HasWon(p.PlayerId, session.Scores, session.Template.Rules.WinningPhase.Value));
         }
 
         return false;

@@ -34,6 +34,16 @@
     margin-top: 15px;
 }
 
+.entry-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.entry-name-override {
+    flex: unset !important;
+}
+
 /* ─── TIME TRAVEL BANNER ─────────────────────────────────────── */
 .tt-banner {
     background: var(--bg-warn-light);

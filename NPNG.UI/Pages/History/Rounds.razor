@@ -41,6 +41,46 @@ else if (session.Template.ScoreType == ScoreType.Structured)
         </div>
     }
 }
+else if (session.Template.ScoreType == ScoreType.PhaseProgression)
+{
+    <div class="section-label">Détail des tours</div>
+    <div class="table-container">
+        <table class="round-table">
+            <thead>
+                <tr>
+                    <th>Tour</th>
+                    @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+                    {
+                        <th>@player.Emoji @player.Name</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 1; i <= maxRound; i++)
+                {
+                    var round = i;
+                    <tr>
+                        <td>T.@round</td>
+                        @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+                        {
+                            <td>@FormatRoundCell(player.PlayerId, round)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td class="total-cell">Total</td>
+                    @foreach (var player in session.Players.OrderBy(p => p.DisplayOrder))
+                    {
+                        var isLeader = leaderboard.FirstOrDefault()?.PlayerId == player.PlayerId;
+                        <td class="total-cell @(isLeader ? "lead" : "")">@GetTotalScore(player.PlayerId)</td>
+                    }
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
 else
 {
     <div class="section-label">Détail des tours</div>
@@ -75,7 +115,7 @@ else
                             </td>
                             @for (int i = 1; i <= maxRound; i++)
                             {
-                                <td>@GetScoreForRound(representativePlayerId, i)</td>
+                                <td>@FormatRoundCell(representativePlayerId, i)</td>
                             }
                             <td class="total-cell @(isLeader ? "lead" : "")">
                                 @GetTotalScore(representativePlayerId)
@@ -93,7 +133,7 @@ else
                             <td>@player.Emoji @player.Name</td>
                             @for (int i = 1; i <= maxRound; i++)
                             {
-                                <td>@GetScoreForRound(player.PlayerId, i)</td>
+                                <td>@FormatRoundCell(player.PlayerId, i)</td>
                             }
                             <td class="total-cell @(isLeader ? "lead" : "")">
                                 @GetTotalScore(player.PlayerId)
@@ -143,10 +183,18 @@ else
             : new List<TeamScore>();
     }
 
-    private int GetScoreForRound(Guid playerId, int round)
+    private string FormatRoundCell(Guid playerId, int round)
     {
         var entry = session?.Scores.FirstOrDefault(s => s.PlayerId == playerId && s.Round == round);
-        return entry?.Value ?? 0;
+        if (entry is null) return "0";
+
+        if (session?.Template.ScoreType == ScoreType.PhaseProgression && entry.PhaseDetail is not null)
+        {
+            var mark = entry.PhaseDetail.Completed ? "✓" : "✗";
+            return $"Ph.{entry.PhaseDetail.PhaseNumber} {mark} ({entry.Value})";
+        }
+
+        return entry.Value.ToString();
     }
 
     private int GetTotalScore(Guid playerId)

@@ -9,4 +9,5 @@ public record ScoreEntry(
     Guid PlayerId,
     int Round,
     int Value,
-    StructuredScoreDetail? StructuredDetail = null);
+    StructuredScoreDetail? StructuredDetail = null,
+    PhaseScoreDetail? PhaseDetail = null);
