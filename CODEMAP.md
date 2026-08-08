@@ -29,7 +29,14 @@ dans `BACKLOG.md`.
   - Services : `PhaseProgressCalculator.cs` (dérive la progression depuis l'historique de `ScoreEntry`,
     ne connaît pas `Phase10Phases`)
   - `GameRules.WinningPhase` pilote la fin de partie (`GameStateService.IsGameFinished`)
-  - UI : `NPNG.UI/Components/PhaseScoreInput.razor`
+  - UI (saisie en direct, `Session/Active.razor`) : `NPNG.UI/Components/PhaseProgressGrid.razor` —
+    tableau 10 phases × joueurs (layout `Table`, sur le modèle de `StructuredScoreSheet`), remplace le
+    bloc "Classement" pour ce `ScoreType` (rang/total intégrés au tableau). Case de la phase courante
+    tappable, score de manche en dernière ligne, bouton "Valider le tour" externe au composant
+    (inchangé, mêmes dictionnaires `currentInputs`/`currentPhaseCompleted`).
+  - UI (Time Travel, `Session/History/Index.razor`) : `NPNG.UI/Components/PhaseScoreInput.razor` —
+    correction d'un seul tour à la fois (badge + toggle + score), volontairement pas la grille : on
+    corrige une manche déjà jouée, pas une progression en cours sur plusieurs manches.
 
 Un `ScoreType` n'a besoin d'un "kind + catalogue" (comme `Structured`) que si **au moins deux jeux**
 partagent le même mécanisme avec des données différentes. En dessous de ça, une classe statique dédiée

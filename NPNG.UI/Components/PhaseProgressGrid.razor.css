@@ -1,0 +1,124 @@
+.ppg-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--input);
+    border: 1px solid var(--bdr-md);
+    border-radius: 14px;
+    margin-bottom: 12px;
+}
+
+.ppg-table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.ppg-label-col-def {
+    width: 52px;
+}
+
+.ppg-table th,
+.ppg-table td {
+    padding: 4px 5px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    min-width: 46px;
+}
+
+.ppg-table thead th {
+    font-family: var(--font-ui);
+    font-size: .58rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    color: var(--sub);
+    white-space: nowrap;
+    padding-top: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--bdr-md);
+}
+
+.ppg-table thead th.leading {
+    color: var(--accent-fg);
+}
+
+.ppg-label-col {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--input);
+    text-align: left;
+    white-space: nowrap;
+    font-family: var(--font-ui);
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--txt);
+    padding-left: 7px;
+    cursor: pointer;
+}
+
+.ppg-phase-row td {
+    border-bottom: 1px solid var(--bdr);
+}
+
+.ppg-cell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+.ppg-done {
+    color: var(--success);
+}
+
+.ppg-locked {
+    color: var(--sub);
+    opacity: .4;
+}
+
+button.ppg-current {
+    box-sizing: border-box;
+    background: var(--bg-accent-subtle);
+    border: 1px solid var(--accent);
+    color: var(--accent-fg);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+button.ppg-current.staged {
+    background: var(--bg-success-light);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.ppg-desc-row td {
+    background: var(--raised);
+    text-align: left;
+    padding: 6px 8px;
+    font-family: var(--font-ui);
+    font-size: .68rem;
+    color: var(--sub);
+    border-bottom: 1px solid var(--bdr);
+}
+
+.ppg-score-row td {
+    padding-top: 7px;
+    padding-bottom: 6px;
+    border-top: 2px solid var(--bdr-md);
+}
+
+.ppg-total-row td {
+    font-weight: 700;
+    color: var(--txt);
+    padding-top: 5px;
+    padding-bottom: 6px;
+}
+
+/* Le score de manche réutilise .str-cell-input (wwwroot/css/app.css) — même style de
+   cellule numérique que StructuredCategoryCell, pas de classe dédiée à dupliquer. */

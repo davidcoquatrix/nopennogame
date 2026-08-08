@@ -1,0 +1,122 @@
+@using System.Collections.Immutable
+@using NPNG.Domain.Entities
+@using NPNG.Domain.Services
+
+<div class="ppg-wrap">
+    @{
+        var orderedPlayers = Players.OrderBy(p => p.DisplayOrder).ToList();
+        var completedCounts = orderedPlayers.ToDictionary(p => p.PlayerId, p => GetCompletedCount(p.PlayerId));
+        var maxCompleted = completedCounts.Count > 0 ? completedCounts.Values.Max() : 0;
+    }
+
+    <table class="ppg-table">
+        <colgroup>
+            <col class="ppg-label-col-def" />
+            @foreach (var _ in orderedPlayers)
+            {
+                <col />
+            }
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="ppg-label-col"></th>
+                @foreach (var player in orderedPlayers)
+                {
+                    <th class="@(maxCompleted > 0 && completedCounts[player.PlayerId] == maxCompleted ? "leading" : "")">
+                        @player.Emoji<br />@player.Name
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (int phase = 1; phase <= Phase10Phases.TotalPhases; phase++)
+            {
+                var phaseNumber = phase;
+
+                <tr class="ppg-phase-row">
+                    <td class="ppg-label-col" @onclick="() => ToggleExpanded(phaseNumber)">Phase @phaseNumber</td>
+                    @foreach (var player in orderedPlayers)
+                    {
+                        var completed = completedCounts[player.PlayerId];
+                        <td>
+                            @if (phaseNumber <= completed)
+                            {
+                                <span class="ppg-cell ppg-done">✓</span>
+                            }
+                            else if (phaseNumber == completed + 1)
+                            {
+                                <button type="button" class="ppg-cell ppg-current @(CurrentPhaseCompleted.GetValueOrDefault(player.PlayerId) ? "staged" : "")"
+                                    @onclick="() => OnPhaseToggled.InvokeAsync(player.PlayerId)">
+                                    @(CurrentPhaseCompleted.GetValueOrDefault(player.PlayerId) ? "✓" : "—")
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="ppg-cell ppg-locked">·</span>
+                            }
+                        </td>
+                    }
+                </tr>
+
+                @if (expandedPhase == phaseNumber)
+                {
+                    <tr class="ppg-desc-row">
+                        <td colspan="@(orderedPlayers.Count + 1)">@Phase10Phases.Descriptions[phaseNumber - 1]</td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <tfoot>
+            <tr class="ppg-score-row">
+                <td class="ppg-label-col">Score</td>
+                @foreach (var player in orderedPlayers)
+                {
+                    <td>
+                        <NumericCellInput Value="CurrentInputs.GetValueOrDefault(player.PlayerId, 0)" CssClass="str-cell-input"
+                            OnValueChanged="@((int v) => OnScoreChanged.InvokeAsync((player.PlayerId, v)))" />
+                    </td>
+                }
+            </tr>
+            <tr class="ppg-total-row">
+                <td class="ppg-label-col">Total</td>
+                @foreach (var player in orderedPlayers)
+                {
+                    <td>@GetRecordedTotal(player.PlayerId) pts</td>
+                }
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    public ImmutableArray<SessionPlayer> Players { get; set; } = ImmutableArray<SessionPlayer>.Empty;
+
+    [Parameter]
+    public ImmutableArray<ScoreEntry> Scores { get; set; } = ImmutableArray<ScoreEntry>.Empty;
+
+    [Parameter]
+    public IReadOnlyDictionary<Guid, int> CurrentInputs { get; set; } = new Dictionary<Guid, int>();
+
+    [Parameter]
+    public IReadOnlyDictionary<Guid, bool> CurrentPhaseCompleted { get; set; } = new Dictionary<Guid, bool>();
+
+    [Parameter]
+    public EventCallback<Guid> OnPhaseToggled { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid PlayerId, int Value)> OnScoreChanged { get; set; }
+
+    private int? expandedPhase;
+
+    private void ToggleExpanded(int phaseNumber)
+    {
+        expandedPhase = expandedPhase == phaseNumber ? null : phaseNumber;
+    }
+
+    private int GetCompletedCount(Guid playerId) =>
+        PhaseProgressCalculator.GetCompletedPhaseCount(playerId, Scores);
+
+    private int GetRecordedTotal(Guid playerId) =>
+        Scores.Where(s => s.PlayerId == playerId).Sum(s => s.Value);
+}
